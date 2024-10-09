@@ -1,1 +1,1 @@
-app/static/vendor/* linguist-vendored
+app/static/vendor/**/* linguist-vendored
