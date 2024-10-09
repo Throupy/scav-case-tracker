@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-4">
+      <div class="list-group" id="list-tab" role="tablist">
+        {% for insight in insights %}
+        <a class="list-group-item list-group-item-action {% if loop.first %}active{% endif %}" id="list-{{ loop.index }}" 
+           data-toggle="list" href="#tab-{{ loop.index }}" role="tab" aria-controls="insight">{{ insight.title }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-8">
+      <div class="tab-content" id="nav-tabContent">
+        {% for insight in insights %}
+        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab-{{ loop.index }}" role="tabpanel" aria-labelledby="list-{{ loop.index }}">
+          <h3>{{ insight.title }}</h3>
+          <p>{{ insight.description|safe }}</p>
+          <canvas id="chart-{{ loop.index }}"></canvas> <!-- Chart.js container -->
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to select the tab based on URL fragment
+        function selectTabFromURL() {
+            var hash = window.location.hash; // Get the hash part of the URL
+            if (hash) {
+                var targetTab = document.querySelector(`a[href="${hash}"]`); // Find the corresponding tab link
+                if (targetTab) {
+                    var tabList = new bootstrap.Tab(targetTab); // Bootstrap 5 API to select a tab
+                    tabList.show();
+                }
+            }
+        }
+    
+        // Initially select the tab if the fragment is present
+        selectTabFromURL();
+    
+        // Event listener for when a user clicks on a tab to update the URL fragment
+        document.querySelectorAll('.list-group-item').forEach(function(tab) {
+            tab.addEventListener('shown.bs.tab', function(event) {
+                history.replaceState(null, null, event.target.getAttribute('href'));
+            });
+        });
+    
+        // Initialize charts for each tab (use this section from the previous example)
+        {% for insight in insights %}
+        var ctx{{ loop.index }} = document.getElementById('chart-{{ loop.index }}').getContext('2d');
+        new Chart(ctx{{ loop.index }}, {
+            type: 'bar',  // Customize this chart type if needed
+            data: {
+                labels: {{ insight.chart_data.x_value|tojson }},
+                datasets: [{
+                    label: '{{ insight.title }}',
+                    data: {{ insight.chart_data.y_value | tojson }},
+                    backgroundColor: {{ insight.chart_data.colors|tojson }},
+                    borderColor: {{ insight.chart_data.border_colors|tojson }},
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var caseType = data.labels[tooltipItem.index];
+                            var tooltipText = {{ insight.chart_tooltip|tojson }}[caseType];
+                            return tooltipText;
+                        }
+                    }
+                },
+            }
+        });
+        {% endfor %}
+    });
+    </script>
+  
+  
+
+{% endblock %}

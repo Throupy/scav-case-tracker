@@ -1,0 +1,9 @@
+<ul class="list-group">
+    {% for item in items %}
+        <li class="list-group-item" onclick="addItemToSelected('{{ item.tarkov_id }}', '{{ item.name }}', 1)">
+            <a>
+                {{ item.name }}
+            </a>
+        </li>
+    {% endfor %}
+</ul>
