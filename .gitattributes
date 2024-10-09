@@ -1,1 +1,3 @@
 app/static/vendor/** linguist-vendored
+app/static/vendor/**/*.min.js linguist-generated
+app/static/vendor/**/*.min.css linguist-generated
