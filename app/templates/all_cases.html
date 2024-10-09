@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <h5 class="card-title">Scav Case Returns <span class="text-gray-500 ms-2">({{ entries | length }})</span></h5>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="">
+            <div class="table-responsive">
+                <table class="table project-list-table table-nowrap align-middle table-borderless">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none" 
+                                    href="{{ url_for('main.all_cases', sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Type
+                                    {% if sort_by == 'type' %}
+                                        {% if sort_order == 'asc' %}
+                                            <i class="fa fa-chevron-up"></i>
+                                        {% else %}
+                                            <i class="fa fa-chevron-down"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none" 
+                                    href="{{ url_for('main.all_cases', sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Return
+                                    {% if sort_by == '_return' %}
+                                        {% if sort_order == 'asc' %}
+                                            <i class="fa fa-chevron-up"></i>
+                                        {% else %}
+                                            <i class="fa fa-chevron-down"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none" 
+                                    href="{{ url_for('main.all_cases', sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Profit
+                                    {% if sort_by == 'profit' %}
+                                        {% if sort_order == 'asc' %}
+                                            <i class="fa fa-chevron-up"></i>
+                                        {% else %}
+                                            <i class="fa fa-chevron-down"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none" 
+                                    href="{{ url_for('main.all_cases', sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Number of Items
+                                    {% if sort_by == 'number_of_items' %}
+                                        {% if sort_order == 'asc' %}
+                                            <i class="fa fa-chevron-up"></i>
+                                        {% else %}
+                                            <i class="fa fa-chevron-down"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none">
+                                    Submitted By
+                                </a>
+                            </th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody>
+                        {% for entry in entries %}
+                            <tr>
+                                <td>
+                                    <span class="badge mb-0
+                                    {% if entry.type == '₽2500' %}
+                                        badge-soft-warning
+                                    {% elif entry.type == '₽15000' %}
+                                        badge-soft-danger
+                                    {% elif entry.type == '₽95000' %}
+                                        badge-soft-success
+                                    {% elif entry.type == 'Moonshine' %}
+                                        badge-soft-primary
+                                    {% elif entry.type == 'Intelligence' %}
+                                        badge-soft-info
+                                    {% else %}
+                                        badge-soft-secondary
+                                    {% endif %}">
+                                        {{ entry.type }}
+                                    </span>
+                                </td>
+                                <td>₽{{ "{:,}".format(entry._return | int) }}</td>
+                                <td>
+                                    {% if entry._return - entry.cost < 0 %}
+                                        <span class="badge mb-0 badge-soft-danger">
+                                            ₽{{ "{:,}".format((entry._return - entry.cost) | int) }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge mb-0 badge-soft-success">
+                                            ₽{{ "{:,}".format((entry._return - entry.cost) | int) }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ entry.number_of_items }}</td>
+                                <td>
+                                    <img width=24 height=24 class="mr-1 img-profile rounded-circle"
+                                    src="{{ url_for('static', filename='profile_pics/' + entry.author.image_file) }}">
+                                    {{ entry.author.username }}
+                                </td>
+                                <td>
+                                    <ul class="list-inline mb-0">
+                                        <li class="list-inline-item">
+                                            <a href="{{ url_for('main.entry_detail', entry_id=entry.id) }}" 
+                                               data-bs-toggle="tooltip" data-bs-placement="top" title="View" 
+                                               class="px-2 text-danger"><i class="fa-regular fa-eye"></i></a>
+                                        </li>
+                                        <li class="list-inline-item">
+                                            <a href="{{ url_for('main.delete_entry', entry_id=entry.id) }}" 
+                                               data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" 
+                                               class="px-2 text-danger"><i class="fa-regular fa-trash-can"></i></a>
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row g-0 align-items-center pb-4">
+    <div class="col-sm-6">
+        <div>
+            <p class="mb-sm-0">
+                Showing Page {{ pagination.page }} of {{ pagination.pages }}
+            </p>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="float-sm-end">
+            <ul class="pagination mb-sm-0">
+                <!-- Previous Page -->
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a href="{{ url_for('main.all_cases', page=pagination.prev_num) }}" class="page-link">
+                        <i class="text-danger fa fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                <!-- Page Numbers -->
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="text-danger page-item {% if pagination.page == page_num %}active{% endif %}">
+                            <a href="{{ url_for('main.all_cases', page=page_num) }}" class="text-danger page-link">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><a href="#" class="text-danger page-link">…</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next Page -->
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a href="{{ url_for('main.all_cases', page=pagination.next_num) }}" class="page-link">
+                        <i class="text-danger fa fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

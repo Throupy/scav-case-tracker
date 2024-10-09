@@ -1,0 +1,11 @@
+Flask==3.0.3
+Flask_Bcrypt==1.0.1
+Flask_Login==0.6.3
+Flask_Migrate==4.0.7
+flask_sqlalchemy==3.1.1
+flask_wtf==1.2.1
+Pillow==10.4.0
+python-dotenv==1.0.1
+Requests==2.32.3
+SQLAlchemy==2.0.35
+WTForms==3.1.2

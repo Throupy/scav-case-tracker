@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1 class="mb-4">Create New Scav Case Entry</h1>
+
+<div class="container mt-5">
+    <div class="card w-100">
+        <div class="card-body">
+            <h5 class="card-title">Scav Case Type and Add Items</h5>
+            <form id="scav-case-form" method="POST" action="{{ url_for('main.submit_scav_case') }}">
+                <div class="mb-3">
+                    <label for="scav-case-type" class="form-label">Scav Case Type</label>
+                    <select class="form-select" id="scav-case-type" name="scav_case_type" required>
+                        <option selected disabled>Select Scav Case Type...</option>
+                        <option value="₽2500">₽2500</option>
+                        <option value="₽15000">₽15000</option>
+                        <option value="₽95000">₽95000</option>
+                        <option value="Moonshine">Moonshine</option>
+                        <option value="Intelligence">Intelligence</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="item-search" class="form-label">Search for Items</label>
+                    <input type="text" class="form-control" id="item-search" name="q" placeholder="Type to search..." 
+                        hx-get="/search-items" hx-target="#item-list" hx-trigger="keyup changed" autocomplete="off">
+                </div>
+
+                <div id="item-list" class="mt-3"></div>
+
+                <div id="selected-items" class="mt-3">
+                    <h6>Selected Items:</h6>
+                    <ul class="list-group" id="selected-item-list"></ul>
+                </div>
+
+                <input type="hidden" name="items_data" id="items-data">
+                <button type="submit" class="btn btn-outline-danger mt-3">Submit Scav Case</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const selectedItems = [];
+
+    function addItemToSelected(itemId, itemName, quantity) {
+        selectedItems.push({ id: itemId, name: itemName, quantity });
+        updateSelectedItemsList();
+        updateItemsDataField();
+        clearSearchResults();
+    }
+
+    function updateSelectedItemsList() {
+        const list = document.getElementById('selected-item-list');
+        list.innerHTML = '';
+        selectedItems.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `
+                <span>${item.name}</span>
+                <span>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="updateQuantity(${index}, -1)">-</button>
+                    <input type="number" id="item-quantity-${index}" class="form-control d-inline-block quantity-input" style="width: 60px;" value="${item.quantity}" min="1" onchange="updateQuantityFromInput(${index}, this.value)">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="updateQuantity(${index}, 1)">+</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </span>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function updateItemsDataField() {
+        const itemsDataField = document.getElementById('items-data');
+        itemsDataField.value = JSON.stringify(selectedItems);
+    }
+
+    function selectItem(itemId, itemName) {
+        const quantity = prompt(`Enter quantity for ${itemName}:`);
+        if (quantity) {
+            addItemToSelected(itemId, itemName, quantity);
+        }
+    }
+
+    function updateQuantity(index, change) {
+        const item = selectedItems[index];
+        let newQuantity = parseInt(item.quantity) + change;
+        if (newQuantity < 1) {
+            newQuantity = 1;
+        }
+        item.quantity = newQuantity;
+        document.getElementById(`item-quantity-${index}`).value = newQuantity;
+        updateItemsDataField();
+    }
+
+    function updateQuantityFromInput(index, newQuantity) {
+        const item = selectedItems[index];
+        newQuantity = parseInt(newQuantity);
+        if (newQuantity < 1) {
+            newQuantity = 1;
+        }
+        item.quantity = newQuantity;
+        updateItemsDataField();
+    }
+
+    function removeItem(index) {
+        selectedItems.splice(index, 1);
+        updateSelectedItemsList();
+        updateItemsDataField();
+    }
+
+    function clearSearchResults() {
+        document.getElementById('item-list').innerHTML = '';
+        document.getElementById('item-search').value = '';
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>
+        <span>
+            Scav Case #{{ entry.id }} | 
+        </span>
+        <span>
+            <span class="badge mb-0
+            {% if entry.type == '₽2500' %}
+                badge-soft-warning
+            {% elif entry.type == '₽15000' %}
+                badge-soft-danger
+            {% elif entry.type == '₽95000' %}
+                badge-soft-success
+            {% elif entry.type == 'Moonshine' %}
+                badge-soft-primary
+            {% elif entry.type == 'Intelligence' %}
+                badge-soft-info
+            {% else %}
+                badge-soft-secondary
+            {% endif %}">
+                {{ entry.type }}
+            </span>
+        </span>
+         | 
+        <span>
+            {% if entry._return - entry.cost < 0 %}
+                <i class="fa-solid fa-chevron-down text-danger"></i>
+                <h3 class="d-inline-block text-danger">₽{{ "{:,}".format((entry._return - entry.cost) | int) }}</h3>
+            {% else %}
+                <i class="fa-solid fa-chevron-up text-success"></i>
+                <h3 class="d-inline-block text-success">₽{{ "{:,}".format((entry._return - entry.cost) | int) }}</h3>
+            {% endif %}
+        </span>
+    </h1>
+  
+
+    <div class="row">
+      <div class="col-4">
+        <div class="list-group" id="list-tab" role="tablist">
+          {% for item in entry.items %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if loop.first %}active{% endif %}"
+               id="list-{{ item.tarkov_id }}-list" 
+               data-toggle="list" href="#list-{{ item.tarkov_id }}" role="tab" aria-controls="{{ item.name }}">
+                {{ item.name }}
+                <span class="badge mb-0 badge-soft-info ms-auto">
+                    ₽{{ "{:,}".format(item.price | int) }} 
+                </span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-8">
+        <div class="tab-content" id="nav-tabContent">
+          {% for item in entry.items %}
+            <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="list-{{ item.tarkov_id }}" role="tabpanel" 
+                 aria-labelledby="list-{{ item.tarkov_id }}-list">
+                <h3>{{ item.name }}</h3>
+                <p><strong>Amount:</strong> {{ item.amount }}</p>    
+                <p><strong>Price (per item):</strong> ₽{{ "{:,}".format(item.price | int) }}</p> 
+                <p><strong>Total Price:</strong> ₽{{ "{:,}".format((item.price | int) * (item.amount)) }}</p>
+                <img class="img-fluid" width="100" src="{{ url_for('static', filename='items/' + item.tarkov_id + '.webp')}}">
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+{% endblock %}
