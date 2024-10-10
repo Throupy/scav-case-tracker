@@ -15,3 +15,7 @@
 pip install -r requirements.txt
 flask run
 ```
+
+# To Do
+- [ ] Entry detail blue badge should display total price, not per item.
+- [ ] Main blueprint
