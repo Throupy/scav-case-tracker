@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, flash, request, render_template
 from flask_login import login_user, logout_user, login_required, current_user
 
-from app.utils import save_picture
+from app.main.utils import save_picture
 from app.models import User
 from app.extensions import db, bcrypt
 from app.users.forms import LoginForm, RegistrationForm, UpdateAccountForm
