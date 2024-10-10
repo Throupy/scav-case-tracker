@@ -18,4 +18,4 @@ flask run
 
 # To Do
 - [X] Entry detail blue badge should display total price, not per item.
-- [ ] Main blueprint
+- [X] Main blueprint

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from app.models import Entry
-from app.utils import get_price, get_image_link
+from app.main.utils import get_price, get_image_link
 
 
 api = Blueprint("api", __name__)
