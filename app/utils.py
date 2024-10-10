@@ -1,13 +1,20 @@
 import os
+import re
 import secrets
 from collections import defaultdict
 
-from PIL import Image
-from flask import current_app
-
-from app.models import Insight
-
 import requests
+import pytesseract
+
+from PIL import Image, ImageFilter
+from flask import current_app
+from rapidfuzz import process, fuzz
+
+from app.models import Insight, TarkovItem
+
+
+class ItemNotFoundException(Exception):
+    pass
 
 
 def generate_price_query(item_id):
@@ -74,6 +81,7 @@ def get_price(item_id: str) -> int:
         (item for item in sell_for_list if item["source"] == "fleaMarket"), None
     )
     if flea_market_price:
+        print(f"Got price of {flea_market_price['price']} for item with ID: {item_id}")
         return flea_market_price["price"]
     # if no flea market possible (e.g. BTC)
     max_price_item = max(sell_for_list, key=lambda x: x["price"])
@@ -227,3 +235,61 @@ def calculate_and_prepare_most_profitable(entries) -> Insight:
         chart_data=chart_data,
         chart_tooltip=chart_tooltip,
     )
+
+def validate_scav_case_image(image_path: str) -> bool:
+    img = Image.open(image_path)
+    img = img.convert("L")
+    img = img.filter(ImageFilter.SHARPEN)
+    text_data = pytesseract.image_to_string(img)
+    confidence = fuzz.partial_ratio("scavs have brought you", text_data.lower())
+    if confidence >= 75:
+        return True
+    return False
+
+def fuzzy_match_ocr_to_database(ocr_text: str):
+    all_items = TarkovItem.query.with_entities(TarkovItem.name).all()
+    item_names = [item[0] for item in all_items]
+    best_match = process.extractOne(ocr_text, item_names, scorer=fuzz.ratio)
+
+    if best_match and best_match[1] > 20:
+        matched_item = TarkovItem.query.filter_by(name=best_match[0]).first()
+        return matched_item
+    else:
+        return None
+
+
+def process_image_for_items(image_path: str) -> str:
+    img = Image.open(image_path)
+    img = img.convert("L")
+    img = img.filter(ImageFilter.SHARPEN)
+    text = pytesseract.image_to_string(img)
+    return text
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"]
+
+
+def extract_items_from_ocr(text: str):
+    item_pattern = r"([A-Za-z0-9\s\.\'\-\(\)x]+)\s+\(([\d\/]+)\)"
+    matches = re.findall(item_pattern, text)
+
+    items = []
+    for match in matches:
+        item_name = match[0].strip()
+        quantity = match[1].strip()
+        # You could add fuzzy matching here if necessary
+        matched_item = fuzzy_match_ocr_to_database(item_name)
+        if matched_item:
+            items.append(
+                {
+                    "id": matched_item.tarkov_id,
+                    "name": matched_item.name,
+                    "quantity": int(quantity),
+                }
+            )
+        else:
+            raise ItemNotFoundException(
+                "One of the items wasn't recognised. Please add the case manually."
+            )
+    return items
