@@ -44,7 +44,7 @@
                data-toggle="list" href="#list-{{ item.tarkov_id }}" role="tab" aria-controls="{{ item.name }}">
                 {{ item.name }}
                 <span class="badge mb-0 badge-soft-info ms-auto">
-                    ₽{{ "{:,}".format(item.price | int) }} 
+                    ₽{{ "{:,}".format((item.price * item.amount) | int) }} 
                 </span>
             </a>
           {% endfor %}
