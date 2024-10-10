@@ -1,7 +1,17 @@
 import json
+import os
 
-from flask import render_template, request, redirect, url_for, Blueprint, flash
+from flask import (
+    render_template,
+    request,
+    redirect,
+    url_for,
+    Blueprint,
+    flash,
+    current_app,
+)
 from flask_login import current_user, login_required
+from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models import Entry, EntryItem, TarkovItem
@@ -10,11 +20,14 @@ from app.utils import (
     calculate_and_prepare_most_profitable,
     calculate_avg_return_by_case_type,
     calculate_avg_items_per_case_type,
+    process_image_for_items,
+    extract_items_from_ocr,
+    validate_scav_case_image,
+    ItemNotFoundException,
 )
+from app.config import SCAV_CASE_TYPES
 
 main = Blueprint("main", __name__)
-
-scav_case_types = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
 
 
 @main.route("/not-implemented")
@@ -48,12 +61,13 @@ def all_cases():
         sort_order=sort_order,
     )
 
+
 @main.route("/")
 @main.route("/dashboard")
 def dashboard():
     entries = Entry.query.all()
     return render_template(
-        "dashboard.html", scav_case_types=scav_case_types, entries=entries
+        "dashboard.html", scav_case_types=SCAV_CASE_TYPES, entries=entries
     )
 
 
@@ -84,10 +98,29 @@ def create_entry():
 def submit_scav_case():
     scav_case_type = request.form.get("scav_case_type")
     items_data = request.form.get("items_data")
+    uploaded_image = request.files.get("scav_case_image")
 
-    if not scav_case_type or not items_data:
+    if not scav_case_type and not items_data and not uploaded_image:
         flash("Scav case type and items are required!", "danger")
         return redirect(url_for("main.dashboard"))
+
+    if uploaded_image:
+        filename = secure_filename(uploaded_image.filename)
+        file_path = os.path.join(current_app.root_path, "static/uploads", filename)
+        uploaded_image.save(file_path)
+
+        if not validate_scav_case_image(file_path):
+            flash("The uploaded image doesn't look like a scav case. See the instructions and try again", "danger")
+            return redirect(url_for("main.create_entry"))
+
+        ocr_text = process_image_for_items(file_path)
+        try:
+            items = extract_items_from_ocr(ocr_text)
+        except ItemNotFoundException as e:
+            flash(str(e), "danger")
+            return redirect(url_for("main.dashboard"))
+
+        items_data = json.dumps(items)
 
     try:
         entry = Entry(type=scav_case_type, user_id=current_user.id)
