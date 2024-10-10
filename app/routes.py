@@ -1,9 +1,9 @@
 import json
 
-from flask import Flask, render_template, request, redirect, url_for, Blueprint, flash
+from flask import render_template, request, redirect, url_for, Blueprint, flash
 from flask_login import current_user, login_required
 
-from extensions import db
+from app.extensions import db
 from app.models import Entry, EntryItem, TarkovItem
 from app.utils import (
     get_price,
@@ -12,7 +12,6 @@ from app.utils import (
     calculate_avg_items_per_case_type,
 )
 
-app = Flask(__name__)
 main = Blueprint("main", __name__)
 
 scav_case_types = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
@@ -49,7 +48,7 @@ def all_cases():
         sort_order=sort_order,
     )
 
-
+@main.route("/")
 @main.route("/dashboard")
 def dashboard():
     entries = Entry.query.all()

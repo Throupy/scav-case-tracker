@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
 
-from extensions import db
+from app.extensions import db
 
 
 @dataclass

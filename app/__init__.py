@@ -1,14 +1,14 @@
 import json
 
 from flask import Flask
-from config import Config
 
+from app.config import Config
 from app.routes import main
 from app.api.routes import api
 from app.users.routes import users
 from app.models import User, TarkovItem, Entry
 from app.utils import get_price
-from extensions import db, migrate, login_manager, bcrypt
+from app.extensions import db, migrate, login_manager, bcrypt
 
 
 @login_manager.user_loader
