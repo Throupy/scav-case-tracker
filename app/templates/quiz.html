@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">{{ quiz_title }}</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">{{ quiz_question }}</h5>
+            
+            <form id="quiz-form">
+                <input type="hidden" name="attachment_id" value="{{ attachment.id }}">
+                
+                <div class="text-center mb-4">
+                    <img class="img-thumbnail" width="150" src="{{ url_for('static', filename='items/' + attachment.tarkov_item.tarkov_id + '.webp') }}" alt="{{ attachment.tarkov_item.name }}">
+                </div>
+                
+                <div class="mb-4">
+                    <div class="d-flex justify-content-center">
+                        {% for option in options %}
+                            <input type="radio" name="selected_modifier" value="{{ option }}" id="option{{ loop.index }}" class="d-none">
+                            <label for="option{{ loop.index }}" class="btn btn-outline-danger btn-lg mx-5 option-label">
+                                {% if option > 0%}+{% endif %}{{ option | int}}%
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+
+            <div id="feedback" class="mt-4" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.option-label').forEach(label => {
+        label.addEventListener('click', function() {
+            let option = this.previousElementSibling;
+            option.checked = true;
+
+            let formData = new FormData(document.getElementById('quiz-form'));
+            formData.append('selected_modifier', option.value);
+
+            fetch('{{ url_for("quiz.quiz", quiz_type=quiz_type) }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                handleQuizResponse(data);
+            });
+        });
+    });
+
+    function handleQuizResponse(data) {
+        let feedbackDiv = document.getElementById('feedback');
+        let selectedOption = document.querySelector('input[name="selected_modifier"]:checked');
+        let selectedLabel = selectedOption.nextElementSibling;
+
+        feedbackDiv.style.display = 'none';
+        selectedLabel.classList.remove('btn-outline-success', 'btn-outline-danger', 'active');
+        let correctAnswer = parseFloat(data.correct_answer).toFixed(1);
+
+        if (data.is_correct) {
+            feedbackDiv.innerHTML = `<div class="alert alert-success">Correct! The value for ${data.attachment_name} is ${data.correct_answer}%.</div>`;
+            selectedLabel.classList.add('btn-outline-success');
+        } else {
+            feedbackDiv.innerHTML = `<div class="alert alert-danger">Incorrect. The correct value for ${data.attachment_name} is ${data.correct_answer}%.</div>`;
+            selectedLabel.classList.add('btn-danger');
+
+            let correctOption = document.querySelector(`input[value="${correctAnswer}"]`);
+            if (correctOption) {
+                let correctLabel = document.querySelector(`label[for="${correctOption.id}"]`);
+                correctLabel.classList.remove('btn-outline-danger');
+                correctLabel.classList.add('btn-outline-success');
+            }
+        }
+
+        feedbackDiv.style.display = 'block';
+
+        setTimeout(function() {
+            window.location.reload();
+        }, 4000);
+    }
+</script>
+{% endblock %}

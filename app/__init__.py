@@ -6,7 +6,8 @@ from app.config import Config
 from app.main.routes import main
 from app.api.routes import api
 from app.users.routes import users
-from app.models import User, TarkovItem, Entry
+from app.quiz.routes import _quiz as quiz
+from app.models import User, TarkovItem, WeaponAttachment, Entry
 from app.main.utils import get_price
 from app.extensions import db, migrate, login_manager, bcrypt
 
@@ -33,6 +34,7 @@ def create_app():
         db.create_all()
 
         if TarkovItem.query.count() == 0:  # Ensure this runs only if the table is empty
+            print("[DEBUG] Adding Tarkov items...")
             with open("../output.json", "r") as f:
                 item_data = json.load(f)
                 for item_name, tarkov_id in item_data.items():
@@ -40,6 +42,28 @@ def create_app():
                     if not TarkovItem.query.filter_by(tarkov_id=tarkov_id).first():
                         item = TarkovItem(name=item_name, tarkov_id=tarkov_id)
                         db.session.add(item)
+
+        if WeaponAttachment.query.count() == 0:
+            print("[DEBUG] Populating Tarkov weapon attachments...")
+            with open("../attachments.json", "r") as f:
+                attachment_data = json.load(f)
+                c = 0
+                for _attachment in attachment_data:
+                    tarkov_item = TarkovItem.query.filter_by(
+                        name=_attachment["name"]
+                    ).first()
+
+                    if tarkov_item:
+                        attachment = WeaponAttachment(
+                            id=tarkov_item.id,
+                            recoil_modifier=_attachment.get("recoilModifier"),
+                            ergonomics_modifier=_attachment.get("ergonomicsModifier"),
+                        )
+                        print(
+                            f"[{c}] Got an attachment, giving it id {tarkov_item.id}. It's name is {tarkov_item.name}"
+                        )
+                        c += 1
+                        db.session.add(attachment)
 
         if app.config["SEED_ENTRIES"]:
             print(
@@ -69,5 +93,6 @@ def create_app():
     app.register_blueprint(main)
     app.register_blueprint(api)
     app.register_blueprint(users)
+    app.register_blueprint(quiz)
 
     return app
