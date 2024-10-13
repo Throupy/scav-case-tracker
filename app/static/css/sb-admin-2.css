@@ -1909,6 +1909,13 @@ select.form-control:focus::-ms-value {
   background-color: #fff;
 }
 
+.form-control-file {
+  overflow: hidden;
+}
+.form-control-file:not(:disabled):not([readonly]) {
+  cursor: pointer;
+}
+
 .form-control-file,
 .form-control-range {
   display: block;

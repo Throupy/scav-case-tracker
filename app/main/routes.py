@@ -25,6 +25,7 @@ from app.main.utils import (
     validate_scav_case_image,
     ItemNotFoundException,
 )
+from app.main.forms import ScavCaseForm
 from app.config import SCAV_CASE_TYPES
 
 main = Blueprint("main", __name__)
@@ -92,68 +93,79 @@ def create_entry():
         return redirect(url_for("users.login"))
     return render_template("create_entry.html")
 
-
-@main.route("/submit-scav-case", methods=["POST"])
+@main.route("/submit-scav-case", methods=["GET", "POST"])
 @login_required
 def submit_scav_case():
-    scav_case_type = request.form.get("scav_case_type")
-    items_data = request.form.get("items_data")
-    uploaded_image = request.files.get("scav_case_image")
+    form = ScavCaseForm()
 
-    if not scav_case_type and not items_data and not uploaded_image:
-        flash("Scav case type and items are required!", "danger")
-        return redirect(url_for("main.dashboard"))
+    if form.validate_on_submit():
+        scav_case_type = form.scav_case_type.data
+        items_data = form.items_data.data # JSON
+        uploaded_image = form.scav_case_image.data
 
-    if uploaded_image:
-        filename = secure_filename(uploaded_image.filename)
-        file_path = os.path.join(current_app.root_path, "static/uploads", filename)
-        uploaded_image.save(file_path)
-
-        if not validate_scav_case_image(file_path):
-            flash("The uploaded image doesn't look like a scav case. See the instructions and try again", "danger")
+        if not scav_case_type and not items_data and not uploaded_image:
+            flash("Scav case type and items or image are required", "danger")
             return redirect(url_for("main.create_entry"))
 
-        ocr_text = process_image_for_items(file_path)
+        if uploaded_image:
+            filename = secure_filename(uploaded_image.filename)
+            file_path = os.path.join(current_app.root_path, "static/uploads", filename)
+            uploaded_image.save(file_path)
+
+            # checks for "scavs have brought you" text within the image
+            if not validate_scav_case_image(file_path):
+                flash("The uploaded image doesn't look like a scav case. See the instructions and try again", "danger")
+                return redirect(url_for("main.create_entry"))
+            
+            ocr_text = process_image_for_items(file_path)
+            try:
+                items = extract_items_from_ocr(ocr_text)
+            except ItemNotFoundException as e:
+                flash(str(e), "danger")
+                return redirect(url_for("main.dashboard"))
+            
+            items_data = json.dumps(items)
+                
         try:
-            items = extract_items_from_ocr(ocr_text)
-        except ItemNotFoundException as e:
-            flash(str(e), "danger")
-            return redirect(url_for("main.dashboard"))
-
-        items_data = json.dumps(items)
-
-    try:
-        entry = Entry(type=scav_case_type, user_id=current_user.id)
-        # work out prices of each item upon entry
-        if scav_case_type.lower() == "moonshine":
-            entry.cost = get_price("5d1b376e86f774252519444e")
-        elif scav_case_type.lower() == "intelligence":
-            entry.cost = get_price("5c12613b86f7743bbe2c3f76")
-        else:
-            entry.cost = scav_case_type[1::]
-        db.session.add(entry)
-        db.session.commit()
-
-        items = json.loads(items_data)
-        for item in items:
-            entry_item = EntryItem(
-                entry_id=entry.id,
-                tarkov_id=item["id"],
-                price=get_price(item["id"]),
-                name=item["name"],
-                amount=item["quantity"],
+            print(f"Creating entry with user id {current_user.id}")
+            entry = Entry(
+                type=scav_case_type,
+                user_id=current_user.id
             )
-            db.session.add(entry_item)
-            entry.number_of_items += 1
-            entry._return += entry_item.price * item["quantity"]
 
-        db.session.commit()
-        flash("Scav case and items saved successfully!", "success")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"There was an error adding your scav case: {e}", "danger")
+            # get price of entry, dynamic for MS / intel
+            if scav_case_type.lower() == "moonshine":
+                entry.cost = get_price("5d1b376e86f774252519444e")
+            elif scav_case_type.lower() == "intelligence":
+                entry.cost = get_price("5c12613b86f7743bbe2c3f76")
+            else:
+                entry.cost = scav_case_type[1::] # strip off '₽'
 
-    return redirect(url_for("main.dashboard"))
+            db.session.add(entry)
+            db.session.commit()
+
+            # now process the items
+            items = json.loads(items_data)
+            for item in items:
+                entry_item = EntryItem(
+                    entry_id=entry.id,
+                    tarkov_id=item['id'],
+                    price=get_price(item['id']),
+                    name=item['name'],
+                    amount=item['quantity']
+                )
+                db.session.add(entry_item)
+                entry.number_of_items += 1
+                entry._return += entry_item.price * item['quantity']
+
+            db.session.commit()
+            flash("Scav Case and Items successfully added", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"There was an error adding the scav case: {str(e)}", "danger")
+
+    return render_template("create_entry.html", form=form)
+
 
 
 @main.route("/entry/<int:entry_id>/detail")
