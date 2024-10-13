@@ -251,7 +251,7 @@ def fuzzy_match_ocr_to_database(ocr_text: str):
     item_names = [item[0] for item in all_items]
     best_match = process.extractOne(ocr_text, item_names, scorer=fuzz.ratio)
 
-    if best_match and best_match[1] > 20:
+    if best_match and best_match[1] > 50:
         matched_item = TarkovItem.query.filter_by(name=best_match[0]).first()
         return matched_item
     else:
@@ -271,8 +271,10 @@ def allowed_file(filename):
 
 
 def extract_items_from_ocr(text: str):
+    print(f"[DEBUG] Extracting Items from OCR Text : {text}")
     item_pattern = r"([A-Za-z0-9\s\.\'\-\(\)x]+)\s+\(([\d\/]+)\)"
     matches = re.findall(item_pattern, text)
+    print(f"[DEBUG] Found {len(matches)} items within the text")
 
     items = []
     for match in matches:
