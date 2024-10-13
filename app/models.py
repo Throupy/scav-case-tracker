@@ -50,6 +50,13 @@ class TarkovItem(db.Model):
     tarkov_id = db.Column(db.String(50), nullable=False)
 
 
+class WeaponAttachment(db.Model):
+    id = db.Column(db.Integer, db.ForeignKey("tarkov_item.id"), primary_key=True)
+    tarkov_item = db.relationship("TarkovItem", backref="attachment")
+    recoil_modifier = db.Column(db.Float)
+    ergonomics_modifier = db.Column(db.Float)
+
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
