@@ -236,6 +236,7 @@ def calculate_and_prepare_most_profitable(entries) -> Insight:
         chart_tooltip=chart_tooltip,
     )
 
+
 def validate_scav_case_image(image_path: str) -> bool:
     img = Image.open(image_path)
     img = img.convert("L")
@@ -245,6 +246,7 @@ def validate_scav_case_image(image_path: str) -> bool:
     if confidence >= 75:
         return True
     return False
+
 
 def fuzzy_match_ocr_to_database(ocr_text: str):
     all_items = TarkovItem.query.with_entities(TarkovItem.name).all()
@@ -267,7 +269,11 @@ def process_image_for_items(image_path: str) -> str:
 
 
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"]
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower()
+        in current_app.config["ALLOWED_EXTENSIONS"]
+    )
 
 
 def extract_items_from_ocr(text: str):

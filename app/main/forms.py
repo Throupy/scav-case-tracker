@@ -2,17 +2,18 @@ from flask_wtf import FlaskForm
 from wtforms import SelectField, FileField, HiddenField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 
+
 class ScavCaseForm(FlaskForm):
     scav_case_type = SelectField(
         "Scav Case Type",
-        choices = [
+        choices=[
             ("₽2500", "₽2500"),
             ("₽15000", "₽15000"),
             ("₽95000", "₽95000"),
             ("Moonshine", "Moonshine"),
             ("Intelligence", "Intelligence"),
         ],
-        validators=[DataRequired()]        
+        validators=[DataRequired()],
     )
 
     items_data = HiddenField("Items Data")
@@ -21,7 +22,7 @@ class ScavCaseForm(FlaskForm):
 
     def validate_items_data(form, field):
         if not form.scav_case_image.data:
-            if not field.data or field.data == '[]':
+            if not field.data or field.data == "[]":
                 raise ValidationError(
                     "You must select at least one item for a scav case"
                 )

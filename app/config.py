@@ -16,5 +16,6 @@ class Config:
     ALLOWED_EXTENSIONS = [".png", ".jpg"]
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16mb
 
+
 # constants
 SCAV_CASE_TYPES = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
