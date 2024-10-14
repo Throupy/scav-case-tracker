@@ -45,7 +45,6 @@ class ImageDownloaderClient(commands.Bot):
         print(f"Discord Bot Logged in as: {self.user}")
 
     async def on_message(self, message):
-        print(message)
         if message.channel.id == self.channel_id:
             if message.attachments and message.content:
                 scav_case_type = message.content.strip()
