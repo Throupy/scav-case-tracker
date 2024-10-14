@@ -1,7 +1,13 @@
 from flask import Blueprint, jsonify, request
 
 from app.models import Entry
-from app.main.utils import get_price, get_image_link, save_uploaded_image, process_scav_case_image, create_scav_case_entry
+from app.cases.utils import (
+    get_price,
+    get_image_link,
+    save_uploaded_image,
+    process_scav_case_image,
+    create_scav_case_entry,
+)
 
 
 api = Blueprint("api", __name__)
@@ -49,11 +55,12 @@ def get_item_price_route(item_id):
     price = get_price(item_id)
     return jsonify({"price": price})
 
+
 @api.route("/api/submit-scav-case", methods=["POST"])
 def submit_scav_case_api():
-    scav_case_type = request.form.get('scav_case_type')
-    uploaded_image = request.files.get('image')
-    user_id = request.form.get('user_id', None)
+    scav_case_type = request.form.get("scav_case_type")
+    uploaded_image = request.files.get("image")
+    user_id = request.form.get("user_id", None)
 
     if not scav_case_type or not uploaded_image:
         return jsonify({"error": "Scav case type and image are required"}), 400
@@ -63,7 +70,13 @@ def submit_scav_case_api():
         items = process_scav_case_image(file_path)
         entry = create_scav_case_entry(scav_case_type, items, user_id)
 
-        return jsonify({"message": "Scav case successfully added", "entry_id": entry.id, "items":items}), 200
+        return jsonify(
+            {
+                "message": "Scav case successfully added",
+                "entry_id": entry.id,
+                "items": items,
+            }
+        ), 200
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

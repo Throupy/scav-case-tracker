@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, url_for, flash, request, render_template
 from flask_login import login_user, logout_user, login_required, current_user
 
-from app.main.utils import save_picture
+from app.users.utils import save_profile_picture
 from app.models import User
 from app.extensions import db, bcrypt
 from app.users.forms import LoginForm, RegistrationForm, UpdateAccountForm
@@ -54,7 +54,7 @@ def account():
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
-            picture_file = save_picture(form.picture.data)
+            picture_file = save_profile_picture(form.picture.data)
             current_user.image_file = picture_file
         current_user.username = form.username.data
         db.session.commit()
