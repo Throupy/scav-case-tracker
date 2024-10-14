@@ -45,6 +45,7 @@ class ImageDownloaderClient(commands.Bot):
         print(f"Discord Bot Logged in as: {self.user}")
 
     async def on_message(self, message):
+        print(message)
         if message.channel.id == self.channel_id:
             if message.attachments and message.content:
                 scav_case_type = message.content.strip()
@@ -115,7 +116,7 @@ class ImageDownloaderClient(commands.Bot):
     ):
         url = "http://localhost:5000/api/submit-scav-case"
         headers = {"X-BOT-REQUEST": "true"}
-        data = {"scav_case_type": "moonshine", "user_id": "bot_user_id"}
+        data = {"scav_case_type": scav_case_type, "user_id": "1"}
 
         try:
             async with aiohttp.ClientSession() as session:
