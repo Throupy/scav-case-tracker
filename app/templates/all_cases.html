@@ -17,7 +17,7 @@
                         <tr>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('main.all_cases', sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_cases', sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Type
                                     {% if sort_by == 'type' %}
                                         {% if sort_order == 'asc' %}
@@ -30,7 +30,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('main.all_cases', sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_cases', sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Return
                                     {% if sort_by == '_return' %}
                                         {% if sort_order == 'asc' %}
@@ -43,7 +43,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('main.all_cases', sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_cases', sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Profit
                                     {% if sort_by == 'profit' %}
                                         {% if sort_order == 'asc' %}
@@ -56,7 +56,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('main.all_cases', sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_cases', sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Number of Items
                                     {% if sort_by == 'number_of_items' %}
                                         {% if sort_order == 'asc' %}
@@ -118,12 +118,12 @@
                                 <td>
                                     <ul class="list-inline mb-0">
                                         <li class="list-inline-item">
-                                            <a href="{{ url_for('main.entry_detail', entry_id=entry.id) }}" 
+                                            <a href="{{ url_for('cases.entry_detail', entry_id=entry.id) }}" 
                                                data-bs-toggle="tooltip" data-bs-placement="top" title="View" 
                                                class="px-2 text-danger"><i class="fa-regular fa-eye"></i></a>
                                         </li>
                                         <li class="list-inline-item">
-                                            <a href="{{ url_for('main.delete_entry', entry_id=entry.id) }}" 
+                                            <a href="{{ url_for('cases.delete_entry', entry_id=entry.id) }}" 
                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" 
                                                class="px-2 text-danger"><i class="fa-regular fa-trash-can"></i></a>
                                         </li>
@@ -150,7 +150,7 @@
             <ul class="pagination mb-sm-0">
                 <!-- Previous Page -->
                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                    <a href="{{ url_for('main.all_cases', page=pagination.prev_num) }}" class="page-link">
+                    <a href="{{ url_for('cases.all_cases', page=pagination.prev_num) }}" class="page-link">
                         <i class="text-danger fa fa-chevron-left"></i>
                     </a>
                 </li>
@@ -159,7 +159,7 @@
                 {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
                         <li class="text-danger page-item {% if pagination.page == page_num %}active{% endif %}">
-                            <a href="{{ url_for('main.all_cases', page=page_num) }}" class="text-danger page-link">{{ page_num }}</a>
+                            <a href="{{ url_for('cases.all_cases', page=page_num) }}" class="text-danger page-link">{{ page_num }}</a>
                         </li>
                     {% else %}
                         <li class="page-item disabled"><a href="#" class="text-danger page-link">…</a></li>
@@ -168,7 +168,7 @@
 
                 <!-- Next Page -->
                 <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                    <a href="{{ url_for('main.all_cases', page=pagination.next_num) }}" class="page-link">
+                    <a href="{{ url_for('cases.all_cases', page=pagination.next_num) }}" class="page-link">
                         <i class="text-danger fa fa-chevron-right"></i>
                     </a>
                 </li>

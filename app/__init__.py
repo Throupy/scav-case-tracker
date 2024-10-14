@@ -10,8 +10,9 @@ from app.main.routes import main
 from app.api.routes import api
 from app.users.routes import users
 from app.quiz.routes import _quiz as quiz
+from app.cases.routes import cases
 from app.models import User, TarkovItem, WeaponAttachment, Entry
-from app.main.utils import get_price
+from app.cases.utils import get_price
 from app.extensions import db, migrate, login_manager, bcrypt
 
 
@@ -44,13 +45,11 @@ def create_app():
                 os.getenv("DISCORD_BOT_USER_PASSWORD")
             ).decode("utf-8")
             discord_bot_user = User(
-                id=1,
-                username="Discord Bot",
-                password=hashed_password
+                id=1, username="Discord Bot", password=hashed_password
             )
             db.session.add(discord_bot_user)
 
-        if TarkovItem.query.count() == 0: 
+        if TarkovItem.query.count() == 0:
             print("[DEBUG] Adding Tarkov items...")
             with open("../output.json", "r") as f:
                 item_data = json.load(f)
@@ -111,16 +110,18 @@ def create_app():
     app.register_blueprint(api)
     app.register_blueprint(users)
     app.register_blueprint(quiz)
+    app.register_blueprint(cases)
 
     if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         with app.app_context():
+
             def run_discord_bot():
                 discord_bot = ImageDownloaderClient(
-                    download_dir=app.config['DISCORD_DOWNLOAD_DIR'],
-                    channel_id=app.config['DISCORD_CHANNEL_ID'],
-                    intents=intents
+                    download_dir=app.config["DISCORD_DOWNLOAD_DIR"],
+                    channel_id=app.config["DISCORD_CHANNEL_ID"],
+                    intents=intents,
                 )
-                discord_bot.run(os.getenv('DISCORD_TOKEN'))
+                discord_bot.run(os.getenv("DISCORD_TOKEN"))
 
             discord_thread = threading.Thread(target=run_discord_bot)
             discord_thread.start()
