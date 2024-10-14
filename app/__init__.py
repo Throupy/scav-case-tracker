@@ -45,7 +45,9 @@ def create_app():
                 os.getenv("DISCORD_BOT_USER_PASSWORD")
             ).decode("utf-8")
             discord_bot_user = User(
-                id=1, username="Discord Bot", password=hashed_password
+                id=1, username="Discord Bot",
+                password=hashed_password,
+                image_file="discord-pfp.png"
             )
             db.session.add(discord_bot_user)
 
@@ -118,7 +120,7 @@ def create_app():
             def run_discord_bot():
                 discord_bot = ImageDownloaderClient(
                     download_dir=app.config["DISCORD_DOWNLOAD_DIR"],
-                    channel_id=app.config["DISCORD_CHANNEL_ID"],
+                    channel_id=int(app.config["DISCORD_CHANNEL_ID"]),
                     intents=intents,
                 )
                 discord_bot.run(os.getenv("DISCORD_TOKEN"))
