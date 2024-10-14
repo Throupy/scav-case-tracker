@@ -1,6 +1,7 @@
 import json
 import os
 
+import requests
 from flask import (
     render_template,
     request,
@@ -101,69 +102,18 @@ def submit_scav_case():
 
     if form.validate_on_submit():
         scav_case_type = form.scav_case_type.data
-        items_data = form.items_data.data  # JSON
         uploaded_image = form.scav_case_image.data
 
-        if not scav_case_type and not items_data and not uploaded_image:
-            flash("Scav case type and items or image are required", "danger")
-            return redirect(url_for("main.create_entry"))
+        # Send the form data and image to the API
+        files = {"image": uploaded_image}
+        data = {"scav_case_type": scav_case_type, "user_id": current_user.id}
 
-        if uploaded_image:
-            filename = secure_filename(uploaded_image.filename)
-            file_path = os.path.join(current_app.root_path, "static/uploads", filename)
-            uploaded_image.save(file_path)
-
-            # checks for "scavs have brought you" text within the image
-            if not validate_scav_case_image(file_path):
-                flash(
-                    "The uploaded image doesn't look like a scav case. See the instructions and try again",
-                    "danger",
-                )
-                return redirect(url_for("main.create_entry"))
-
-            ocr_text = process_image_for_items(file_path)
-            try:
-                items = extract_items_from_ocr(ocr_text)
-            except ItemNotFoundException as e:
-                flash(str(e), "danger")
-                return redirect(url_for("main.dashboard"))
-
-            items_data = json.dumps(items)
-
-        try:
-            print(f"Creating entry with user id {current_user.id}")
-            entry = Entry(type=scav_case_type, user_id=current_user.id)
-
-            # get price of entry, dynamic for MS / intel
-            if scav_case_type.lower() == "moonshine":
-                entry.cost = get_price("5d1b376e86f774252519444e")
-            elif scav_case_type.lower() == "intelligence":
-                entry.cost = get_price("5c12613b86f7743bbe2c3f76")
-            else:
-                entry.cost = scav_case_type[1::]  # strip off '₽'
-
-            db.session.add(entry)
-            db.session.commit()
-
-            # now process the items
-            items = json.loads(items_data)
-            for item in items:
-                entry_item = EntryItem(
-                    entry_id=entry.id,
-                    tarkov_id=item["id"],
-                    price=get_price(item["id"]),
-                    name=item["name"],
-                    amount=item["quantity"],
-                )
-                db.session.add(entry_item)
-                entry.number_of_items += 1
-                entry._return += entry_item.price * item["quantity"]
-
-            db.session.commit()
+        response = requests.post(url_for('api.submit_scav_case_api', _external=True), data=data, files=files)
+        if response.status_code == 200:
             flash("Scav Case and Items successfully added", "success")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"There was an error adding the scav case: {str(e)}", "danger")
+            return redirect(url_for("main.dashboard"))
+        else:
+            flash(f"There was an error: {response.json().get('error')}", "danger")
 
     return render_template("create_entry.html", form=form)
 
