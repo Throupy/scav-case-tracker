@@ -5,12 +5,13 @@ from collections import defaultdict
 
 import requests
 import pytesseract
-
+from werkzeug.utils import secure_filename
 from PIL import Image, ImageFilter
 from flask import current_app
 from rapidfuzz import process, fuzz
 
-from app.models import Insight, TarkovItem
+from app.models import Insight, TarkovItem, Entry, EntryItem
+from app.extensions import db
 
 
 class ItemNotFoundException(Exception):
@@ -301,3 +302,48 @@ def extract_items_from_ocr(text: str):
                 "One of the items wasn't recognised. Please add the case manually."
             )
     return items
+
+def save_uploaded_image(uploaded_image):
+    """Saves the uploaded image to the server and returns the file path."""
+    filename = secure_filename(uploaded_image.filename)
+    file_path = os.path.join(current_app.root_path, "static/uploads", filename)
+    uploaded_image.save(file_path)
+    return file_path
+
+def process_scav_case_image(file_path):
+    """Validates and processes an image for scav case data using OCR."""
+    if not validate_scav_case_image(file_path):
+        raise ValueError("The uploaded image doesn't look like a scav case. Make sure the text that reads 'Scavs have brought you' at the top is visible within the image.")
+    
+    ocr_text = process_image_for_items(file_path)
+    return extract_items_from_ocr(ocr_text)
+
+def create_scav_case_entry(scav_case_type, items, user_id):
+    """Creates a scav case entry and associated items in the database."""
+    entry = Entry(type=scav_case_type, user_id=user_id)
+
+    # Get price for scav case type (based on your existing logic)
+    if scav_case_type.lower() == "moonshine":
+        entry.cost = get_price("5d1b376e86f774252519444e")
+    elif scav_case_type.lower() == "intelligence":
+        entry.cost = get_price("5c12613b86f7743bbe2c3f76")
+    else:
+        entry.cost = int(scav_case_type.replace("₽", "").strip())
+
+    db.session.add(entry)
+    db.session.commit()
+
+    for item in items:
+        entry_item = EntryItem(
+            entry_id=entry.id,
+            tarkov_id=item["id"],
+            price=get_price(item["id"]),
+            name=item["name"],
+            amount=item["quantity"],
+        )
+        db.session.add(entry_item)
+        entry.number_of_items += 1
+        entry._return += entry_item.price * item["quantity"]
+
+    db.session.commit()
+    return entry
