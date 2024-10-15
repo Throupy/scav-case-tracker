@@ -4,6 +4,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    url_for,
 )
 
 from app.config import SCAV_CASE_TYPES
@@ -15,7 +16,7 @@ main = Blueprint("main", __name__)
 @main.route("/not-implemented")
 def not_implemented():
     flash("This feature hasn't been implemented yet", "warning")
-    return redirect(request.referrer)
+    return redirect(url_for("main.dashboard"))
 
 
 @main.route("/")

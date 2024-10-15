@@ -19,6 +19,7 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
+            flash("You are now logged in", "success")
             return redirect(url_for("main.dashboard"))
         else:
             flash("Login Unsuccessful. Please check username and password", "danger")
@@ -45,6 +46,7 @@ def register():
 @users.route("/logout")
 def logout():
     logout_user()
+    flash("You are now logged out", "success")
     return redirect(url_for("users.login"))
 
 
