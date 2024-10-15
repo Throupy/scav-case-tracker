@@ -9,13 +9,6 @@ from tests.config import TestConfig
 def app():
     """Create and configure a new app instance for each test."""
     app = create_app(config_class=TestConfig)
-    app.config.update(
-        {
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",  # Use in-memory database for tests
-            "SECRET_KEY": "test_secret_key",  # Ensure a secret key is set for session management
-        }
-    )
 
     with app.app_context():
         db.create_all()  # Create tables
