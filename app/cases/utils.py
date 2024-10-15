@@ -100,6 +100,25 @@ def get_price(item_id: str) -> int:
 
 
 def validate_scav_case_image(image_path: str) -> bool:
+    """
+    Validate whether an image is a scav case image by checking for specific text.
+
+    This function performs the following steps:
+    1. Opens and processes the image (converts to grayscale and sharpens).
+    2. Extracts text from the image using OCR.
+    3. Checks for the presence of the phrase "scavs have brought you" in the extracted text.
+
+    Args:
+        image_path (str): The file path of the image to be validated.
+
+    Returns:
+        bool: True if the image is likely a scav case image (confidence >= 75%),
+              False otherwise.
+
+    Note:
+        The function uses fuzzy matching to allow for slight variations or OCR errors
+        in the target phrase "scavs have brought you".
+    """
     img = Image.open(image_path)
     img = img.convert("L")
     img = img.filter(ImageFilter.SHARPEN)
@@ -111,6 +130,15 @@ def validate_scav_case_image(image_path: str) -> bool:
 
 
 def fuzzy_match_ocr_to_database(ocr_text: str):
+    """
+    Perform a fuzzy match of OCR text to item names in the database.
+
+    Args:
+        ocr_text (str): The text extracted from OCR.
+
+    Returns:
+        TarkovItem or None: The best matching TarkovItem if found, None otherwise.
+    """
     all_items = TarkovItem.query.with_entities(TarkovItem.name).all()
     item_names = [item[0] for item in all_items]
     best_match = process.extractOne(ocr_text, item_names, scorer=fuzz.ratio)
@@ -139,6 +167,18 @@ def allowed_file(filename):
 
 
 def extract_items_from_ocr(text: str):
+    """
+    Extract item information from OCR text.
+
+    Args:
+        text (str): The OCR text to process.
+
+    Returns:
+        list: A list of dictionaries containing item information.
+
+    Raises:
+        ItemNotFoundException: If an item is not recognized in the database.
+    """
     print(f"[DEBUG] Extracting Items from OCR Text : {text}")
     item_pattern = r"([A-Za-z0-9\s\.\'\-\(\)x]+)\s+\(([\d\/]+)\)"
     matches = re.findall(item_pattern, text)
@@ -174,7 +214,29 @@ def save_uploaded_image(uploaded_image):
 
 
 def process_scav_case_image(file_path):
-    """Validates and processes an image for scav case data using OCR."""
+    """
+    Validate and process an image of a scav case to extract item data using OCR.
+
+    This function performs the following steps:
+    1. Validates that the image is indeed a scav case image.
+    2. Processes the image to extract text using OCR.
+    3. Extracts item information from the OCR text.
+
+    Args:
+        file_path (str): The path to the image file to be processed.
+
+    Returns:
+        list: A list of dictionaries containing extracted item information.
+              Each dictionary contains 'id', 'name', and 'quantity' of an item.
+
+    Raises:
+        ValueError: If the image is not recognized as a valid scav case image.
+        ItemNotFoundException: If any extracted item is not recognized in the database.
+
+    Note:
+        The image should clearly show the text "Scavs have brought you" at the top
+        for it to be considered a valid scav case image.
+    """
     if not validate_scav_case_image(file_path):
         raise ValueError(
             "The uploaded image doesn't look like a scav case. Make sure the text that reads 'Scavs have brought you' at the top is visible within the image."
