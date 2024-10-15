@@ -21,9 +21,9 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
 
     # Initialize extensions
     db.init_app(app)
@@ -45,9 +45,10 @@ def create_app():
                 os.getenv("DISCORD_BOT_USER_PASSWORD")
             ).decode("utf-8")
             discord_bot_user = User(
-                id=1, username="Discord Bot",
+                id=1,
+                username="Discord Bot",
                 password=hashed_password,
-                image_file="discord-pfp.png"
+                image_file="discord-pfp.png",
             )
             db.session.add(discord_bot_user)
 
@@ -76,9 +77,6 @@ def create_app():
                             id=tarkov_item.id,
                             recoil_modifier=_attachment.get("recoilModifier"),
                             ergonomics_modifier=_attachment.get("ergonomicsModifier"),
-                        )
-                        print(
-                            f"[{c}] Got an attachment, giving it id {tarkov_item.id}. It's name is {tarkov_item.name}"
                         )
                         c += 1
                         db.session.add(attachment)
@@ -114,7 +112,9 @@ def create_app():
     app.register_blueprint(quiz)
     app.register_blueprint(cases)
 
-    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    if app.config["START_DISCORD_BOT"] and (
+        not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+    ):
         with app.app_context():
 
             def run_discord_bot():
