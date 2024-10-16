@@ -290,6 +290,9 @@ def calculate_avg_items_per_case_type(entries):
         for case_type in total_items_by_case_type
     }
 
+    if not avg_items_per_case_type:
+        return None
+
     chart_data = {
         "x_value": list(avg_items_per_case_type.keys()),
         "y_value": list(avg_items_per_case_type.values()),
@@ -326,6 +329,9 @@ def calculate_avg_return_by_case_type(entries):
         for case_type in total_return_by_case_type
     }
 
+    if not average_return_by_case_type:
+        return None
+
     chart_data = {
         "x_value": list(average_return_by_case_type.keys()),
         "y_value": list(average_return_by_case_type.values()),
@@ -360,17 +366,7 @@ def calculate_and_prepare_most_profitable(entries) -> Insight:
             count_by_case_type[entry.type] += 1
 
     if not profit_by_case_type:
-        return Insight(
-            title="Most Profitable Case Type",
-            description="No data available.",
-            chart_data={
-                "case_types": [],
-                "profits": [],
-                "colors": [],
-                "border_colors": [],
-            },
-            chart_tooltip={},
-        )
+        return None
 
     most_profitable_case_type = max(profit_by_case_type.items(), key=lambda x: x[1])
     case_type = most_profitable_case_type[0]
