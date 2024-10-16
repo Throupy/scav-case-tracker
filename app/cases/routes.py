@@ -49,7 +49,9 @@ def insights():
     average_items_insight = calculate_avg_items_per_case_type(entries)
 
     insights = [most_profitable_insight, average_return_insight, average_items_insight]
-
+    insights = [insight for insight in insights if insight is not None]
+    if not insights:
+        flash("No Data to show", "warning")
     return render_template("insights.html", insights=insights)
 
 
