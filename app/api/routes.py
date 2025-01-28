@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, request
 
 from app.models import Entry
@@ -59,15 +60,20 @@ def get_item_price_route(item_id):
 @api.route("/api/submit-scav-case", methods=["POST"])
 def submit_scav_case_api():
     scav_case_type = request.form.get("scav_case_type")
+    items_data = request.form.get("items_data")
     uploaded_image = request.files.get("image")
     user_id = request.form.get("user_id", None)
 
-    if not scav_case_type or not uploaded_image:
-        return jsonify({"error": "Scav case type and image are required"}), 400
+    if not scav_case_type:
+        return jsonify({"error": "Scav case type is required"}), 400
 
     try:
-        file_path = save_uploaded_image(uploaded_image)
-        items = process_scav_case_image(file_path)
+        if uploaded_image:
+            file_path = save_uploaded_image(uploaded_image)
+            items = process_scav_case_image(file_path)
+        else:
+            items = json.loads(items_data)
+
         entry = create_scav_case_entry(scav_case_type, items, user_id)
 
         return jsonify(
