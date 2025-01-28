@@ -1,3 +1,4 @@
+import json
 import requests
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
@@ -72,10 +73,11 @@ def submit_scav_case():
     if form.validate_on_submit():
         scav_case_type = form.scav_case_type.data
         uploaded_image = form.scav_case_image.data
+        items_data = form.items_data.data
 
         # Send the form data and image to the API
         files = {"image": uploaded_image}
-        data = {"scav_case_type": scav_case_type, "user_id": current_user.id}
+        data = {"scav_case_type": scav_case_type, "user_id": current_user.id, "items_data": items_data}
 
         response = requests.post(
             url_for("api.submit_scav_case_api", _external=True), data=data, files=files
