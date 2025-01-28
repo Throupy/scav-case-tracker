@@ -1,4 +1,5 @@
 from collections import defaultdict
+import json
 
 from app.models import Insight
 
@@ -249,7 +250,6 @@ def process_scav_case_image(file_path):
 def create_scav_case_entry(scav_case_type, items, user_id):
     """Creates a scav case entry and associated items in the database."""
     entry = Entry(type=scav_case_type, user_id=user_id)
-
     # Get price for scav case type (based on your existing logic)
     if scav_case_type.lower() == "moonshine":
         entry.cost = get_price("5d1b376e86f774252519444e")
