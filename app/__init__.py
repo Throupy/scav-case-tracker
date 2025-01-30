@@ -55,15 +55,17 @@ def create_app(config_class=Config):
             )
             db.session.add(discord_bot_user)
 
-        if TarkovItem.query.count() == 0:
+        if TarkovItem.query.count() == 0 or app.config['REFRESH_TARKOV_ITEMS']:
             print("[DEBUG] Adding Tarkov items...")
-            with open("../output.json", "r") as f:
+            with open("../all_items.json", "r") as f:
                 item_data = json.load(f)
-                for item_name, tarkov_id in item_data.items():
+                for item in item_data['items']:
+                    tarkov_id, item_name, category = item.values()
                     # Add items only if they don't already exist
                     if not TarkovItem.query.filter_by(tarkov_id=tarkov_id).first():
-                        item = TarkovItem(name=item_name, tarkov_id=tarkov_id)
+                        item = TarkovItem(name=item_name, tarkov_id=tarkov_id, category=category)
                         db.session.add(item)
+                        print(f"[*] Added Item with name: {item_name}")
 
         if WeaponAttachment.query.count() == 0:
             print("[DEBUG] Populating Tarkov weapon attachments...")

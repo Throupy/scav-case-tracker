@@ -35,7 +35,7 @@ class Entry(db.Model):
 
 class EntryItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tarkov_id = db.Column(db.String(50), nullable=False)
+    tarkov_id = db.Column(db.String(50), db.ForeignKey("tarkov_item.tarkov_id"), nullable=False)
     name = db.Column(db.String(100), nullable=False)  # item name
     amount = db.Column(db.Integer, nullable=False)  # number of that item
     price = db.Column(db.Float, nullable=False)  # price of the item
@@ -43,11 +43,14 @@ class EntryItem(db.Model):
         db.Integer, db.ForeignKey("entry.id"), nullable=False
     )  # reference to Entry
 
+    tarkov_item = db.relationship("TarkovItem", backref="entry_items", primaryjoin="EntryItem.tarkov_id == TarkovItem.tarkov_id")
+
 
 class TarkovItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)  # item name
     tarkov_id = db.Column(db.String(50), nullable=False)
+    category = db.Column(db.String(64), nullable=True)
 
 
 class WeaponAttachment(db.Model):
