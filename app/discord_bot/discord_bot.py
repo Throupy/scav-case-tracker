@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from app.discord_bot.utils import get_matching_type, valid_types, create_basic_embed
 from app.config import SCAV_CASE_TYPES
+from app.models import Entry
 
 
 @commands.command(name="case_types")
@@ -32,6 +33,36 @@ async def case_types(ctx):
 
     await ctx.send(embed=embed)
 
+@commands.command(name="stats")
+async def stats(ctx):
+    api_url = "http://localhost:5000/api/discord-stats"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_url) as response:
+            if response.status == 200:
+                data = await response.json()
+                total_profit = data.get("total_profit", "N/A")
+                total_cases = data.get("total_cases", "N/A")
+                total_spend = data.get("total_spend", "N/A")
+            else:
+                total_profit, total_cases, total_spend = "Error", "Error", "Error"
+
+    embed = discord.Embed(
+        title="Scav Case Tracker Stats",
+        description="Here are the latest statistics:",
+        color=discord.Color.red()
+    )
+
+    embed.add_field(name="📈 Total Profit", value=f"₽{round(total_profit):,}", inline=False)
+    embed.add_field(name="📦 Total Cases", value=f"{total_cases}", inline=False)
+    embed.add_field(name="💸 Total Spend", value=f"₽{round(total_spend):,}", inline=False)
+
+    embed.set_footer(text="Scav Case Tracker Bot")
+    embed.set_thumbnail(
+        url="https://github.com/Throupy/scav-case-tracker/blob/00d1ebe13240f56f200b52b80214ff8fab69233b/app/static/icon.png?raw=true"
+    )
+    await ctx.send(embed=embed)
+
 
 class ImageDownloaderClient(commands.Bot):
     def __init__(self, download_dir, channel_id, *args, **kwargs):
@@ -40,6 +71,7 @@ class ImageDownloaderClient(commands.Bot):
         self.channel_id = channel_id
 
         self.add_command(case_types)
+        self.add_command(stats)
 
     async def on_ready(self):
         print(f"Discord Bot Logged in as: {self.user}")
