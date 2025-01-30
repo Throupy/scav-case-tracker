@@ -58,6 +58,17 @@ document.addEventListener("DOMContentLoaded", function() {
           }],
       },
       options: {
+          onClick: function(event, elements) {
+            if (elements.length > 0) {
+                var datasetIndex = elements[0].datasetIndex;
+                var dataIndex = elements[0].index;
+                var entry = recentEarningsChart.data.datasets[datasetIndex].entries[dataIndex];
+
+                if (entry && entry.id) {
+                    window.location.href = `/entry/${entry.id}/detail`;
+                }
+            }
+          },
           maintainAspectRatio: false,
           layout: {
               padding: {
@@ -114,19 +125,32 @@ document.addEventListener("DOMContentLoaded", function() {
                   mode: 'index',
                   caretPadding: 10,
                   callbacks: {
-                      title: function(tooltipItem) {
-                          var dataset = tooltipItem[0].dataset;
-                          var dataPointIndex = tooltipItem[0].dataIndex;
-                          if (selectedCaseType.toLowerCase() === 'all') {
-                              var type = dataset.types[dataPointIndex];
-                              return 'Case Type: ' + type;
-                          }
-                          return '';
-                      },
-                      label: function(tooltipItem) {
-                          var earnings = tooltipItem.raw;
-                          return 'Earnings: ₽' + number_format(earnings);
-                      }
+                    title: function(tooltipItem) {
+                        var dataset = tooltipItem[0].dataset;
+                        var dataPointIndex = tooltipItem[0].dataIndex;
+                        var entry = dataset.entries[dataPointIndex]; // Get full entry object
+
+                        if (selectedCaseType.toLowerCase() === 'all') {
+                            return 'Case Type: ' + entry.type;
+                        }
+                        return '';
+                    },
+                    label: function(tooltipItem) {
+                        var dataset = tooltipItem.dataset;
+                        var dataPointIndex = tooltipItem.dataIndex;
+                        var entry = dataset.entries[dataPointIndex]; // Get full entry object
+
+                        var labels = [];
+                        // Display profit (if available)
+                        if (entry.profit !== undefined) {
+                            labels.push('Profit: ₽' + number_format(entry.profit));
+                        }
+
+                        // Display created_at (formatted date)
+                        labels.push('Submitted: ' + entry.created_at_humanized);
+
+                        return labels;
+                    }
                   }
               },
               horizontalLine: { 
@@ -209,28 +233,30 @@ function updateChart(caseType) {
 }
 
 function updateChartWithThreshold(threshold) {
-  fetch(`/api/get-chart-data?type=${selectedCaseType}`)
-      .then(response => response.json())
-      .then(data => {
-          document.getElementById('selected-case-type').textContent = selectedCaseType.toProperCase();
-          console.log(data)
-          if (data.data.length < 3) {
-              document.getElementById('warning-message').classList.remove('d-none');
-              recentEarningsChart.data.labels = [];
-              recentEarningsChart.data.datasets[0].data = [];
-              recentEarningsChart.data.datasets[0].types = [];
-              recentEarningsChart.update();
-          } else {
-              document.getElementById('warning-message').classList.add('d-none');
-              recentEarningsChart.data.labels = data.labels;
-              recentEarningsChart.data.datasets[0].data = data.data;
-              recentEarningsChart.data.datasets[0].types = data.types;
+    fetch(`/api/get-chart-data?type=${selectedCaseType}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('selected-case-type').textContent = selectedCaseType.toProperCase();
 
-              recentEarningsChart.options.plugins.horizontalLine.y = threshold;
-              recentEarningsChart.update();
-          }
-      })
-      .catch(error => console.error('Error fetching chart data:', error));
+            if (data.entries.length < 3) {
+                document.getElementById('warning-message').classList.remove('d-none');
+                recentEarningsChart.data.labels = [];
+                recentEarningsChart.data.datasets[0].data = [];
+                recentEarningsChart.data.datasets[0].entries = [];  // Store full entries
+                recentEarningsChart.update();
+            } else {
+                document.getElementById('warning-message').classList.add('d-none');
+                recentEarningsChart.data.labels = data.labels;
+                
+                // Store data points
+                recentEarningsChart.data.datasets[0].data = data.entries.map(entry => entry.return);
+                recentEarningsChart.data.datasets[0].entries = data.entries; // Store full entry objects
+
+                recentEarningsChart.options.plugins.horizontalLine.y = threshold;
+                recentEarningsChart.update();
+            }
+        })
+        .catch(error => console.error('Error fetching chart data:', error));
 }
 
 function number_format(number, decimals, dec_point, thousands_sep) {

@@ -1,4 +1,7 @@
 import json
+from datetime import datetime
+
+import humanize
 from flask import Blueprint, jsonify, request
 
 from app.models import Entry
@@ -46,9 +49,19 @@ def get_chart_data_route():
         )
 
     labels = list(range(1, len(entries) + 1))
-    data = [entry._return for entry in entries]
-    types = [entry.type for entry in entries]
-    return jsonify({"labels": labels, "data": data, "types": types})
+
+    entry_data = [
+        {
+            "id": entry.id,
+            "created_at_humanized": humanize.naturaltime(datetime.utcnow() - entry.created_at),  
+            "profit": entry.profit,                   
+            "type": entry.type,
+            "return": entry._return 
+        }
+        for entry in entries
+    ]
+
+    return jsonify({"labels": labels, "entries": entry_data})
 
 
 @api.route("/api/get-item-price/<item_id>")
