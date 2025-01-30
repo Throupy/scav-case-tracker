@@ -1,20 +1,15 @@
-from collections import defaultdict
-import json
-
-from app.models import Insight
-
-
 import os
 import re
+import json
 import secrets
 from collections import defaultdict
 
 import requests
 import pytesseract
-from werkzeug.utils import secure_filename
 from PIL import Image, ImageFilter
 from flask import current_app
 from rapidfuzz import process, fuzz
+from werkzeug.utils import secure_filename
 
 from app.models import Insight, TarkovItem, Entry, EntryItem
 from app.extensions import db
