@@ -12,6 +12,7 @@ from app.cases.utils import (
     process_scav_case_image,
     create_scav_case_entry,
 )
+from app.extensions import db
 
 
 api = Blueprint("api", __name__)
@@ -27,6 +28,15 @@ def fetch_scav_case_type_distribution():
 
     return jsonify(scav_case_types)
 
+@api.route("/api/discord-stats")
+def discord_stats():
+    """
+    Stats results to be fetched by the discord bot
+    """
+    total_profit = Entry.query.with_entities(db.func.sum(Entry.profit)).scalar()
+    total_cases = len(Entry.query.all())
+    total_spend = Entry.query.with_entities(db.func.sum(Entry.cost)).scalar()
+    return jsonify({"total_profit": total_profit, "total_cases": total_cases, "total_spend": total_spend})
 
 @api.route("/api/get-image-link")
 def get_image_link_route():
