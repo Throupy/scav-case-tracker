@@ -189,7 +189,6 @@ def extract_items_from_ocr(text: str):
     for match in matches:
         item_name = match[0].strip()
         quantity = match[1].strip()
-        # You could add fuzzy matching here if necessary
         matched_item = fuzzy_match_ocr_to_database(item_name)
         if matched_item:
             items.append(
@@ -250,7 +249,6 @@ def process_scav_case_image(file_path):
 def create_scav_case_entry(scav_case_type, items, user_id):
     """Creates a scav case entry and associated items in the database."""
     entry = Entry(type=scav_case_type, user_id=user_id)
-    # Get price for scav case type (based on your existing logic)
     if scav_case_type.lower() == "moonshine":
         entry.cost = get_price("5d1b376e86f774252519444e")
     elif scav_case_type.lower() == "intelligence":
