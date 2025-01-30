@@ -12,6 +12,7 @@ from app.users.routes import users
 from app.quiz.routes import _quiz as quiz
 from app.cases.routes import cases
 from app.models import User, TarkovItem, WeaponAttachment, Entry
+from app.filters import timeago
 from app.cases.utils import get_price
 from app.extensions import db, migrate, login_manager, bcrypt
 
@@ -24,6 +25,8 @@ def load_user(user_id):
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    app.jinja_env.filters['timeago'] = timeago
 
     # Initialize extensions
     db.init_app(app)
