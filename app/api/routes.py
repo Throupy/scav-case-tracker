@@ -1,11 +1,7 @@
 import json
-<<<<<<< HEAD
 from datetime import datetime
 
 import humanize
-=======
-
->>>>>>> ceb322f (test)
 from flask import Blueprint, jsonify, request
 
 from app.models import Entry
@@ -81,13 +77,8 @@ def submit_scav_case_api():
     uploaded_image = request.files.get("image")
     user_id = request.form.get("user_id", None)
 
-<<<<<<< HEAD
-    if not scav_case_type:
-        return jsonify({"error": "Scav case type is required"}), 400
-=======
     if not scav_case_type and not (uploaded_image or items_data) :
         return jsonify({"error": "Scav case type and image are required"}), 400
->>>>>>> ceb322f (test)
 
     try:
         if uploaded_image:
