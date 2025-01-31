@@ -9,8 +9,9 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ImageFilter
 from flask import current_app
 from rapidfuzz import process, fuzz
+from sqlalchemy.sql import func
 
-from app.models import Insight, TarkovItem, Entry, EntryItem
+from app.models import Insight, TarkovItem, Entry, EntryItem, User
 from app.extensions import db
 
 
@@ -208,3 +209,53 @@ def create_scav_case_entry(scav_case_type, items, user_id):
 
     db.session.commit()
     return entry
+
+def get_most_popular_item():
+    """Get the most common Tarkov item category from all entries."""
+    return (
+        TarkovItem.query
+        .join(EntryItem, EntryItem.tarkov_id == TarkovItem.tarkov_id)
+        .with_entities(TarkovItem.category, func.count(TarkovItem.category).label("count"))
+        .group_by(TarkovItem.category)
+        .order_by(func.count(TarkovItem.category).desc())
+        .first()
+    )
+
+def get_top_contributor():
+    """Find the user who submitted the most entries."""
+    return (
+        User.query
+        .join(Entry, Entry.user_id == User.id)
+        .group_by(User.id)
+        .order_by(func.count(Entry.id).desc())
+        .first()
+    )
+
+def get_most_profitable_case():
+    """Determine the most profitable case type based on average profit per run."""
+    return (
+        Entry.query
+        .with_entities(Entry.type, func.avg(Entry._return - Entry.cost).label("avg_profit"))
+        .group_by(Entry.type)
+        .order_by(func.avg(Entry._return - Entry.cost).desc())
+        .first()
+    )
+
+def get_most_valuable_item():
+    """Find the most valuable single item (highest total price × amount)."""
+    return (
+        EntryItem.query
+        .order_by((EntryItem.price).desc())
+        .first()
+    )
+
+def get_dashboard_data():
+    """Compute all dashboard metrics dynamically."""
+    dashboard_functions = {
+        "most_popular_item": get_most_popular_item,
+        "top_contributor": get_top_contributor,
+        "most_profitable_case": get_most_profitable_case,
+        "most_valuable_item": get_most_valuable_item,
+    }
+    
+    return {key: func() for key, func in dashboard_functions.items()}

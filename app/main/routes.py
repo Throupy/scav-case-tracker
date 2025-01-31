@@ -7,8 +7,11 @@ from flask import (
     url_for,
 )
 
+from sqlalchemy.sql import func
+
 from app.config import SCAV_CASE_TYPES
-from app.models import Entry, TarkovItem
+from app.models import Entry, TarkovItem, EntryItem, User
+from app.main.utils import get_dashboard_data
 
 main = Blueprint("main", __name__)
 
@@ -22,9 +25,13 @@ def not_implemented():
 @main.route("/")
 @main.route("/dashboard")
 def dashboard():
-    entries = Entry.query.all()
+    dashboard_data = get_dashboard_data()
+    
     return render_template(
-        "dashboard.html", scav_case_types=SCAV_CASE_TYPES, entries=entries
+        "dashboard.html",
+        scav_case_types=SCAV_CASE_TYPES,
+        entries=Entry.query.all(),
+        **dashboard_data 
     )
 
 
