@@ -77,7 +77,18 @@ class ImageDownloaderClient(commands.Bot):
         print(f"Discord Bot Logged in as: {self.user}")
 
     async def on_message(self, message):
+        if message.author == self.user:
+            return
+
         if message.channel.id == self.channel_id:
+            tarkov_role = discord.utils.get(message.guild.roles, name="EFT")
+            if not tarkov_role or tarkov_role not in message.author.roles:
+                return await message.channel.send(
+                    embed=create_basic_embed(
+                        f"You do not have permission to submit scav case entries"
+                    )
+                )
+
             if message.attachments and message.content:
                 scav_case_type = message.content.strip()
                 matched_type = get_matching_type(scav_case_type)
