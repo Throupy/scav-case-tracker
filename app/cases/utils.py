@@ -270,6 +270,17 @@ def create_scav_case_entry(scav_case_type, items, user_id):
     return entry
 
 
+def calculate_insights(entries):
+    """Compute multiple insights dynamically"""
+    insight_functions = {
+        "Most Profitable Case": calculate_most_profitable,
+        "Average Return by Case Type": calculate_avg_return_by_case_type,
+        "Average Items per Case Type": calculate_avg_items_per_case_type,
+    }
+
+    insights = [func(entries) for func in insight_functions.values()]
+    return [insight for insight in insights if insight is not None]
+
 def calculate_avg_items_per_case_type(entries):
     total_items_by_case_type = defaultdict(int)
     count_by_case_type = defaultdict(int)
@@ -348,7 +359,7 @@ def calculate_avg_return_by_case_type(entries):
     )
 
 
-def calculate_and_prepare_most_profitable(entries) -> Insight:
+def calculate_most_profitable(entries):
     profit_by_case_type = defaultdict(float)
     count_by_case_type = defaultdict(int)
 
@@ -361,34 +372,39 @@ def calculate_and_prepare_most_profitable(entries) -> Insight:
     if not profit_by_case_type:
         return None
 
-    most_profitable_case_type = max(profit_by_case_type.items(), key=lambda x: x[1])
-    case_type = most_profitable_case_type[0]
-    total_profit = most_profitable_case_type[1]
-    number_of_runs = count_by_case_type[case_type]
+    # Calculate AVERAGE profit per case type
+    avg_profit_by_case_type = {
+        case_type: profit_by_case_type[case_type] / count_by_case_type[case_type]
+        for case_type in profit_by_case_type
+    }
+
+    # Get the most profitable case type based on AVERAGE profit
+    most_profitable_case_type = max(avg_profit_by_case_type, key=avg_profit_by_case_type.get)
+    avg_profit = avg_profit_by_case_type[most_profitable_case_type]
 
     chart_data = {
-        "x_value": list(profit_by_case_type.keys()),
-        "y_value": list(profit_by_case_type.values()),
+        "x_value": list(avg_profit_by_case_type.keys()),
+        "y_value": list(avg_profit_by_case_type.values()),
         "colors": [
-            "rgba(28, 200, 138, 1)" if k == case_type else "rgba(231, 74, 59, 1)"
-            for k in profit_by_case_type.keys()
+            "rgba(28, 200, 138, 1)" if k == most_profitable_case_type else "rgba(231, 74, 59, 1)"
+            for k in avg_profit_by_case_type.keys()
         ],
         "border_colors": [
-            "rgba(28, 200, 138, 1)" if k == case_type else "rgba(231, 74, 59, 1)"
-            for k in profit_by_case_type.keys()
+            "rgba(28, 200, 138, 1)" if k == most_profitable_case_type else "rgba(231, 74, 59, 1)"
+            for k in avg_profit_by_case_type.keys()
         ],
     }
 
     # Tooltip text for each case type
     chart_tooltip = {
-        case_type: f"Profit: ₽{round(profit_by_case_type[case_type]):,} from {count_by_case_type[case_type]} runs"
-        for case_type in profit_by_case_type
+        case_type: f"Average Profit: ₽{round(avg_profit_by_case_type[case_type]):,} per run"
+        for case_type in avg_profit_by_case_type
     }
 
     return Insight(
         title="Most Profitable Case Type",
-        description=f"""The <strong>most profitable</strong> case type is <strong>{case_type}</strong>, returning a total profit of <strong>₽{round(total_profit):,}</strong>
-            from a total of <strong>{number_of_runs}</strong> uses.""",
+        description=f"""The <strong>most profitable</strong> case type is <strong>{most_profitable_case_type}</strong>, 
+        returning an average profit of <strong>₽{round(avg_profit):,}</strong> per run.""",
         chart_data=chart_data,
         chart_tooltip=chart_tooltip,
     )
