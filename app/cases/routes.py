@@ -6,11 +6,7 @@ from flask_login import login_required, current_user
 from app.models import Entry
 from app.extensions import db
 from app.cases.forms import ScavCaseForm
-from app.cases.utils import (
-    calculate_and_prepare_most_profitable,
-    calculate_avg_items_per_case_type,
-    calculate_avg_return_by_case_type,
-)
+from app.cases.utils import calculate_insights
 
 cases = Blueprint("cases", __name__)
 
@@ -44,15 +40,11 @@ def all_cases():
 @cases.route("/insights")
 def insights():
     entries = Entry.query.all()
-
-    most_profitable_insight = calculate_and_prepare_most_profitable(entries)
-    average_return_insight = calculate_avg_return_by_case_type(entries)
-    average_items_insight = calculate_avg_items_per_case_type(entries)
-
-    insights = [most_profitable_insight, average_return_insight, average_items_insight]
-    insights = [insight for insight in insights if insight is not None]
+    insights = calculate_insights(entries)
+    
     if not insights:
         flash("No Data to show", "warning")
+
     return render_template("insights.html", insights=insights)
 
 
