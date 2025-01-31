@@ -19,3 +19,5 @@ flask run
 # To Do
 - [X] Entry detail blue badge should display total price, not per item.
 - [X] Main blueprint
+- [ ] Discord bot user role filtering - stop spam
+- [ ] Item stats e.g. "most common item" per case.
