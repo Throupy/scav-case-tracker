@@ -18,7 +18,7 @@ class Config:
     ALLOWED_EXTENSIONS = [".png", ".jpg"]
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16mb
     # discord bot configuration
-    START_DISCORD_BOT = True
+    START_DISCORD_BOT = False
     DISCORD_CHANNEL_ID = os.getenv("DISCORD_SCAV_CASE_CHANNEL_ID")
     DISCORD_DOWNLOAD_DIR = "app/static/uploads/discord_bot"
 

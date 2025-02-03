@@ -1,6 +1,8 @@
 <ul class="list-group">
     {% for item in items %}
         <li class="list-group-item" onclick="addItemToSelected('{{ item.tarkov_id }}', '{{ item.name }}', 1)">
+            <img src="{{ url_for('static', filename='items/category_images/' + item.category.lower()) }}.png" alt="{{ item.name }}"
+                 class="me-2" width="24" height="24">
             <a>
                 {{ item.name }}
             </a>
