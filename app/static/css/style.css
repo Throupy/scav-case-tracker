@@ -12,6 +12,13 @@
   color: #f56e6e;  /* Red text color */
 }
 
+#canvas-container {
+    width: 100%;
+    height: 600px;
+    overflow: auto;
+    border: 1px solid #ccc;
+}
+
 body{
     background-color:#eee;
     }

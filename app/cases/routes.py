@@ -3,7 +3,7 @@ import requests
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 
-from app.models import Entry
+from app.models import Entry, EntryItem
 from app.extensions import db
 from app.cases.forms import ScavCaseForm
 from app.cases.utils import calculate_insights
@@ -82,12 +82,15 @@ def submit_scav_case():
 
     return render_template("create_entry.html", form=form)
 
+@cases.route("/items")
+def items():
+    items = EntryItem.query.all()
+    return render_template("items.html", items=items)
 
 @cases.route("/entry/<int:entry_id>/detail")
 def entry_detail(entry_id):
     entry = Entry.query.get_or_404(entry_id)
     return render_template("entry_detail.html", entry=entry)
-
 
 @cases.route("/delete-entry/<int:entry_id>", methods=["GET"])
 def delete_entry(entry_id):
