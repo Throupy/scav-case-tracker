@@ -61,6 +61,12 @@
                     <span>Insights</span></a>
             </li>
 
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('cases.items') }}">
+                    <i class="fas fa-fw fa-table-list"></i>
+                    <span>Items</span></a>
+            </li>
+
             <hr class="sidebar-divider">
 
             <li class="nav-item">
@@ -200,7 +206,7 @@
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
     <script src="https://unpkg.com/htmx.org@1.7.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.umd.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
 </body>
 
 </html>
