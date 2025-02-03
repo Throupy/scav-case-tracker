@@ -2,9 +2,9 @@ import json
 from datetime import datetime
 
 import humanize
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, abort
 
-from app.models import Entry
+from app.models import Entry, EntryItem
 from app.cases.utils import (
     get_price,
     get_image_link,
@@ -72,7 +72,6 @@ def get_chart_data_route():
     ]
 
     return jsonify({"labels": labels, "entries": entry_data})
-
 
 @api.route("/api/get-item-price/<item_id>")
 def get_item_price_route(item_id):

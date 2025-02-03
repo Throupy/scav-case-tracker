@@ -42,6 +42,7 @@
             <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if loop.first %}active{% endif %}"
                id="list-{{ item.tarkov_id }}-list" 
                data-toggle="list" href="#list-{{ item.tarkov_id }}" role="tab" aria-controls="{{ item.name }}">
+               <img class="mr-2" width=32 height=32 src="{{ url_for('static', filename='items/category_images/' + item.tarkov_item.category.lower() + '.png') }}">
                 {{ item.name }}
                 <span class="badge mb-0 badge-soft-info ms-auto">
                     ₽{{ "{:,}".format((item.price * item.amount) | int) }} 
