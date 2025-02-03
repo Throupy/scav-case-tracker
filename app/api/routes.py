@@ -49,12 +49,12 @@ def get_image_link_route():
 def get_chart_data_route():
     case_type = request.args.get("type") or "all"
     if case_type.lower() == "all":
-        entries = Entry.query.order_by(Entry.created_at.desc()).limit(30).all()
+        entries = Entry.query.order_by(Entry.created_at.desc()).limit(15).all()
     else:
         entries = (
             Entry.query.filter_by(type=case_type)
             .order_by(Entry.created_at.desc())
-            .limit(30)
+            .limit(15)
             .all()
         )
 
