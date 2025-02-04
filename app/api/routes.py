@@ -66,7 +66,8 @@ def get_chart_data_route():
             "created_at_humanized": humanize.naturaltime(datetime.utcnow() - entry.created_at),  
             "profit": entry.profit,                   
             "type": entry.type,
-            "return": entry._return 
+            "return": entry._return,
+            "cost": entry.cost
         }
         for entry in entries
     ]
