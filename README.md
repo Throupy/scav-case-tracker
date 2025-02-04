@@ -21,3 +21,4 @@ flask run
 - [X] Main blueprint
 - [X] Discord bot user role filtering - stop spam
 - [ ] Item stats e.g. "most common item" per case.
+- [ ] Pie chart item distribution (credit: wojteklays)
