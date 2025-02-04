@@ -61,15 +61,19 @@ document.addEventListener("DOMContentLoaded", function() {
                 types: []
           },
           {
-                label: "Cost",
-                pointRadius: 3, 
-                pointBackgroundColor: "rgb(40, 167, 69)",  //green
-                pointBorderColor: "rgb(40, 167, 69)",
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: "rgb(40, 167, 69)",
-                pointHoverBorderColor: "rgb(40, 167, 69)",
-                showLine: false, 
-                data: [],  
+            label: "Cost",
+            pointRadius: 3, 
+            pointBackgroundColor: "rgb(40, 167, 69)",  // green
+            pointBorderColor: "rgb(40, 167, 69)",
+            pointHoverRadius: 7,
+            pointHoverBackgroundColor: "rgb(40, 167, 69)",
+            pointHoverBorderColor: "rgb(40, 167, 69)",
+            borderColor: "rgb(40, 167, 69)",
+            lineTension: 0.3,
+            fill: false,
+            borderDash: [5,5],
+            showLine: true,  
+            data: [],  
           }],
       },
       options: {
