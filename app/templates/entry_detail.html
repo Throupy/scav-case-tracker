@@ -1,69 +1,127 @@
 {% extends "layout.html" %}
-{% block content %}
-    <h1>
-        <span>
-            Scav Case #{{ entry.id }} | 
-        </span>
-        <span>
-            <span class="badge mb-0
-            {% if entry.type == '₽2500' %}
-                badge-soft-warning
-            {% elif entry.type == '₽15000' %}
-                badge-soft-danger
-            {% elif entry.type == '₽95000' %}
-                badge-soft-success
-            {% elif entry.type == 'Moonshine' %}
-                badge-soft-primary
-            {% elif entry.type == 'Intelligence' %}
-                badge-soft-info
-            {% else %}
-                badge-soft-secondary
-            {% endif %}">
-                {{ entry.type }}
-            </span>
-        </span>
-         | 
-        <span>
-            {% if entry._return - entry.cost < 0 %}
-                <i class="fa-solid fa-chevron-down text-danger"></i>
-                <h3 class="d-inline-block text-danger">₽{{ "{:,}".format((entry._return - entry.cost) | int) }}</h3>
-            {% else %}
-                <i class="fa-solid fa-chevron-up text-success"></i>
-                <h3 class="d-inline-block text-success">₽{{ "{:,}".format((entry._return - entry.cost) | int) }}</h3>
-            {% endif %}
-        </span>
-    </h1>
-  
 
-    <div class="row">
-      <div class="col-4">
-        <div class="list-group" id="list-tab" role="tablist">
-          {% for item in entry.items %}
-            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if loop.first %}active{% endif %}"
-               id="list-{{ item.tarkov_id }}-list" 
-               data-toggle="list" href="#list-{{ item.tarkov_id }}" role="tab" aria-controls="{{ item.name }}">
-               <img class="mr-2" width=32 height=32 src="{{ url_for('static', filename='items/category_images/' + item.tarkov_item.category.lower() + '.png') }}">
-                {{ item.name }}
-                <span class="badge mb-0 badge-soft-info ms-auto">
-                    ₽{{ "{:,}".format((item.price * item.amount) | int) }} 
-                </span>
-            </a>
-          {% endfor %}
-        </div>
-      </div>
-      <div class="col-8">
-        <div class="tab-content" id="nav-tabContent">
-          {% for item in entry.items %}
-            <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="list-{{ item.tarkov_id }}" role="tabpanel" 
-                 aria-labelledby="list-{{ item.tarkov_id }}-list">
-                <h3>{{ item.name }}</h3>
-                <p><strong>Amount:</strong> {{ item.amount }}</p>
-                <p><strong>Price (per item):</strong> ₽{{ "{:,}".format(item.price | int) }}</p> 
-                <p><strong>Total Price:</strong> ₽{{ "{:,}".format((item.price | int) * (item.amount)) }}</p>
-                <img class="img-fluid" width="100" src="{{ url_for('static', filename='items/' + item.tarkov_id + '.webp')}}">
+{% block content %}
+    <div class="card shadow-sm p-3 mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <h2 class="mr-2 mb-0 text-dark fs-2">
+                    Scav Case <span class="text-muted">#{{ entry.id }}</span>
+                </h2>
+                <a href="{{ url_for('main.not_implemented') }}" class="ml-2 ms-2 text-danger" title="Edit Entry">
+                    <i class="fa-regular fa-pen-to-square fa-md"></i>
+                </a>
+                <a href="#" class="ml-3 ms-2 text-danger" title="Delete Entry" data-toggle="modal" data-target="#deleteConfirmationModal">
+                    <i class="fa-regular fa-trash-can fa-md"></i>
+                </a>                
             </div>
-          {% endfor %}
+            
+            <h5>
+                <span class="badge px-4 py-3 fs-3 
+                    {% if entry.type == '₽2500' %}badge-soft-warning
+                    {% elif entry.type == '₽15000' %}badge-soft-danger
+                    {% elif entry.type == '₽95000' %}badge-soft-success
+                    {% elif entry.type == 'Moonshine' %}badge-soft-primary
+                    {% elif entry.type == 'Intelligence' %}badge-soft-info
+                    {% else %}badge-soft-secondary
+                    {% endif %}">
+                    {{ entry.type }}
+                </span>
+            </h5>
         </div>
-      </div>
+        <hr>
+        <div class="d-flex align-items-center justify-content-between mt-1">
+            <p class="mb-0 fs-5"><strong>Cost:</strong> ₽{{ "{:,}".format(entry.cost | int) }}</p>
+            <p class="mb-0 fs-5"><strong>Return:</strong> ₽{{ "{:,}".format(entry._return | int) }}</p>
+            <p class="mb-0 fs-5"><strong>Submitted:</strong> {{ entry.created_at | timeago }}</p>
+            
+            <div class="d-flex align-items-center">
+                {% if entry._return - entry.cost < 0 %}
+                    <i class="fa-solid fa-chevron-down text-danger fs-3 me-2"></i>
+                    <h3 class="mb-0 text-danger fs-2">₽{{ "{:,}".format((entry._return - entry.cost) | int) }}</h3>
+                {% else %}
+                    <i class="fa-solid fa-chevron-up text-success fs-3 me-2"></i>
+                    <h3 class="mb-0 text-success fs-2">₽{{ "{:,}".format((entry._return - entry.cost) | int) }}</h3>
+                {% endif %}
+            </div>
+        </div>
     </div>
+
+    <div class="row mt-4">
+        <div class="col-md-5">
+            <div class="list-group shadow-sm" id="list-tab" role="tablist">
+                {% for item in entry.items %}
+                <a class="p-3 list-group-item list-group-item-action d-flex align-items-center {% if loop.first %}active{% endif %}"
+                    id="list-{{ item.tarkov_id }}-list"
+                    data-toggle="list" href="#list-{{ item.tarkov_id }}"
+                    role="tab" aria-controls="{{ item.name }}"
+                    style="padding: 10px 15px;">
+                    
+                    <img class="rounded flex-shrink-0" width="28" height="28"
+                        src="{{ url_for('static', filename='items/category_images/' + item.tarkov_item.category.lower() + '.png') }}"
+                        style="margin-right: 12px;">
+                
+                    <span class="text-truncate flex-grow-1" style="min-width: 0; font-size: 16px;">
+                        {{ item.name }}
+                        {% if item.amount > 1 %}
+                            <span class="text-muted">(x{{ item.amount }})</span>
+                        {% endif %}
+                    </span>
+                
+                    <span class="badge badge-soft-info text-nowrap ms-auto" style="font-size: 14px; padding: 6px 10px;">
+                        ₽{{ "{:,}".format((item.price * item.amount) | int) }}
+                    </span>
+                </a>
+            
+                {% endfor %}
+            </div>                
+        </div>
+
+        <div class="col-md-7">
+            <div class="tab-content h-100" id="nav-tabContent">
+                {% for item in entry.items %}
+                    <div class="tab-pane fade {% if loop.first %} show active {% endif %}" id="list-{{ item.tarkov_id }}" role="tabpanel"
+                        aria-labelledby="list-{{ item.tarkov_id }}-list">
+                        
+                        <div class="card shadow-sm p-3 h-100 d-flex flex-column">
+                            <h3 class="mb-3 fs-2">{{ item.name }}</h3>
+                            <div class="row flex-grow-1">
+                                <div class="col-md-6">
+                                    <p class="fs-5"><strong>Item Category:</strong> {{ item.tarkov_item.category }}</p>
+                                    <p class="fs-5"><strong>Amount:</strong> {{ item.amount }}</p>
+                                    <p class="fs-5"><strong>Price (per item):</strong> ₽{{ "{:,}".format(item.price | int) }}</p> 
+                                    <p class="fs-5"><strong>Total Price:</strong> ₽{{ "{:,}".format((item.price | int) * (item.amount)) }}</p>
+                                </div>
+                                <div class="col-md-6 text-center align-self-center">
+                                    <img class="img-fluid rounded shadow-sm" width="160"
+                                        src="{{ url_for('static', filename='items/' + item.tarkov_id + '.webp')}}">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this Scav Case entry? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                    <a href="{{ url_for('cases.delete_entry', entry_id=entry.id) }}" class="btn btn-outline-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
