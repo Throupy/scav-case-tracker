@@ -19,6 +19,11 @@
     border: 1px solid #ccc;
 }
 
+.chartjs-legend ul {
+    column-count: 2;
+    column-gap: 20px;
+}
+
 body{
     background-color:#eee;
     }
