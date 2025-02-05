@@ -21,9 +21,11 @@ flask run
 - [X] Main blueprint
 - [X] Discord bot user role filtering - stop spam
 - [ ] Item stats e.g. "most common item" per case.
-- [ ] Pie chart item distribution (credit: wojteklays)
+- [X] Pie chart item distribution (credit: wojteklays)
 - [X] Improve entry detail page
 - Implement "entry editing"
 - [ ] Prices for ammo packs are wrong. tarkov.dev API says that 50 box of 6a1 is worth 480, this is not true. Perhaps "unpack" the box and sell each round individually for a more accurate price?
 - [ ] More high-res and better images for entry detail page required
 - [X] Trim "most valuable item to date"
+- [ ] Couple OCR with image recognition
+- [ ] Implement edit case functionality

@@ -13,7 +13,7 @@ from app.users.routes import users
 from app.quiz.routes import _quiz as quiz
 from app.cases.routes import cases
 from app.models import User, TarkovItem, WeaponAttachment, Entry
-from app.filters import timeago
+from app.filters import timeago, get_item_image_filename
 from app.cases.utils import get_price
 from app.extensions import db, migrate, login_manager, bcrypt
 
@@ -28,6 +28,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     app.jinja_env.filters['timeago'] = timeago
+    app.jinja_env.filters['item_image'] = get_item_image_filename
 
     # Initialize extensions
     db.init_app(app)
