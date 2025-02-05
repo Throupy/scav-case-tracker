@@ -34,7 +34,6 @@ def dashboard():
         **dashboard_data 
     )
 
-
 @main.route("/search-items")
 def search_items():
     query = request.args.get("q")
