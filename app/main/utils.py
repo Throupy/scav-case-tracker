@@ -168,7 +168,6 @@ def save_uploaded_image(uploaded_image):
     uploaded_image.save(file_path)
     return file_path
 
-
 def process_scav_case_image(file_path):
     """Validates and processes an image for scav case data using OCR."""
     if not validate_scav_case_image(file_path):

@@ -85,15 +85,16 @@
                     <div class="card shadow-sm p-3 h-100 d-flex flex-column">
                         <h3 class="mb-3 fs-2">{{ item.name }}</h3>
                         <div class="row flex-grow-1">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <p class="fs-5"><strong>Item Category:</strong> {{ item.tarkov_item.category }}</p>
                                 <p class="fs-5"><strong>Amount:</strong> {{ item.amount }}</p>
                                 <p class="fs-5"><strong>Price (per item):</strong> ₽{{ "{:,}".format(item.price | int) }}</p> 
                                 <p class="fs-5"><strong>Total Price:</strong> ₽{{ "{:,}".format((item.price | int) * (item.amount)) }}</p>
                             </div>
-                            <div class="col-md-6 text-center align-self-center">
-                                <img class="img-fluid rounded shadow-sm" width="160"
-                                    src="{{ url_for('static', filename='items/' + item.tarkov_id + '.webp')}}">
+                            <div class="col-md-8 text-center align-self-center">
+                                <img class="img-fluid rounded"
+                                    style="max-height: 150px; object-fit: contain;"
+                                    src="{{ url_for('static', filename='items/' + item | item_image) }}">
                             </div>
                         </div>
                     </div>
