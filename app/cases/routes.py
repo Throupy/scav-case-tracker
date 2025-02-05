@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 import requests
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
@@ -6,7 +7,7 @@ from flask_login import login_required, current_user
 from app.models import Entry, EntryItem
 from app.extensions import db
 from app.cases.forms import ScavCaseForm
-from app.cases.utils import calculate_insights
+from app.cases.utils import calculate_most_popular_category, find_most_common_item, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
 
 cases = Blueprint("cases", __name__)
 
@@ -40,12 +41,27 @@ def all_cases():
 @cases.route("/insights")
 def insights():
     entries = Entry.query.all()
-    insights = calculate_insights(entries)
-    
-    if not insights:
+
+    most_profitable_case = calculate_most_profitable(entries)
+    avg_return_chart = calculate_avg_return_by_case_type(entries)
+    avg_items_chart = calculate_avg_items_per_case_type(entries)
+    category_distribution = calculate_item_category_distribution(entries)
+    most_popular_category = calculate_most_popular_category(entries)
+    most_popular_item = find_most_common_item(entries)
+
+    if not entries:
         flash("No Data to show", "warning")
 
-    return render_template("insights.html", insights=insights)
+    return render_template(
+        "insights.html",
+        most_profitable_case=most_profitable_case,
+        avg_return_chart=avg_return_chart,
+        avg_items_chart=avg_items_chart,
+        category_labels=category_distribution["labels"],
+        category_counts=category_distribution["values"],
+        most_popular_category=most_popular_category,
+        most_popular_item=most_popular_item,
+    )
 
 
 @cases.route("/create-entry", methods=["GET"])
@@ -67,7 +83,6 @@ def submit_scav_case():
         uploaded_image = form.scav_case_image.data
         items_data = form.items_data.data
 
-        # Send the form data and image to the API
         files = {"image": uploaded_image}
         data = {"scav_case_type": scav_case_type, "user_id": current_user.id, "items_data": items_data}
 

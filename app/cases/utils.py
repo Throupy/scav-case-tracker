@@ -281,85 +281,42 @@ def calculate_insights(entries):
     insights = [func(entries) for func in insight_functions.values()]
     return [insight for insight in insights if insight is not None]
 
-def calculate_avg_items_per_case_type(entries):
-    total_items_by_case_type = defaultdict(int)
-    count_by_case_type = defaultdict(int)
+def find_most_common_item(entries):
+    item_counts = defaultdict(int)
 
     for entry in entries:
-        total_items_by_case_type[entry.type] += len(entry.items)
-        count_by_case_type[entry.type] += 1
+        for item in entry.items:
+            item_counts[item.name] += 1
 
-    avg_items_per_case_type = {
-        case_type: total_items_by_case_type[case_type] / count_by_case_type[case_type]
-        for case_type in total_items_by_case_type
-    }
+    if not item_counts:
+        return ("No Data", 0, None)
 
-    if not avg_items_per_case_type:
-        return None
+    most_common = max(item_counts, key=item_counts.get)
 
-    chart_data = {
-        "x_value": list(avg_items_per_case_type.keys()),
-        "y_value": list(avg_items_per_case_type.values()),
-        "colors": ["rgba(231, 74, 59, 1)" for _ in avg_items_per_case_type.keys()],
-        "border_colors": [
-            "rgba(231, 74, 59, 1)" for _ in avg_items_per_case_type.keys()
-        ],
-    }
-
-    chart_tooltip = {
-        case_type: f"Average items: {round(avg_items_per_case_type[case_type], 2)}"
-        for case_type in avg_items_per_case_type
-    }
-
-    return Insight(
-        title="Average Items per Case Type",
-        description="This chart shows the average number of items per scav case type.",
-        chart_data=chart_data,
-        chart_tooltip=chart_tooltip,
+    tarkov_id = next(
+        (item.tarkov_id for entry in entries for item in entry.items if item.name == most_common),
+        None
     )
 
+    return (most_common, item_counts[most_common], tarkov_id)
 
-def calculate_avg_return_by_case_type(entries):
-    total_return_by_case_type = defaultdict(float)
-    count_by_case_type = defaultdict(int)
+def calculate_item_category_distribution(entries):
+    category_counts = defaultdict(int)
 
     for entry in entries:
-        if entry._return is not None:
-            total_return_by_case_type[entry.type] += entry._return
-            count_by_case_type[entry.type] += 1
+        for item in entry.items:
+            category_counts[item.tarkov_item.category] += 1
 
-    average_return_by_case_type = {
-        case_type: total_return_by_case_type[case_type] / count_by_case_type[case_type]
-        for case_type in total_return_by_case_type
+    if not category_counts:
+        return {"labels": [], "values": []}
+
+    return {
+        "labels": list(category_counts.keys()),
+        "values": list(category_counts.values()),
     }
-
-    if not average_return_by_case_type:
-        return None
-
-    chart_data = {
-        "x_value": list(average_return_by_case_type.keys()),
-        "y_value": list(average_return_by_case_type.values()),
-        "colors": ["rgba(231, 74, 59, 1)" for _ in average_return_by_case_type.keys()],
-        "border_colors": [
-            "rgba(231, 74, 59, 1)" for _ in average_return_by_case_type.keys()
-        ],
-    }
-
-    # Tooltip text for each case type
-    chart_tooltip = {
-        case_type: f"Average return: ₽{round(average_return_by_case_type[case_type]):,}"
-        for case_type in average_return_by_case_type
-    }
-
-    return Insight(
-        title="Average Return by Case Type",
-        description="This chart shows the average return for each scav case type.",
-        chart_data=chart_data,
-        chart_tooltip=chart_tooltip,
-    )
-
 
 def calculate_most_profitable(entries):
+    """Find the scav case type with the highest average profit."""
     profit_by_case_type = defaultdict(float)
     count_by_case_type = defaultdict(int)
 
@@ -372,39 +329,94 @@ def calculate_most_profitable(entries):
     if not profit_by_case_type:
         return None
 
-    # Calculate AVERAGE profit per case type
     avg_profit_by_case_type = {
         case_type: profit_by_case_type[case_type] / count_by_case_type[case_type]
         for case_type in profit_by_case_type
     }
 
-    # Get the most profitable case type based on AVERAGE profit
     most_profitable_case_type = max(avg_profit_by_case_type, key=avg_profit_by_case_type.get)
     avg_profit = avg_profit_by_case_type[most_profitable_case_type]
 
-    chart_data = {
-        "x_value": list(avg_profit_by_case_type.keys()),
-        "y_value": list(avg_profit_by_case_type.values()),
-        "colors": [
-            "rgba(28, 200, 138, 1)" if k == most_profitable_case_type else "rgba(231, 74, 59, 1)"
-            for k in avg_profit_by_case_type.keys()
-        ],
-        "border_colors": [
-            "rgba(28, 200, 138, 1)" if k == most_profitable_case_type else "rgba(231, 74, 59, 1)"
-            for k in avg_profit_by_case_type.keys()
-        ],
+    return {
+        "type": most_profitable_case_type, 
+        "avg_profit": avg_profit,  
+        "chart_data": { 
+            "x_value": list(avg_profit_by_case_type.keys()),
+            "y_value": list(avg_profit_by_case_type.values()),
+        },
     }
 
-    # Tooltip text for each case type
-    chart_tooltip = {
-        case_type: f"Average Profit: ₽{round(avg_profit_by_case_type[case_type]):,} per run"
-        for case_type in avg_profit_by_case_type
+
+def calculate_avg_items_per_case_type(entries):
+    """Calculate the average number of items per scav case type."""
+    total_items_by_case_type = defaultdict(int)
+    count_by_case_type = defaultdict(int)
+
+    for entry in entries:
+        total_items_by_case_type[entry.type] += len(entry.items)
+        count_by_case_type[entry.type] += 1
+
+    if not total_items_by_case_type:
+        return None
+
+    return {
+        "chart_data": {
+            "x_value": list(total_items_by_case_type.keys()),
+            "y_value": [
+                total_items_by_case_type[case_type] / count_by_case_type[case_type]
+                for case_type in total_items_by_case_type
+            ],
+        },
     }
 
-    return Insight(
-        title="Most Profitable Case Type",
-        description=f"""The <strong>most profitable</strong> case type is <strong>{most_profitable_case_type}</strong>, 
-        returning an average profit of <strong>₽{round(avg_profit):,}</strong> per run.""",
-        chart_data=chart_data,
-        chart_tooltip=chart_tooltip,
-    )
+def calculate_most_popular_category(entries):
+    """Find the most frequently appearing item category across all scav cases."""
+    category_counts = defaultdict(int)
+
+    for entry in entries:
+        for item in entry.items:
+            category_counts[item.tarkov_item.category] += 1
+
+    if not category_counts:
+        return None  
+
+    most_popular_category = max(category_counts, key=category_counts.get)
+    count = category_counts[most_popular_category]
+
+    return {
+        "category": most_popular_category,
+        "count": count,
+        "chart_data": {
+            "labels": list(category_counts.keys()),
+            "values": list(category_counts.values()),
+        }
+    }
+
+
+def calculate_avg_return_by_case_type(entries):
+    """Calculate the average return for each scav case type."""
+    total_return_by_case_type = defaultdict(float)
+    count_by_case_type = defaultdict(int)
+
+    for entry in entries:
+        if entry._return is not None:
+            total_return_by_case_type[entry.type] += entry._return
+            count_by_case_type[entry.type] += 1
+
+    if not total_return_by_case_type:
+        return None
+
+    avg_return_by_case_type = {
+        case_type: total_return_by_case_type[case_type] / count_by_case_type[case_type]
+        for case_type in total_return_by_case_type
+    }
+
+    return {
+        "chart_data": {
+            "x_value": list(avg_return_by_case_type.keys()),
+            "y_value": [
+                round(total_return_by_case_type[case_type] / count_by_case_type[case_type])
+                for case_type in total_return_by_case_type
+            ],
+        },
+    }
