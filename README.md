@@ -25,3 +25,4 @@ flask run
 - [X] Improve entry detail page
 - Implement "entry editing"
 - [ ] Prices for ammo packs are wrong. tarkov.dev API says that 50 box of 6a1 is worth 480, this is not true. Perhaps "unpack" the box and sell each round individually for a more accurate price?
+- [ ] More high-res and better images for entry detail page required
