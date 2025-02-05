@@ -136,17 +136,28 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Most Valuable Item to Date</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_valuable_item.name }}</div>
+                            Most Valuable Item to Date
+                        </div>
+                        <!-- Item name with truncation + tooltip -->
+                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-truncate"
+                             style="max-width: 200px;" 
+                             data-toggle="tooltip" 
+                             data-placement="top" 
+                             title="{{ most_valuable_item.name }}">
+                            {{ most_valuable_item.name }}
+                        </div>
                     </div>
                     <div class="col-auto">
-                        <img width=48 height=48 class="mr-1 img-profile rounded-circle"
-                        src="{{ url_for('static', filename='items/' + most_valuable_item.tarkov_id + '.webp') }}">
+                        <a href="{{ url_for('cases.entry_detail', entry_id=most_valuable_item.entry.id) }}">
+                            <img width=48 height=48 class="mr-1 img-profile rounded-circle"
+                            src="{{ url_for('static', filename='items/' + most_valuable_item.tarkov_id + '.webp') }}">
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
 </div>
 <div class="row">
     <!-- earnings overview graph -->
