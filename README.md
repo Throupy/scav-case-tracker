@@ -29,7 +29,7 @@ flask run
 - [ ] More high-res and better images for entry detail page required
 - [X] Trim "most valuable item to date"
 - [ ] Couple OCR with image recognition
-- [ ] Implement edit case functionality
+- [X] Implement edit case functionality
 - [ ] Put images into CDN / S3, whatever is free and fastest
 - [ ] Modify "insights" page to be able to select a sample of cases and have the graphs display. Either by category, or by manually selecting with radio boxes.
 - [ ] Export functionality (export all Entries to JSON, CSV, etc)
