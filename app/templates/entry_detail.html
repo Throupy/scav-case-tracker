@@ -7,7 +7,7 @@
             <h2 class="mr-2 mb-0 text-dark fs-2">
                 Scav Case <span class="text-muted">#{{ entry.id }}</span>
             </h2>
-            <a href="{{ url_for('main.not_implemented') }}" class="ml-2 ms-2 text-danger" title="Edit Entry">
+            <a href="{{ url_for('cases.update_entry', entry_id=entry.id) }}" class="ml-2 ms-2 text-danger" title="Edit Entry">
                 <i class="fa-regular fa-pen-to-square fa-md"></i>
             </a>
             <a href="#" class="ml-3 ms-2 text-danger" title="Delete Entry" data-toggle="modal" data-target="#deleteConfirmationModal">
