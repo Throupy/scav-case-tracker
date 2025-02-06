@@ -3,7 +3,7 @@ from wtforms import SelectField, FileField, HiddenField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 
 
-class ScavCaseForm(FlaskForm):
+class CreateEntryForm(FlaskForm):
     scav_case_type = SelectField(
         "Scav Case Type",
         choices=[
@@ -26,3 +26,7 @@ class ScavCaseForm(FlaskForm):
                 raise ValidationError(
                     "You must select at least one item for a scav case"
                 )
+
+class UpdateEntryForm(FlaskForm):
+    items_data = HiddenField("Items Data")
+    submit = SubmitField("Submit Scav Case")
