@@ -29,3 +29,5 @@ flask run
 - [X] Trim "most valuable item to date"
 - [ ] Couple OCR with image recognition
 - [ ] Implement edit case functionality
+- [ ] Put images into CDN / S3, whatever is free and fastest
+- [ ] Modify "insights" page to be able to select a sample of cases and have the graphs display. Either by category, or by manually selecting with radio boxes.
