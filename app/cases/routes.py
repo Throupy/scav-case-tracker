@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 
 from app.models import Entry, EntryItem
 from app.extensions import db
-from app.cases.forms import ScavCaseForm
+from app.cases.forms import CreateEntryForm, UpdateEntryForm
 from app.cases.utils import get_price, calculate_most_popular_category, find_most_common_item, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
 
 cases = Blueprint("cases", __name__)
@@ -76,7 +76,7 @@ def create_entry():
 @cases.route("/submit-scav-case", methods=["GET", "POST"])
 @login_required
 def submit_scav_case():
-    form = ScavCaseForm()
+    form = CreateEntryForm()
 
     if form.validate_on_submit():
         scav_case_type = form.scav_case_type.data
@@ -110,10 +110,9 @@ def entry_detail(entry_id):
 @cases.route("/entry/<int:entry_id>/edit", methods=["GET", "POST"])
 def update_entry(entry_id):
     entry = Entry.query.get_or_404(entry_id)
-    form = ScavCaseForm(obj=entry)
+    form = UpdateEntryForm(obj=entry)
 
     if request.method == "GET":
-        form.scav_case_type.data = entry.type
         form.items_data.data = json.dumps([{
             "id": item.id,
             "name": item.name, 
@@ -121,7 +120,6 @@ def update_entry(entry_id):
         } for item in entry.items])
 
     if form.validate_on_submit():
-        entry.type = form.scav_case_type.data
         items_data = json.loads(form.items_data.data)
 
         existing_items = {item.id: item for item in entry.items}
