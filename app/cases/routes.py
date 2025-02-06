@@ -7,7 +7,7 @@ from flask_login import login_required, current_user
 from app.models import Entry, EntryItem
 from app.extensions import db
 from app.cases.forms import ScavCaseForm
-from app.cases.utils import calculate_most_popular_category, find_most_common_item, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
+from app.cases.utils import get_price, calculate_most_popular_category, find_most_common_item, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
 
 cases = Blueprint("cases", __name__)
 
@@ -106,6 +106,63 @@ def items():
 def entry_detail(entry_id):
     entry = Entry.query.get_or_404(entry_id)
     return render_template("entry_detail.html", entry=entry)
+
+@cases.route("/entry/<int:entry_id>/edit", methods=["GET", "POST"])
+def update_entry(entry_id):
+    entry = Entry.query.get_or_404(entry_id)
+    form = ScavCaseForm(obj=entry)
+
+    if request.method == "GET":
+        form.scav_case_type.data = entry.type
+        form.items_data.data = json.dumps([{
+            "id": item.id,
+            "name": item.name, 
+            "quantity": item.amount
+        } for item in entry.items])
+
+    if form.validate_on_submit():
+        entry.type = form.scav_case_type.data
+        items_data = json.loads(form.items_data.data)
+
+        existing_items = {item.id: item for item in entry.items}
+        received_item_ids = {item["id"] for item in items_data if "id" in item}
+
+        items_to_delete = [item for item_id, item in existing_items.items() if item_id not in received_item_ids]
+        for item in items_to_delete:
+            db.session.delete(item)
+
+        total_price = 0
+        total_items = 0
+
+        for item in items_data:
+            if "id" in item and item["id"] in existing_items:
+                # first update quantities
+                existing_item = existing_items[item["id"]]
+                existing_item.amount = item["quantity"]
+            else:
+                new_item = EntryItem(
+                    entry=entry,
+                    tarkov_id=item["id"],
+                    price=get_price(item["id"]),
+                    name=item["name"],
+                    amount=item["quantity"],
+                )
+                total_price += new_item.price * new_item.amount
+                db.session.add(new_item)
+            
+            item_price = getattr(existing_items.get(item.get("id")), "price", None) or 0
+            total_price += item_price * item["quantity"]
+            total_items += item["quantity"]
+
+        entry._return = total_price
+        entry.number_of_items = len(items_data)
+
+
+        db.session.commit()
+        flash("Scav Case entry updated successfully", "success")
+        return redirect(url_for("cases.entry_detail", entry_id=entry.id))
+
+    return render_template("edit_entry.html", form=form, entry=entry)
 
 @cases.route("/delete-entry/<int:entry_id>", methods=["GET"])
 def delete_entry(entry_id):
