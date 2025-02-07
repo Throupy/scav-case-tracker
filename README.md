@@ -37,3 +37,4 @@ flask run
 - [ ] Separate DEV and PROD configs
 - [ ] BUG: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
 - [ ] BUG: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
+- [ ] FEATURE: Some sort of price watcher. Unsure exactly how this will look but definately monitoring historical prices of intel and moonshine. Perhaps include other items that fluctuate (e.g. sugar, GPUs). And items that have increased in value drastically over the last few days (can use tarkov.dev API for this)
