@@ -1,159 +1,30 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card shadow mb-4 h-100"> 
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Most Profitable Case Type</h6>
-            </div>
-            <div class="card-body d-flex flex-column"> 
-                <div class="chart-area flex-grow-1"> 
-                    <canvas id="mostProfitableChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card shadow mb-4 h-100"> 
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Average Items Per Case Type</h6>
-            </div>
-            <div class="card-body d-flex flex-column">
-                <div class="chart-area flex-grow-1">
-                    <canvas id="avgItemsChart"></canvas>
-                </div>
-            </div>
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label for="case-filter" class="form-label">Select Scav Case Type</label>
+        <select id="case-filter" class="form-control"
+            hx-get="{{ url_for('cases.insights_data') }}"
+            hx-trigger="change"
+            hx-target="#insights-content"
+            hx-indicator="#loading-spinner"
+            name="case_type">
+            <option value="all">All</option>
+            <option value="₽2500">₽2500</option>
+            <option value="₽15000">₽15000</option>
+            <option value="₽95000">₽95000</option>
+            <option value="Moonshine">Moonshine</option>
+            <option value="Intelligence">Intelligence</option>
+        </select>
+        <div id="loading-spinner" class="spinner-border text-danger" role="status" style="display: none;">
+            <span class="sr-only">Loading...</span>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Most Common Item</h6>
-            </div>
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <h5 class="mb-0">{{ most_popular_item[0] }}</h5>
-                <span class="text-muted">Found {{ most_popular_item[1] }} times</span>
-                <img width="42" height="42" class="rounded-circle"
-                    src="{{ url_for('static', filename='items/' + most_popular_item[2] + '.webp') }}">
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Most Common Item Category</h6>
-            </div>
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <h5 class="mb-0">{{ most_popular_category['category'] }}</h5>
-                <span class="text-muted">Found {{ most_popular_category['count'] }} times</span>
-                <img width="42" height="42" class="rounded"
-                    src="{{ url_for('static', filename='items/category_images/' + most_popular_category['category'].lower() + '.png') }}">
-            </div>
-        </div>
-    </div>
+<div id="insights-content">
+    {% include 'partials/insights.html' %}
 </div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution</h6>
-            </div>
-            <div class="card-body">
-                <div class="chart-area">
-                    <canvas id="itemCategoryChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Average Return Per Case Type</h6>
-            </div>
-            <div class="card-body">
-                <div class="chart-area">
-                    <canvas id="avgReturnChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>    
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    function formatRoubles(value) {
-        return `₽${Math.round(value).toLocaleString()}`;
-    }
-
-    function formatAvgItemCount(value) {
-        return value.toFixed(1) + " items";
-    }
-
-    function createChart(chartId, type, labels, data, label, backgroundColor, isRoubles = false, isDecimal = false) {
-        new Chart(document.getElementById(chartId), {
-            type: type,
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: label,
-                    data: data,
-                    backgroundColor: backgroundColor,
-                    borderColor: '#ffffff',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                let value = tooltipItem.raw;
-                                if (isRoubles) return formatRoubles(value);
-                                if (isDecimal) return formatAvgItemCount(value);
-                                return value;
-                            }
-                        }
-                    }
-                },
-                scales: chartId !== "itemCategoryChart" ? { 
-                    y: { beginAtZero: true } 
-                } : {}
-            }
-        });
-    }
-
-    createChart('avgItemsChart', 'bar',
-        {{ avg_items_chart['chart_data']['x_value'] | tojson }},
-        {{ avg_items_chart['chart_data']['y_value'] | tojson }},
-        'Avg Items', '#e74a3b', false, true);
-
-    createChart('mostProfitableChart', 'bar',
-        {{ most_profitable_case['chart_data']['x_value'] | tojson }},
-        {{ most_profitable_case['chart_data']['y_value'] | tojson }},
-        'Avg Profit', '#e74a3b', true);
-
-    createChart('avgReturnChart', 'bar',
-        {{ avg_return_chart['chart_data']['x_value'] | tojson }},
-        {{ avg_return_chart['chart_data']['y_value'] | tojson }},
-        'Avg Return', '#e74a3b', true);
-
-    createChart('itemCategoryChart', 'pie',
-        {{ category_labels | tojson }},
-        {{ category_counts | tojson }},
-        'Item Categories',
-        ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
-         '#858796', '#f8f9fc', '#5a5c69', '#bcf60c', '#fabebe', 
-         '#008080', '#e6beff', '#9A6324', '#fffac8', '#800000']
-    );
-
-</script>
 
 {% endblock content %}

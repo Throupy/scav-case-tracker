@@ -7,19 +7,19 @@ from flask_login import login_required, current_user
 from app.models import Entry, EntryItem
 from app.extensions import db
 from app.cases.forms import CreateEntryForm, UpdateEntryForm
-from app.cases.utils import get_price, calculate_most_popular_category, find_most_common_item, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
+from app.cases.utils import get_price, calculate_most_popular_categories, find_most_common_items, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
 
 cases = Blueprint("cases", __name__)
 
 
 @cases.route("/all-cases", methods=["GET"])
 def all_cases():
-    page = request.args.get("page", 1, type=int)  # Get current page number
+    page = request.args.get("page", 1, type=int) 
     sort_by = request.args.get(
         "sort_by", "type"
-    )  # Column to sort by, default to 'type'
-    sort_order = request.args.get("sort_order", "asc")  # Sort order, default to 'asc'
-    per_page = 10  # Number of entries per page
+    )
+    sort_order = request.args.get("sort_order", "asc")  
+    per_page = 10  
     entries = Entry.query.with_entities(Entry.id, Entry.type, Entry._return).all()
 
     if sort_order == "asc":
@@ -37,6 +37,71 @@ def all_cases():
         sort_order=sort_order,
     )
 
+@cases.route("/insights-data")
+def insights_data():
+    case_type = request.args.get("case_type", "all")
+
+    if case_type == "all":
+        entries = Entry.query.all()
+    else:
+        entries = Entry.query.filter_by(type=case_type).all()
+
+    if case_type == "all":
+        # on "all", we want more aggregated / generic insights, so call some util functions for that
+        entries = Entry.query.all()
+        most_profitable_case = calculate_most_profitable(entries)
+        avg_return_chart = calculate_avg_return_by_case_type(entries)
+        avg_items_chart = calculate_avg_items_per_case_type(entries)
+        category_distribution = calculate_item_category_distribution(entries)
+        most_popular_categories = calculate_most_popular_categories(entries)
+        most_popular_items = find_most_common_items(entries)
+        # no individual chart data needed for this case type
+        profit_over_time_chart = None
+        items_over_time_chart = None
+        return_over_time_chart = None
+    else:
+        entries = Entry.query.filter_by(type=case_type).all()
+        most_popular_items = find_most_common_items(entries)
+        most_popular_categories = calculate_most_popular_categories(entries)
+        category_distribution = calculate_item_category_distribution(entries)
+
+        profit_over_time_chart = {
+            "labels": [str(entry.id) for entry in entries],
+            "profits": [(entry._return - entry.cost) for entry in entries],
+            "costs": [entry.cost for entry in entries]
+        }
+
+        items_over_time_chart = {
+            "labels": [str(entry.id) for entry in entries],
+            "items_count": [entry.number_of_items for entry in entries]
+        }
+
+        return_over_time_chart = {
+            "labels": [str(entry.id) for entry in entries],
+            "returns": [entry._return for entry in entries],
+            "costs": [entry.cost for entry in entries]
+        }
+
+        # no bar chart nonsense when looking at a specific case type
+        avg_items_chart = None
+        most_profitable_case = None
+        avg_return_chart = None
+
+
+    return render_template(
+        "partials/insights.html",
+        case_type=case_type,
+        most_popular_items=most_popular_items,
+        most_popular_categories=most_popular_categories,
+        avg_items_chart=avg_items_chart,
+        most_profitable_case=most_profitable_case,
+        avg_return_chart=avg_return_chart,
+        return_over_time_chart=return_over_time_chart,
+        category_labels=category_distribution["labels"],
+        category_counts=category_distribution["values"],
+        profit_over_time_chart=profit_over_time_chart,
+        items_over_time_chart=items_over_time_chart
+    )
 
 @cases.route("/insights")
 def insights():
@@ -46,21 +111,22 @@ def insights():
     avg_return_chart = calculate_avg_return_by_case_type(entries)
     avg_items_chart = calculate_avg_items_per_case_type(entries)
     category_distribution = calculate_item_category_distribution(entries)
-    most_popular_category = calculate_most_popular_category(entries)
-    most_popular_item = find_most_common_item(entries)
+    most_popular_categories = calculate_most_popular_categories(entries)
+    most_popular_items = find_most_common_items(entries)
 
     if not entries:
         flash("No Data to show", "warning")
 
     return render_template(
         "insights.html",
+        case_type="all",
         most_profitable_case=most_profitable_case,
         avg_return_chart=avg_return_chart,
         avg_items_chart=avg_items_chart,
         category_labels=category_distribution["labels"],
         category_counts=category_distribution["values"],
-        most_popular_category=most_popular_category,
-        most_popular_item=most_popular_item,
+        most_popular_categories=most_popular_categories,
+        most_popular_items=most_popular_items,
     )
 
 
