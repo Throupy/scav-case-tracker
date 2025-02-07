@@ -1,11 +1,16 @@
 <ul class="list-group">
     {% for item in items %}
-        <li class="list-group-item" onclick="addItemToSelected('{{ item.tarkov_id }}', '{{ item.name }}', 1)">
-            <img src="{{ url_for('static', filename='items/category_images/' + item.category.lower()) }}.png" alt="{{ item.name }}"
-                 class="me-2" width="24" height="24">
-            <a>
-                {{ item.name }}
-            </a>
+        <li class="list-group-item d-flex align-items-center">
+            
+            <!-- Image on the left -->
+            <img src="{{ url_for('static', filename='items/' + item | item_image ) }}" alt="{{ item.name }}"
+                 class="flex-shrink-0" style="max-height: 75px; object-fit: contain;">
+            
+            <!-- Text container (ensures full width & correct alignment) -->
+            <div class="w-100 text-center">
+                <span class="text-dark">{{ item.name }}</span>
+            </div>
+
         </li>
     {% endfor %}
 </ul>
