@@ -1,0 +1,329 @@
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    {% if case_type == "all" %}
+                        Average Return Per Case Type
+                    {% else %}
+                        Return Per Run - {{ case_type }}
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    {% if case_type == "all" %}
+                        <canvas id="avgReturnChart"></canvas>
+                    {% else %}
+                        <canvas id="returnOverTimeChart"></canvas>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>  
+
+    <div class="col-md-6">
+        <div class="card shadow mb-4 h-100"> 
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    {% if case_type == "all" %}
+                        Average Items Per Case Type
+                    {% else %}
+                        Items Per Run - {{ case_type }}
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <div class="chart-area flex-grow-1">
+                    {% if case_type == "all" %}
+                        <canvas id="avgItemsChart"></canvas>
+                    {% else %}
+                        <canvas id="itemsOverTimeChart"></canvas>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">Most Common Items</h6>
+                <i class="fa fa-chevron-down collapse-toggle" data-toggle="collapse" data-target="#itemCollapse"></i>
+            </div>
+            <div class="card-body">
+                <div class="most-common-grid big-item">
+                    <h5 class="mb-0 truncate">{{ most_popular_items[0][0].name }}</h5>
+                    <span class="text-muted">Found {{ most_popular_items[0][1] }} times</span>
+                    <img src="{{ url_for('static', filename='items/' + most_popular_items[0][0] | item_image) }}">
+                </div>
+                <div class="collapse" id="itemCollapse">
+                    <hr>
+                    {% for item, count in most_popular_items[1:3] %}
+                    <div class="most-common-grid mb-2">
+                        <h6 class="mb-0 truncate">{{ item.name }}</h6>
+                        <span class="text-muted">Found {{ count }} times</span>
+                        <img src="{{ url_for('static', filename='items/' + item | item_image) }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">Most Common Categories</h6>
+                <i class="fa fa-chevron-down collapse-toggle" data-toggle="collapse" data-target="#categoryCollapse"></i>
+            </div>
+            <div class="card-body">
+                <div class="most-common-grid big-item">
+                    <h5 class="mb-0 truncate">{{ most_popular_categories[0][0].category }}</h5>
+                    <span class="text-muted">Found {{ most_popular_categories[0][1] }} times</span>
+                    <img class="rounded" src="{{ url_for('static', filename='items/category_images/' + most_popular_categories[0][0].category.lower() + '.png') }}">
+                </div>
+                <div class="collapse" id="categoryCollapse">
+                    <hr>
+                    {% for category, count in most_popular_categories[1:3] %}
+                    <div class="most-common-grid mb-2">
+                        <h6 class="mb-0 truncate">{{ category.category }}</h6>
+                        <span class="text-muted">Found {{ count }} times</span>
+                        <img class="rounded" src="{{ url_for('static', filename='items/category_images/' + category.category.lower() + '.png') }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="itemCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div> 
+    <div class="col-md-6">
+        <div class="card shadow mb-4 h-100"> 
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    {% if case_type == "all" %}
+                        Average Profit Per Case Type
+                    {% else %}
+                        Profit Over Time - {{ case_type }}
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body d-flex flex-column"> 
+                <div class="chart-area flex-grow-1"> 
+                    {% if case_type == "all" %}
+                        <canvas id="mostProfitableChart"></canvas>
+                    {% else %}
+                        <canvas id="historicalScavChart"></canvas>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function formatRoubles(value) {
+        return `₽${Math.round(value).toLocaleString()}`;
+    }
+
+    function formatAvgItemCount(value) {
+        return value.toFixed(1) + " items";
+    }
+
+    // was getting a funny HTMX error here about re-declaring variables?
+    // i think the only way to stop this is to literally check if it is 
+    // defined like so.
+    if (typeof fixedCosts === "undefined") {
+        var fixedCosts = {
+            '₽2500': 2500,
+            '₽15000': 15000,
+            '₽95000': 95000
+        };
+    }
+
+    function createChart(chartId, type, labels, data, label, color, isRoubles = false, isDecimal = false, horizontalLine = null, costData = null) {
+    var ctx = document.getElementById(chartId);
+    if (!ctx) return;
+
+    var datasets = [
+        {
+            label: label,
+            data: data,
+            backgroundColor: color,
+            borderColor: color,
+            borderWidth: 2,
+            fill: type === 'line' ? false : true,
+            tension: 0.3,
+            pointRadius: type === 'line' ? 3 : 0,
+            pointBackgroundColor: color,
+            pointBorderColor: color,
+            pointHoverRadius: 7
+        }
+    ];
+
+    if (costData) {
+        datasets.push({
+            label: "Cost",
+            borderColor: "rgb(40, 167, 69)",
+            pointBackgroundColor: "rgb(40, 167, 69)",
+            fill: false,
+            borderDash: [5, 5],
+            data: costData
+        });
+    }
+
+    new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            onClick: (type === "pie" || type === "bar") ? {} : function(event, elements) {
+                if (elements.length > 0) {
+                    var datasetIndex = elements[0].datasetIndex;
+                    var dataIndex = elements[0].index;
+                    var entry_id = this.data.labels[dataIndex]
+
+                    if (entry_id) {
+                        window.location.href = `/entry/${entry_id}/detail`; 
+                    }
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: type === "pie" ? {} : {
+                x: { 
+                    ticks: { 
+                        autoSkip: type === 'line' ? false : true, 
+                        maxTicksLimit: 10, 
+                        maxRotation: type === 'line' ? 45 : 0,
+                        minRotation: type === 'line' ? 45 : 0
+                    }
+                },
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return isRoubles ? `₽${value.toLocaleString()}` : value;
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            if (type === "pie") {
+                                return tooltipItems[0].label
+                            } else {
+                                return `Scav Case ID: ${tooltipItems[0].label}`
+                            }
+                        },
+                        label: function(tooltipItem) {
+                            let value = tooltipItem.raw
+                            if (isRoubles) return `${tooltipItem.dataset.label}: ${formatRoubles(value)}`;
+                            if (isDecimal) return `${tooltipItem.dataset.label}: ${formatAvgItemCount(value)}`;
+                            return value;
+                        }
+                    }
+                },
+                legend: type === "pie" ? {} : { display:false }
+            }
+        },
+        plugins: [{
+            id: 'horizontalLine',
+            beforeDraw: function(chart) {
+                if (horizontalLine !== null) {
+                    let yScale = chart.scales['y'];
+                    let yValue = horizontalLine;
+                    let yPixel = yScale.getPixelForValue(yValue);
+
+                    let ctx = chart.ctx;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(chart.chartArea.left, yPixel);
+                    ctx.lineTo(chart.chartArea.right, yPixel);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'rgb(40, 167, 69)';
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.fillStyle = 'rgb(40, 167, 69)';
+                    ctx.fillText("Cost", chart.chartArea.right - 70, yPixel - 5);
+                    ctx.restore();
+                }
+            }
+        }],
+    });
+}
+
+
+    createChart('itemCategoryChart', 'pie',
+        {{ category_labels | tojson }},
+        {{ category_counts | tojson }},
+        'Item Categories',
+        ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+        '#858796', '#f8f9fc', '#5a5c69', '#bcf60c', '#fabebe', 
+        '#008080', '#e6beff', '#9A6324', '#fffac8', '#800000']);
+
+    {% if case_type == "all" %}
+        createChart('avgItemsChart', 'bar',
+            {{ avg_items_chart['chart_data']['x_value'] | tojson }},
+            {{ avg_items_chart['chart_data']['y_value'] | tojson }},
+            'Avg Items', '#e74a3b', false, true);
+
+        createChart('mostProfitableChart', 'bar',
+            {{ most_profitable_case['chart_data']['x_value'] | tojson }},
+            {{ most_profitable_case['chart_data']['y_value'] | tojson }},
+            'Avg Profit', '#e74a3b', true);
+
+        createChart('avgReturnChart', 'bar',
+            {{ avg_return_chart['chart_data']['x_value'] | tojson }},
+            {{ avg_return_chart['chart_data']['y_value'] | tojson }},
+            'Avg Return', '#e74a3b', true);
+    
+    {% else %}
+
+        createChart('historicalScavChart', 'line',
+            {{ profit_over_time_chart['labels'] | tojson }},
+            {{ profit_over_time_chart['profits'] | tojson }},
+            'Profit', 'rgb(231, 74, 59)', true, false);
+
+        createChart('itemsOverTimeChart', 'line',
+            {{ items_over_time_chart['labels'] | tojson }},
+            {{ items_over_time_chart['items_count'] | tojson }},
+            'Items Received', 'rgb(78, 115, 223)', false, true);
+
+        var isFixedPriceCase = {{ (case_type in ['₽2500', '₽15000', '₽95000']) | tojson }};
+        var returnLabels = {{ return_over_time_chart['labels'] | tojson }};
+        var returnData = {{ return_over_time_chart['returns'] | tojson }};
+        var costData = isFixedPriceCase ? null : {{ return_over_time_chart['costs'] | tojson }};
+
+        var horizontalLine = isFixedPriceCase ? fixedCosts["{{ case_type }}"] : null;
+
+        createChart('returnOverTimeChart', 'line',
+            returnLabels,
+            returnData,
+            'Return', 'rgb(231, 74, 59)', true, false, horizontalLine, costData
+        );
+    {% endif %}
+</script>
