@@ -39,5 +39,7 @@ def search_items():
     query = request.args.get("q")
     if len(query) < 2:
         return render_template("partials/item_list.html", items=[])
-    items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).all()
+    items = TarkovItem.query.filter(
+        TarkovItem.name.ilike(f"%{query}%")
+    ).limit(15).all()
     return render_template("partials/item_list.html", items=items)

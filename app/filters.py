@@ -18,7 +18,11 @@ def get_item_image_filename(item):
     ACTUALLY is attached to the item with name 'M4A1 Assault Rifle Default'. The normal
     M4A1 image is just the weapon's chassis.
     """
-    if item.tarkov_item.category == "Guns":
+    if isinstance(item, TarkovItem):
+        category = item.category
+    else:
+        category = item.tarkov_item.category
+    if category == "Guns":
         print(f"Finding where name = '{item.name} Default'")
         real_image_item = TarkovItem.query.filter_by(name=f"{item.name} Default").first()
         if real_image_item:
