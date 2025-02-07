@@ -281,24 +281,21 @@ def calculate_insights(entries):
     insights = [func(entries) for func in insight_functions.values()]
     return [insight for insight in insights if insight is not None]
 
-def find_most_common_item(entries):
+def find_most_common_items(entries, top_n = 3):
+    """Find the top N most common items across all entries."""
     item_counts = defaultdict(int)
+    tarkov_item_map = {}
 
     for entry in entries:
         for item in entry.items:
-            item_counts[item.name] += 1
+            item_counts[item.tarkov_id] += 1
+            tarkov_item_map[item.tarkov_id] = item
 
     if not item_counts:
-        return ("No Data", 0, None)
+        return []
 
-    most_common = max(item_counts, key=item_counts.get)
-
-    tarkov_id = next(
-        (item.tarkov_id for entry in entries for item in entry.items if item.name == most_common),
-        None
-    )
-
-    return (most_common, item_counts[most_common], tarkov_id)
+    sorted_items = sorted(item_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    return [(tarkov_item_map[tarkov_id], count) for tarkov_id, count in sorted_items]
 
 def calculate_item_category_distribution(entries):
     category_counts = defaultdict(int)
@@ -369,28 +366,21 @@ def calculate_avg_items_per_case_type(entries):
         },
     }
 
-def calculate_most_popular_category(entries):
-    """Find the most frequently appearing item category across all scav cases."""
+def calculate_most_popular_categories(entries, top_n = 3):
+    """Find the top N most frequently appearing item categories across all scav cases."""
     category_counts = defaultdict(int)
+    category_map = {}
 
     for entry in entries:
         for item in entry.items:
             category_counts[item.tarkov_item.category] += 1
+            category_map[item.tarkov_item.category] = item.tarkov_item 
 
     if not category_counts:
-        return None  
+        return []
 
-    most_popular_category = max(category_counts, key=category_counts.get)
-    count = category_counts[most_popular_category]
-
-    return {
-        "category": most_popular_category,
-        "count": count,
-        "chart_data": {
-            "labels": list(category_counts.keys()),
-            "values": list(category_counts.values()),
-        }
-    }
+    sorted_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    return [(category_map[category], count) for category, count in sorted_categories]
 
 
 def calculate_avg_return_by_case_type(entries):

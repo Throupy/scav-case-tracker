@@ -31,7 +31,7 @@ flask run
 - [ ] Couple OCR with image recognition
 - [X] Implement edit case functionality
 - [ ] Put images into CDN / S3, whatever is free and fastest
-- [ ] Modify "insights" page to be able to select a sample of cases and have the graphs display. Either by category, or by manually selecting with radio boxes.
+- [X] Modify "insights" page to be able to select a sample of cases and have the graphs display. Either by category, or by manually selecting with radio boxes.
 - [ ] Export functionality (export all Entries to JSON, CSV, etc)
 - [ ] Maybe some sort of 'executive summary' ?
 - [ ] Separate DEV and PROD configs
