@@ -35,3 +35,5 @@ flask run
 - [ ] Export functionality (export all Entries to JSON, CSV, etc)
 - [ ] Maybe some sort of 'executive summary' ?
 - [ ] Separate DEV and PROD configs
+- [ ] BUG: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
+- [ ] BUG: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
