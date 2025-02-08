@@ -4,7 +4,7 @@ import threading
 
 from flask import Flask
 
-from app.config import Config
+from app.config import ConfigClass
 from app.constants import CATEGORY_MAPPING
 from app.discord_bot.discord_bot import intents, ImageDownloaderClient
 from app.main.routes import main
@@ -23,10 +23,9 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-def create_app(config_class=Config):
+def create_app(config_class=ConfigClass):
     app = Flask(__name__)
     app.config.from_object(config_class)
-
     app.jinja_env.filters['timeago'] = timeago
     app.jinja_env.filters['item_image'] = get_item_image_filename
 

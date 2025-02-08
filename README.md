@@ -34,6 +34,8 @@ flask run
 - [X] Modify "insights" page to be able to select a sample of cases and have the graphs display. Either by category, or by manually selecting with radio boxes.
 - [ ] Export functionality (export all Entries to JSON, CSV, etc)
 - [ ] Maybe some sort of 'executive summary' ?
-- [ ] Separate DEV and PROD configs
+- [X] Separate DEV and PROD configs
 - [ ] BUG: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
 - [ ] BUG: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
+- [ ] Item scraping via config variable integrate into create_app()
+- [ ] Refactor codebase (entire)
