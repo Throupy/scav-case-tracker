@@ -7,6 +7,13 @@ instance/*
 .webassets-cache
 .env
 
+### Gunicorn logs
+logs/*
+*.log
+
+### Gunicorn config
+gunicorn_config.py
+
 ### Flask.Python Stack ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
