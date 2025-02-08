@@ -2,7 +2,7 @@
 Configuration classes for the scav case tracker flask app.
 
 SEED_ENTRIES: when this is set to true, the application will auto-generate some
-              random entry data for visualisation. The number of entries generated
+              random scav case data for visualisation. The number of scav cases generated
               is controlled by the SEED_ENTRIES_COUNT variable.
 REFRESH_TARKOV_ITEMS: when this is set to true, the application will read a new JSON list
                       list of items from ../items.json. I need to include the code for scraping this

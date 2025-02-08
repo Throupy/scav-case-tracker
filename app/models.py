@@ -15,7 +15,7 @@ class Insight:
     chart_tooltip: str
 
 
-class Entry(db.Model):
+class ScavCase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     cost = db.Column(db.Float, nullable=False, default=0)
@@ -24,7 +24,7 @@ class Entry(db.Model):
     type = db.Column(db.String(50), nullable=False)
     number_of_items = db.Column(db.Integer, nullable=False, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    items = db.relationship("EntryItem", backref="entry", cascade="all, delete")
+    items = db.relationship("ScavCaseItem", backref="scav_case", cascade="all, delete")
 
     @hybrid_property
     def profit(self):
@@ -33,17 +33,17 @@ class Entry(db.Model):
         return 0  # If _return is None, profit is 0
 
 
-class EntryItem(db.Model):
+class ScavCaseItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tarkov_id = db.Column(db.String(50), db.ForeignKey("tarkov_item.tarkov_id"), nullable=False)
     name = db.Column(db.String(100), nullable=False)  # item name
     amount = db.Column(db.Integer, nullable=False)  # number of that item
     price = db.Column(db.Float, nullable=False)  # price of the item
-    entry_id = db.Column(
-        db.Integer, db.ForeignKey("entry.id"), nullable=False
-    )  # reference to Entry
+    scav_case_id = db.Column(
+        db.Integer, db.ForeignKey("scav_case.id"), nullable=False
+    )  # reference to case
 
-    tarkov_item = db.relationship("TarkovItem", backref="entry_items", primaryjoin="EntryItem.tarkov_id == TarkovItem.tarkov_id")
+    tarkov_item = db.relationship("TarkovItem", backref="scav_case_items", primaryjoin="ScavCaseItem.tarkov_id == TarkovItem.tarkov_id")
 
 
 class TarkovItem(db.Model):
@@ -65,4 +65,4 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default="default.jpg")
     password = db.Column(db.String(60), nullable=False)
-    entries = db.relationship("Entry", backref="author", lazy=True)
+    scav_cases = db.relationship("ScavCase", backref="author", lazy=True)

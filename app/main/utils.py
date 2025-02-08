@@ -11,7 +11,7 @@ from flask import current_app
 from rapidfuzz import process, fuzz
 from sqlalchemy.sql import func
 
-from app.models import Insight, TarkovItem, Entry, EntryItem, User
+from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem, User
 from app.extensions import db
 
 
@@ -181,39 +181,38 @@ def process_scav_case_image(file_path):
 
 def create_scav_case_entry(scav_case_type, items, user_id):
     """Creates a scav case entry and associated items in the database."""
-    entry = Entry(type=scav_case_type, user_id=user_id)
+    scav_case = ScavCase(type=scav_case_type, user_id=user_id)
 
-    # Get price for scav case type (based on your existing logic)
     if scav_case_type.lower() == "moonshine":
-        entry.cost = get_price("5d1b376e86f774252519444e")
+        scav_case.cost = get_price("5d1b376e86f774252519444e")
     elif scav_case_type.lower() == "intelligence":
-        entry.cost = get_price("5c12613b86f7743bbe2c3f76")
+        scav_case.cost = get_price("5c12613b86f7743bbe2c3f76")
     else:
-        entry.cost = int(scav_case_type.replace("₽", "").strip())
+        scav_case.cost = int(scav_case_type.replace("₽", "").strip())
 
-    db.session.add(entry)
+    db.session.add(scav_case)
     db.session.commit()
 
     for item in items:
-        entry_item = EntryItem(
-            entry_id=entry.id,
+        scav_case_item = ScavCaseItem(
+            scav_case_id=scav_case.id,
             tarkov_id=item["id"],
             price=get_price(item["id"]),
             name=item["name"],
             amount=item["quantity"],
         )
-        db.session.add(entry_item)
-        entry.number_of_items += 1
-        entry._return += entry_item.price * item["quantity"]
+        db.session.add(scav_case_item)
+        scav_case.number_of_items += 1
+        scav_case._return += scav_case_item.price * item["quantity"]
 
     db.session.commit()
-    return entry
+    return scav_case
 
 def get_most_popular_item():
-    """Get the most common Tarkov item category from all entries."""
+    """Get the most common Tarkov item category from all scav cases."""
     return (
         TarkovItem.query
-        .join(EntryItem, EntryItem.tarkov_id == TarkovItem.tarkov_id)
+        .join(ScavCaseItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id)
         .with_entities(TarkovItem.category, func.count(TarkovItem.category).label("count"))
         .group_by(TarkovItem.category)
         .order_by(func.count(TarkovItem.category).desc())
@@ -221,30 +220,30 @@ def get_most_popular_item():
     )
 
 def get_top_contributor():
-    """Find the user who submitted the most entries."""
+    """Find the user who submitted the most scav cases."""
     return (
         User.query
-        .join(Entry, Entry.user_id == User.id)
+        .join(ScavCase, ScavCase.user_id == User.id)
         .group_by(User.id)
-        .order_by(func.count(Entry.id).desc())
+        .order_by(func.count(ScavCase.id).desc())
         .first()
     )
 
 def get_most_profitable_case():
     """Determine the most profitable case type based on average profit per run."""
     return (
-        Entry.query
-        .with_entities(Entry.type, func.avg(Entry._return - Entry.cost).label("avg_profit"))
-        .group_by(Entry.type)
-        .order_by(func.avg(Entry._return - Entry.cost).desc())
+        ScavCase.query
+        .with_entities(ScavCase.type, func.avg(ScavCase._return - ScavCase.cost).label("avg_profit"))
+        .group_by(ScavCase.type)
+        .order_by(func.avg(ScavCase._return - ScavCase.cost).desc())
         .first()
     )
 
 def get_most_valuable_item():
     """Find the most valuable single item (highest total price × amount)."""
     return (
-        EntryItem.query
-        .order_by((EntryItem.price).desc())
+        ScavCaseItem.query
+        .order_by((ScavCaseItem.price).desc())
         .first()
     )
 
@@ -256,5 +255,5 @@ def get_dashboard_data():
         "most_profitable_case": get_most_profitable_case,
         "most_valuable_item": get_most_valuable_item,
     }
-    
+
     return {key: func() for key, func in dashboard_functions.items()}

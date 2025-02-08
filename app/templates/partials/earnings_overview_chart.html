@@ -81,10 +81,10 @@ document.addEventListener("DOMContentLoaded", function() {
             if (elements.length > 0) {
                 var datasetIndex = elements[0].datasetIndex;
                 var dataIndex = elements[0].index;
-                var entry = recentEarningsChart.data.datasets[datasetIndex].entries[dataIndex];
+                var entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases[dataIndex];
 
                 if (entry && entry.id) {
-                    window.location.href = `/entry/${entry.id}/detail`;
+                    window.location.href = `/case/${entry.id}/detail`;
                 }
             }
           },
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     title: function(tooltipItems) {
                         if (!tooltipItems || tooltipItems.length === 0 || !tooltipItems[0]) return ''; 
                         var dataIndex = tooltipItems[0].dataIndex;
-                        var entry = recentEarningsChart.data.datasets[0].entries[dataIndex];
+                        var entry = recentEarningsChart.data.datasets[0].scav_cases[dataIndex];
                         if (!entry) return ''; 
                         
                         return 'Case Type: ' + entry.type;
@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     label: function(tooltipItem) {
                         var datasetIndex = tooltipItem.datasetIndex;
                         var dataPointIndex = tooltipItem.dataIndex;
-                        var entry = recentEarningsChart.data.datasets[datasetIndex].entries[dataPointIndex];
+                        var entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases[dataPointIndex];
                         var labels = [];
                         labels.push('Profit: ₽' + number_format(entry.profit));
                         labels.push('Cost: ₽' + number_format(entry.cost));
@@ -255,23 +255,23 @@ async function updateChartWithThreshold(threshold) {
     const fixedCostTypes = ['₽2500', '₽15000', '₽95000'];
     const showCostDots = !fixedCostTypes.includes(selectedCaseType);
 
-    if (data.entries.length < 3) {
+    if (data.scav_cases.length < 3) {
       document.getElementById('warning-message').classList.remove('d-none');
       recentEarningsChart.data.labels = [];
       recentEarningsChart.data.datasets[0].data = [];
       recentEarningsChart.data.datasets[1].data = [];
-      recentEarningsChart.data.datasets[0].entries = [];
-      recentEarningsChart.data.datasets[1].entries = [];
+      recentEarningsChart.data.datasets[0].scav_cases = [];
+      recentEarningsChart.data.datasets[1].scav_cases = [];
     } else {
       document.getElementById('warning-message').classList.add('d-none');
       recentEarningsChart.data.labels = data.labels;
 
-      recentEarningsChart.data.datasets[0].data = data.entries.map(entry => entry.return);
-      recentEarningsChart.data.datasets[0].entries = data.entries;
+      recentEarningsChart.data.datasets[0].data = data.scav_cases.map(entry => entry.return);
+      recentEarningsChart.data.datasets[0].scav_cases = data.scav_cases;
 
       if (showCostDots) {
-        recentEarningsChart.data.datasets[1].data = data.entries.map(entry => entry.cost);
-        recentEarningsChart.data.datasets[1].entries = data.entries;
+        recentEarningsChart.data.datasets[1].data = data.scav_cases.map(entry => entry.cost);
+        recentEarningsChart.data.datasets[1].scav_cases = data.scav_cases;
         recentEarningsChart.data.datasets[1].hidden = false;
         recentEarningsChart.options.plugins.horizontalLine.y = null; 
       } else {
