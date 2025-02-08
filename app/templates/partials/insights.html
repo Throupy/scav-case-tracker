@@ -200,10 +200,10 @@
                 if (elements.length > 0) {
                     var datasetIndex = elements[0].datasetIndex;
                     var dataIndex = elements[0].index;
-                    var entry_id = this.data.labels[dataIndex]
+                    var scav_case_id = this.data.labels[dataIndex]
 
-                    if (entry_id) {
-                        window.location.href = `/entry/${entry_id}/detail`; 
+                    if (scav_case_id) {
+                        window.location.href = `/case/${scav_case_id}/detail`; 
                     }
                 }
             },

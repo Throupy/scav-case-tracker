@@ -11,7 +11,7 @@ from flask import current_app
 from rapidfuzz import process, fuzz
 from werkzeug.utils import secure_filename
 
-from app.models import Insight, TarkovItem, Entry, EntryItem
+from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem
 from app.extensions import db
 
 
@@ -243,34 +243,34 @@ def process_scav_case_image(file_path):
 
 def create_scav_case_entry(scav_case_type, items, user_id):
     """Creates a scav case entry and associated items in the database."""
-    entry = Entry(type=scav_case_type, user_id=user_id)
+    scav_case = ScavCase(type=scav_case_type, user_id=user_id)
     if scav_case_type.lower() == "moonshine":
-        entry.cost = get_price("5d1b376e86f774252519444e")
+        scav_case.cost = get_price("5d1b376e86f774252519444e")
     elif scav_case_type.lower() == "intelligence":
-        entry.cost = get_price("5c12613b86f7743bbe2c3f76")
+        scav_case.cost = get_price("5c12613b86f7743bbe2c3f76")
     else:
-        entry.cost = int(scav_case_type.replace("₽", "").strip())
+        scav_case.cost = int(scav_case_type.replace("₽", "").strip())
 
-    db.session.add(entry)
+    db.session.add(scav_case)
     db.session.commit()
 
     for item in items:
-        entry_item = EntryItem(
-            entry_id=entry.id,
+        scav_case_item = ScavCaseItem(
+            scav_case_id=scav_case.id,
             tarkov_id=item["id"],
             price=get_price(item["id"]),
             name=item["name"],
             amount=item["quantity"],
         )
-        db.session.add(entry_item)
-        entry.number_of_items += 1
-        entry._return += entry_item.price * item["quantity"]
+        db.session.add(scav_case_item)
+        scav_case.number_of_items += 1
+        scav_case._return += scav_case_item.price * item["quantity"]
 
     db.session.commit()
-    return entry
+    return scav_case
 
 
-def calculate_insights(entries):
+def calculate_insights(scav_cases):
     """Compute multiple insights dynamically"""
     insight_functions = {
         "Most Profitable Case": calculate_most_profitable,
@@ -278,16 +278,16 @@ def calculate_insights(entries):
         "Average Items per Case Type": calculate_avg_items_per_case_type,
     }
 
-    insights = [func(entries) for func in insight_functions.values()]
+    insights = [func(scav_cases) for func in insight_functions.values()]
     return [insight for insight in insights if insight is not None]
 
-def find_most_common_items(entries, top_n = 3):
-    """Find the top N most common items across all entries."""
+def find_most_common_items(scav_cases, top_n = 3):
+    """Find the top N most common items across all scav cases."""
     item_counts = defaultdict(int)
     tarkov_item_map = {}
 
-    for entry in entries:
-        for item in entry.items:
+    for scav_case in scav_cases:
+        for item in scav_case.items:
             item_counts[item.tarkov_id] += 1
             tarkov_item_map[item.tarkov_id] = item
 
@@ -297,11 +297,11 @@ def find_most_common_items(entries, top_n = 3):
     sorted_items = sorted(item_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
     return [(tarkov_item_map[tarkov_id], count) for tarkov_id, count in sorted_items]
 
-def calculate_item_category_distribution(entries):
+def calculate_item_category_distribution(scav_cases):
     category_counts = defaultdict(int)
 
-    for entry in entries:
-        for item in entry.items:
+    for scav_case in scav_cases:
+        for item in scav_case.items:
             category_counts[item.tarkov_item.category] += 1
 
     if not category_counts:
@@ -312,16 +312,16 @@ def calculate_item_category_distribution(entries):
         "values": list(category_counts.values()),
     }
 
-def calculate_most_profitable(entries):
+def calculate_most_profitable(scav_cases):
     """Find the scav case type with the highest average profit."""
     profit_by_case_type = defaultdict(float)
     count_by_case_type = defaultdict(int)
 
-    for entry in entries:
-        if entry._return is not None:
-            profit = entry._return - entry.cost
-            profit_by_case_type[entry.type] += profit
-            count_by_case_type[entry.type] += 1
+    for scav_case in scav_cases:
+        if scav_case._return is not None:
+            profit = scav_case._return - scav_case.cost
+            profit_by_case_type[scav_case.type] += profit
+            count_by_case_type[scav_case.type] += 1
 
     if not profit_by_case_type:
         return None
@@ -344,14 +344,14 @@ def calculate_most_profitable(entries):
     }
 
 
-def calculate_avg_items_per_case_type(entries):
+def calculate_avg_items_per_case_type(scav_cases):
     """Calculate the average number of items per scav case type."""
     total_items_by_case_type = defaultdict(int)
     count_by_case_type = defaultdict(int)
 
-    for entry in entries:
-        total_items_by_case_type[entry.type] += len(entry.items)
-        count_by_case_type[entry.type] += 1
+    for scav_case in scav_cases:
+        total_items_by_case_type[scav_case.type] += len(scav_case.items)
+        count_by_case_type[scav_case.type] += 1
 
     if not total_items_by_case_type:
         return None
@@ -366,13 +366,13 @@ def calculate_avg_items_per_case_type(entries):
         },
     }
 
-def calculate_most_popular_categories(entries, top_n = 3):
+def calculate_most_popular_categories(scav_cases, top_n = 3):
     """Find the top N most frequently appearing item categories across all scav cases."""
     category_counts = defaultdict(int)
     category_map = {}
 
-    for entry in entries:
-        for item in entry.items:
+    for scav_case in scav_cases:
+        for item in scav_case.items:
             category_counts[item.tarkov_item.category] += 1
             category_map[item.tarkov_item.category] = item.tarkov_item 
 
@@ -383,15 +383,15 @@ def calculate_most_popular_categories(entries, top_n = 3):
     return [(category_map[category], count) for category, count in sorted_categories]
 
 
-def calculate_avg_return_by_case_type(entries):
+def calculate_avg_return_by_case_type(scav_cases):
     """Calculate the average return for each scav case type."""
     total_return_by_case_type = defaultdict(float)
     count_by_case_type = defaultdict(int)
 
-    for entry in entries:
-        if entry._return is not None:
-            total_return_by_case_type[entry.type] += entry._return
-            count_by_case_type[entry.type] += 1
+    for scav_case in scav_cases:
+        if scav_case._return is not None:
+            total_return_by_case_type[scav_case.type] += scav_case._return
+            count_by_case_type[scav_case.type] += 1
 
     if not total_return_by_case_type:
         return None
