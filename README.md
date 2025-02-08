@@ -41,3 +41,4 @@ flask run
 
 - [ ] Item scraping via config variable integrate into create_app()
 - [ ] Refactor codebase (entire)
+- [ ] `'` in item name on entry page causes JS error and item not added to selected items list.
