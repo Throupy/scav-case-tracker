@@ -10,7 +10,7 @@ from flask import (
 from sqlalchemy.sql import func
 
 from app.config import SCAV_CASE_TYPES
-from app.models import Entry, TarkovItem, EntryItem, User
+from app.models import ScavCase, TarkovItem, ScavCaseItem, User
 from app.main.utils import get_dashboard_data
 
 main = Blueprint("main", __name__)
@@ -30,12 +30,13 @@ def dashboard():
     return render_template(
         "dashboard.html",
         scav_case_types=SCAV_CASE_TYPES,
-        entries=Entry.query.all(),
+        scav_cases=ScavCase.query.all(),
         **dashboard_data 
     )
 
 @main.route("/search-items")
 def search_items():
+    """HTMX search route"""
     query = request.args.get("q")
     if len(query) < 2:
         return render_template("partials/item_list.html", items=[])

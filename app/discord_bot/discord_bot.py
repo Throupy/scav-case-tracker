@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from app.discord_bot.utils import get_matching_type, valid_types, create_basic_embed
 from app.config import SCAV_CASE_TYPES
-from app.models import Entry
+from app.models import ScavCase
 
 
 @commands.command(name="case_types")
@@ -85,7 +85,7 @@ class ImageDownloaderClient(commands.Bot):
             if not tarkov_role or tarkov_role not in message.author.roles:
                 return await message.channel.send(
                     embed=create_basic_embed(
-                        f"You do not have permission to submit scav case entries"
+                        f"You do not have permission to submit scav cases"
                     )
                 )
 
@@ -176,7 +176,7 @@ class ImageDownloaderClient(commands.Bot):
                         if response.status == 200:
                             # Update message after successful submission
                             response_msg = await response.json()
-                            status_embed.description = "Image successfully processed and added to scav case entry. The following items were detected:"
+                            status_embed.description = "Image successfully processed and added to scav case. The following items were detected:"
                             for item in response_msg["items"]:
                                 status_embed.add_field(
                                     name=item["name"],

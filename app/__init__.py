@@ -12,7 +12,7 @@ from app.api.routes import api
 from app.users.routes import users
 from app.quiz.routes import _quiz as quiz
 from app.cases.routes import cases
-from app.models import User, TarkovItem, WeaponAttachment, Entry
+from app.models import User, TarkovItem, WeaponAttachment, ScavCase
 from app.filters import timeago, get_item_image_filename
 from app.cases.utils import get_price
 from app.extensions import db, migrate, login_manager, bcrypt
@@ -118,8 +118,8 @@ def create_app(config_class=ConfigClass):
                 if random.choice(range(5)) == 3:
                     _return = random.uniform(cost * 0.9, cost * 5.5)
                 _type = costs[cost]
-                entry = Entry(cost=cost, _return=_return, type=_type, user_id=1)
-                db.session.add(entry)
+                scav_case = ScavCase(cost=cost, _return=_return, type=_type, user_id=1)
+                db.session.add(scav_case)
 
         db.session.commit()
 

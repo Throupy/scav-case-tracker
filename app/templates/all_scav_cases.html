@@ -4,7 +4,7 @@
 <div class="row align-items-center">
     <div class="col-md-6">
         <div class="mb-3">
-            <h5 class="card-title">Scav Case Returns <span class="text-gray-500 ms-2">({{ entries | length }})</span></h5>
+            <h5 class="card-title">Scav Case Returns <span class="text-gray-500 ms-2">({{ scav_cases | length }})</span></h5>
         </div>
     </div>
 </div>
@@ -17,7 +17,7 @@
                         <tr>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('cases.all_cases', sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_scav_cases', sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Type
                                     {% if sort_by == 'type' %}
                                         {% if sort_order == 'asc' %}
@@ -30,7 +30,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('cases.all_cases', sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_scav_cases', sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Return
                                     {% if sort_by == '_return' %}
                                         {% if sort_order == 'asc' %}
@@ -43,7 +43,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('cases.all_cases', sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_scav_cases', sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Profit
                                     {% if sort_by == 'profit' %}
                                         {% if sort_order == 'asc' %}
@@ -56,7 +56,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('cases.all_cases', sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_scav_cases', sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Number of Items
                                     {% if sort_by == 'number_of_items' %}
                                         {% if sort_order == 'asc' %}
@@ -74,7 +74,7 @@
                             </th>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none" 
-                                    href="{{ url_for('cases.all_cases', sort_by='created_at', sort_order='asc' if sort_by != 'created_at' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('cases.all_scav_cases', sort_by='created_at', sort_order='asc' if sort_by != 'created_at' or sort_order == 'desc' else 'desc', page=1) }}">
                                     Submitted
                                     {% if sort_by == 'created_at' %}
                                         {% if sort_order == 'asc' %}
@@ -90,56 +90,56 @@
                     </thead>
                     
                     <tbody>
-                        {% for entry in entries %}
+                        {% for scav_case in scav_cases %}
                             <tr>
                                 <td>
                                     <span class="badge mb-0
-                                    {% if entry.type == '₽2500' %}
+                                    {% if scav_case.type == '₽2500' %}
                                         badge-soft-warning
-                                    {% elif entry.type == '₽15000' %}
+                                    {% elif scav_case.type == '₽15000' %}
                                         badge-soft-danger
-                                    {% elif entry.type == '₽95000' %}
+                                    {% elif scav_case.type == '₽95000' %}
                                         badge-soft-success
-                                    {% elif entry.type == 'Moonshine' %}
+                                    {% elif scav_case.type == 'Moonshine' %}
                                         badge-soft-primary
-                                    {% elif entry.type == 'Intelligence' %}
+                                    {% elif scav_case.type == 'Intelligence' %}
                                         badge-soft-info
                                     {% else %}
                                         badge-soft-secondary
                                     {% endif %}">
-                                        {{ entry.type }}
+                                        {{ scav_case.type }}
                                     </span>
                                 </td>
-                                <td>₽{{ "{:,}".format(entry._return | int) }}</td>
+                                <td>₽{{ "{:,}".format(scav_case._return | int) }}</td>
                                 <td>
-                                    {% if entry._return - entry.cost < 0 %}
+                                    {% if scav_case._return - scav_case.cost < 0 %}
                                         <span class="badge mb-0 badge-soft-danger">
-                                            ₽{{ "{:,}".format((entry._return - entry.cost) | int) }}
+                                            ₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}
                                         </span>
                                     {% else %}
                                         <span class="badge mb-0 badge-soft-success">
-                                            ₽{{ "{:,}".format((entry._return - entry.cost) | int) }}
+                                            ₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td>{{ entry.number_of_items }}</td>
+                                <td>{{ scav_case.number_of_items }}</td>
                                 <td>
                                     <img width=24 height=24 class="mr-1 img-profile rounded-circle"
-                                    src="{{ url_for('static', filename='profile_pics/' + entry.author.image_file) }}">
-                                    {{ entry.author.username }}
+                                    src="{{ url_for('static', filename='profile_pics/' + scav_case.author.image_file) }}">
+                                    {{ scav_case.author.username }}
                                 </td>
                                 <td>
-                                    {{ entry.created_at | timeago }}
+                                    {{ scav_case.created_at | timeago }}
                                 </td>
                                 <td>
                                     <ul class="list-inline mb-0">
                                         <li class="list-inline-item">
-                                            <a href="{{ url_for('cases.entry_detail', entry_id=entry.id) }}" 
+                                            <a href="{{ url_for('cases.scav_case_detail', scav_case_id=scav_case.id) }}" 
                                                data-bs-toggle="tooltip" data-bs-placement="top" title="View" 
                                                class="px-2 text-danger"><i class="fa-regular fa-eye"></i></a>
                                         </li>
                                         <li class="list-inline-item">
-                                            <a href="{{ url_for('cases.delete_entry', entry_id=entry.id) }}" 
+                                            <a href="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}" 
                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" 
                                                class="px-2 text-danger"><i class="fa-regular fa-trash-can"></i></a>
                                         </li>
@@ -166,7 +166,7 @@
             <ul class="pagination mb-sm-0">
                 <!-- Previous Page -->
                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                    <a href="{{ url_for('cases.all_cases', page=pagination.prev_num) }}" class="page-link">
+                    <a href="{{ url_for('cases.all_scav_cases', page=pagination.prev_num) }}" class="page-link">
                         <i class="text-danger fa fa-chevron-left"></i>
                     </a>
                 </li>
@@ -175,7 +175,7 @@
                 {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
                         <li class="text-danger page-item {% if pagination.page == page_num %}active{% endif %}">
-                            <a href="{{ url_for('cases.all_cases', page=page_num) }}" class="text-danger page-link">{{ page_num }}</a>
+                            <a href="{{ url_for('cases.all_scav_cases', page=page_num) }}" class="text-danger page-link">{{ page_num }}</a>
                         </li>
                     {% else %}
                         <li class="page-item disabled"><a href="#" class="text-danger page-link">…</a></li>
@@ -184,7 +184,7 @@
 
                 <!-- Next Page -->
                 <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                    <a href="{{ url_for('cases.all_cases', page=pagination.next_num) }}" class="page-link">
+                    <a href="{{ url_for('cases.all_scav_cases', page=pagination.next_num) }}" class="page-link">
                         <i class="text-danger fa fa-chevron-right"></i>
                     </a>
                 </li>
