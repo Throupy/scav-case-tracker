@@ -4,7 +4,7 @@
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-danger">
                     {% if case_type == "all" %}
-                        Average Return Per Case Type
+                        Average Return Per Case Type ({{ case_type.title() }} Cases)
                     {% else %}
                         Return Per Run - {{ case_type }}
                     {% endif %}
@@ -27,7 +27,7 @@
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-danger">
                     {% if case_type == "all" %}
-                        Average Items Per Case Type
+                        Average Items Per Case Type ({{ case_type.title() }} Cases)
                     {% else %}
                         Items Per Run - {{ case_type }}
                     {% endif %}
@@ -50,7 +50,7 @@
     <div class="col-md-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Most Common Items</h6>
+                <h6 class="m-0 font-weight-bold text-danger">Most Common Items ({{ case_type.title() }} Cases)</h6>
                 <i class="fa fa-chevron-down collapse-toggle" data-toggle="collapse" data-target="#itemCollapse"></i>
             </div>
             <div class="card-body">
@@ -76,7 +76,7 @@
     <div class="col-md-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Most Common Categories</h6>
+                <h6 class="m-0 font-weight-bold text-danger">Most Common Categories ({{ case_type.title() }} Cases)</h6>
                 <i class="fa fa-chevron-down collapse-toggle" data-toggle="collapse" data-target="#categoryCollapse"></i>
             </div>
             <div class="card-body">
@@ -104,7 +104,7 @@
     <div class="col-md-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution</h6>
+                <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution ({{ case_type.title() }} Cases)</h6>
             </div>
             <div class="card-body">
                 <div class="chart-area">
@@ -118,7 +118,7 @@
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-danger">
                     {% if case_type == "all" %}
-                        Average Profit Per Case Type
+                        Average Profit Per Case Type ({{ case_type.title() }} Cases)
                     {% else %}
                         Profit Over Time - {{ case_type }}
                     {% endif %}
