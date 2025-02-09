@@ -43,4 +43,4 @@ flask run
 
 - [X] BUG_1: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
 - [X] BUG_2: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
-- [ ] BUG_3: `'` in item name on entry page causes JS error and item not added to selected items list.
+- [X] BUG_3: `'` in item name on entry page causes JS error and item not added to selected items list.
