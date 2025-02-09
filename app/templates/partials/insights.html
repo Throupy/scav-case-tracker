@@ -233,6 +233,8 @@
                         title: function(tooltipItems) {
                             if (type === "pie") {
                                 return tooltipItems[0].label
+                            } else if (type === "bar") {
+                                return `Case Type: ${tooltipItems[0].label}`
                             } else {
                                 return `Scav Case ID: ${tooltipItems[0].label}`
                             }
