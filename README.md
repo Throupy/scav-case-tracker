@@ -35,10 +35,9 @@ flask run
 - [ ] Export functionality (export all Entries to JSON, CSV, etc)
 - [ ] Maybe some sort of 'executive summary' ?
 - [X] Separate DEV and PROD configs
-- [ ] BUG: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
-- [ ] BUG: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
-- [ ] FEATURE: Some sort of price watcher. Unsure exactly how this will look but definately monitoring historical prices of intel and moonshine. Perhaps include other items that fluctuate (e.g. sugar, GPUs). And items that have increased in value drastically over the last few days (can use tarkov.dev API for this)
-
+- [ ] BUG_1: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
+- [X] BUG_2: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
+- [ ] FEATURE_1: Some sort of price watcher. Unsure exactly how this will look but definately monitoring historical prices of intel and moonshine. Perhaps include other items that fluctuate (e.g. sugar, GPUs). And items that have increased in value drastically over the last few days (can use tarkov.dev API for this)
 - [ ] Item scraping via config variable integrate into create_app()
 - [ ] Refactor codebase (entire)
-- [ ] `'` in item name on entry page causes JS error and item not added to selected items list.
+- [ ] BUG_3: `'` in item name on entry page causes JS error and item not added to selected items list.
