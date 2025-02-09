@@ -18,29 +18,16 @@ flask run
 ```
 
 # To Do
-- [X] ScavCase detail blue badge should display total price, not per item.
-- [X] Main blueprint
-- [X] Discord bot user role filtering - stop spam
-- [ ] Item stats e.g. "most common item" per case.
-- [X] Pie chart item distribution (credit: wojteklays)
-- [X] Improve scav case detail page
-- Implement "scav case editing"
-- [ ] Prices for ammo packs are wrong. tarkov.dev API says that 50 box of 6a1 is worth 480, this is not true. Perhaps "unpack" the box and sell each round individually for a more accurate price?
-- [ ] More high-res and better images for scav case detail page required
-- [X] Trim "most valuable item to date"
-- [ ] Couple OCR with image recognition
-- [X] Implement edit case functionality
-- [ ] Put images into CDN / S3, whatever is free and fastest
-- [X] Modify "insights" page to be able to select a sample of cases and have the graphs display. Either by category, or by manually selecting with radio boxes.
-- [ ] Export functionality (export all Entries to JSON, CSV, etc)
-- [ ] Maybe some sort of 'executive summary' ?
-- [X] Separate DEV and PROD configs
-- [ ] Item scraping via config variable integrate into create_app()
-- [ ] Refactor codebase (entire)
-
+- [ ] IMPROVEMENT_1: Put images into S3 / CDN
+- [ ] IMPROVEMENT_2: Couple OCR with image recognition
 
 - [ ] FEATURE_1: Some sort of price watcher. Unsure exactly how this will look but definately monitoring historical prices of intel and moonshine. Perhaps include other items that fluctuate (e.g. sugar, GPUs). And items that have increased in value drastically over the last few days (can use tarkov.dev API for this)
+- [ ] FEATURE_2: Custom error pages, including specific handling e.g. 404 (case not found).
+- [ ] FEATURE_3: Item scraping to be included into the applications startup, while still being controlled from the configuration file.
+- [ ] FEATURE_4: Export functionality (CSV, JSON)
+- [ ] FEATURE_5: 'Executive Summary' style report
 
 - [X] BUG_1: insights page, when ALL selected, it says Scav Case ID: on the bar hover.
 - [X] BUG_2: insights page, when filtering, the titles of all graphs should read the scav case type. only 3 do currently
 - [X] BUG_3: `'` in item name on entry page causes JS error and item not added to selected items list.
+- [ ] BUG_4: Prices for ammo packs are wrong. tarkov.dev API says that 50 box of 6a1 is worth 480, this is not true. Perhaps "unpack" the box and sell each round individually for a more accurate price?
