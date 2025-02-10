@@ -1,6 +1,5 @@
 <ul class="list-group">
     {% for item in items %}
-        {{ item.name | tojson }}
         <li class="list-group-item d-flex align-items-center" 
         onclick="addItemToSelected('{{ item.tarkov_id }}', '{{ item.name | replace("'", "\\'") }}', 1)">
             <img src="{{ url_for('static', filename='items/' + item | item_image ) }}" alt="{{ item.name }}"
