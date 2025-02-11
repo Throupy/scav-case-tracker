@@ -91,6 +91,11 @@ CATEGORY_MAPPING = {
 
 SCAV_CASE_TYPES = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
 
+DEFAULT_TRACKED_ITEMS = [
+    "Pack of sugar", 
+    "Bottle of Fierce Hatchling moonshine", 
+    "Intelligence folder"]
+
 # Error message will read 404 - Not Found, then on new line, one of:
 MESSAGES_404 = [
     "Just like that last GPU you searched for.",
