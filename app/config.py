@@ -14,8 +14,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SCAV_CASE_TYPES = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
-
 class Config:
     """Base configuration (shared settings)"""
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///scav_case.db")

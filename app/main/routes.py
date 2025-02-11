@@ -9,7 +9,7 @@ from flask import (
 
 from sqlalchemy.sql import func
 
-from app.config import SCAV_CASE_TYPES
+from app.constants import SCAV_CASE_TYPES
 from app.models import ScavCase, TarkovItem, ScavCaseItem, User
 from app.main.utils import get_dashboard_data
 

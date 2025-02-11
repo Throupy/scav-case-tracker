@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from app.discord_bot.utils import get_matching_type, valid_types, create_basic_embed
-from app.config import SCAV_CASE_TYPES
+from app.constants import SCAV_CASE_TYPES
 from app.models import ScavCase
 
 

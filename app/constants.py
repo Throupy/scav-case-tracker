@@ -88,3 +88,40 @@ CATEGORY_MAPPING = {
     "Ammo": "Ammo",
     "Ammo packs": "Ammo"
 }
+
+SCAV_CASE_TYPES = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
+
+# Error message will read 404 - Not Found, then on new line, one of:
+MESSAGES_404 = [
+    "Just like that last GPU you searched for.",
+    "Page not found, but don’t worry, it’ll extract before you do.",
+    "You didn’t bring enough rubles for this route, comrade.",
+    "This page is camped by Killa. Good luck.",
+    "Wrong keycard. Try again, rat.",
+    "This page was found in a dead SCAV’s backpack, but now it’s gone.",
+    "Page not found. Maybe it desynced?",
+    "You loaded into the wrong raid. Try again."
+]
+
+MESSAGES_403 = [
+    "Nice try, but you don’t have the key for this door.",
+    "Access denied. Maybe Fence doesn’t trust you enough?",
+    "You need to be Level 15 to access this trader… oh wait, wrong game.",
+    "Prapor says no. Try again later.",
+    "This area is locked. Find a Labs keycard, then we’ll talk.",
+    "Your access has been revoked… probably because you scav killed.",
+    "You don’t have enough reputation to enter. Go grind some more quests.",
+    "You need higher loyalty with Therapist to access this page."
+]
+
+MESSAGES_500 = [
+    "Looks like Tarkov servers are down… again.",
+    "The game crashed, and now so did this page.",
+    "An unexpected error occurred. Just like when your game freezes mid-raid.",
+    "This page took too much damage and blacked out.",
+    "Something went wrong, kind of like your last raid.",
+    "Your request got head-eyes’d by a TTV chad.",
+    "Our backend desynced. Please wait for a reconnect...",
+    "This page hit an invisible Sturman guard. Try again."
+]
+

@@ -22,7 +22,7 @@ flask run
 - [ ] IMPROVEMENT_2: Couple OCR with image recognition
 
 - [ ] FEATURE_1: Some sort of price watcher. Unsure exactly how this will look but definately monitoring historical prices of intel and moonshine. Perhaps include other items that fluctuate (e.g. sugar, GPUs). And items that have increased in value drastically over the last few days (can use tarkov.dev API for this)
-- [ ] FEATURE_2: Custom error pages, including specific handling e.g. 404 (case not found).
+- [X] FEATURE_2: Custom error pages, including specific handling e.g. 404 (case not found).
 - [ ] FEATURE_3: Item scraping to be included into the applications startup, while still being controlled from the configuration file.
 - [ ] FEATURE_4: Export functionality (CSV, JSON)
 - [ ] FEATURE_5: 'Executive Summary' style report
