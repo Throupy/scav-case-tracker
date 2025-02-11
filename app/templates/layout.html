@@ -60,7 +60,7 @@
                     <i class="fas fa-fw fa-wrench"></i>
                     <span>Insights</span></a>
             </li>
-
+            
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('cases.items') }}">
                     <i class="fas fa-fw fa-table-list"></i>
@@ -81,6 +81,14 @@
                         <a class="collapse-item" href="{{ url_for('quiz.quiz', quiz_type='ergonomics') }}">Ergonomics</a>
                     </div>
                 </div>
+            </li>
+
+            <hr class="sidebar-divider">
+
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('market.index') }}">
+                    <i class="fas fa-fw fa-shop"></i>
+                    <span>Market</span></a>
             </li>
 
             <hr class="sidebar-divider">
