@@ -10,6 +10,7 @@ from app.discord_bot.discord_bot import intents, ImageDownloaderClient
 from app.main.routes import main
 from app.api.routes import api
 from app.users.routes import users
+from app.errors.routes import errors
 from app.quiz.routes import _quiz as quiz
 from app.cases.routes import cases
 from app.models import User, TarkovItem, WeaponAttachment, ScavCase
@@ -127,6 +128,7 @@ def create_app(config_class=ConfigClass):
     app.register_blueprint(api)
     app.register_blueprint(users)
     app.register_blueprint(quiz)
+    app.register_blueprint(errors)
     app.register_blueprint(cases)
 
     if app.config["START_DISCORD_BOT"] and (
