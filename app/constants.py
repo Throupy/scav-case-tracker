@@ -86,15 +86,16 @@ CATEGORY_MAPPING = {
     "Medikit": "Medical",
     "Medical supplies": "Medical",
     "Ammo": "Ammo",
-    "Ammo packs": "Ammo"
+    "Ammo packs": "Ammo",
 }
 
 SCAV_CASE_TYPES = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
 
 DEFAULT_TRACKED_ITEMS = [
-    "Pack of sugar", 
-    "Bottle of Fierce Hatchling moonshine", 
-    "Intelligence folder"]
+    "Pack of sugar",
+    "Bottle of Fierce Hatchling moonshine",
+    "Intelligence folder",
+]
 
 # Error message will read 404 - Not Found, then on new line, one of:
 MESSAGES_404 = [
@@ -105,7 +106,7 @@ MESSAGES_404 = [
     "Wrong keycard. Try again, rat.",
     "This page was found in a dead SCAV’s backpack, but now it’s gone.",
     "Page not found. Maybe it desynced?",
-    "You loaded into the wrong raid. Try again."
+    "You loaded into the wrong raid. Try again.",
 ]
 
 MESSAGES_403 = [
@@ -116,7 +117,7 @@ MESSAGES_403 = [
     "This area is locked. Find a Labs keycard, then we’ll talk.",
     "Your access has been revoked… probably because you scav killed.",
     "You don’t have enough reputation to enter. Go grind some more quests.",
-    "You need higher loyalty with Therapist to access this page."
+    "You need higher loyalty with Therapist to access this page.",
 ]
 
 MESSAGES_500 = [
@@ -127,6 +128,5 @@ MESSAGES_500 = [
     "Something went wrong, kind of like your last raid.",
     "Your request got head-eyes’d by a TTV chad.",
     "Our backend desynced. Please wait for a reconnect...",
-    "This page hit an invisible Sturman guard. Try again."
+    "This page hit an invisible Sturman guard. Try again.",
 ]
-

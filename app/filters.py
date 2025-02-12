@@ -4,11 +4,13 @@ import humanize
 
 from app.models import TarkovItem
 
+
 def timeago(dt):
     """Convert datetime to a 'time ago' format"""
     if isinstance(dt, datetime):
         return humanize.naturaltime(datetime.utcnow() - dt)
     return dt
+
 
 def get_item_image_filename(item):
     """
@@ -24,7 +26,9 @@ def get_item_image_filename(item):
         category = item.tarkov_item.category
     if category == "Guns":
         print(f"Finding where name = '{item.name} Default'")
-        real_image_item = TarkovItem.query.filter_by(name=f"{item.name} Default").first()
+        real_image_item = TarkovItem.query.filter_by(
+            name=f"{item.name} Default"
+        ).first()
         if real_image_item:
             return f"{real_image_item.tarkov_id}.webp"
     return f"{item.tarkov_id}.webp"
