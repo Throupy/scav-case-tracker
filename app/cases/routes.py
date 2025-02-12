@@ -7,20 +7,28 @@ from flask_login import login_required, current_user
 from app.models import ScavCase, ScavCaseItem
 from app.extensions import db
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
-from app.cases.utils import get_price, calculate_most_popular_categories, find_most_common_items, calculate_avg_items_per_case_type, calculate_avg_return_by_case_type, calculate_most_profitable, calculate_item_category_distribution
+from app.cases.utils import (
+    get_price,
+    calculate_most_popular_categories,
+    find_most_common_items,
+    calculate_avg_items_per_case_type,
+    calculate_avg_return_by_case_type,
+    calculate_most_profitable,
+    calculate_item_category_distribution,
+)
 
 cases = Blueprint("cases", __name__)
 
 
 @cases.route("/all-scav-cases", methods=["GET"])
 def all_scav_cases():
-    page = request.args.get("page", 1, type=int) 
-    sort_by = request.args.get(
-        "sort_by", "type"
-    )
-    sort_order = request.args.get("sort_order", "asc")  
-    per_page = 10  
-    scav_cases = ScavCase.query.with_entities(ScavCase.id, ScavCase.type, ScavCase._return).all()
+    page = request.args.get("page", 1, type=int)
+    sort_by = request.args.get("sort_by", "type")
+    sort_order = request.args.get("sort_order", "asc")
+    per_page = 10
+    scav_cases = ScavCase.query.with_entities(
+        ScavCase.id, ScavCase.type, ScavCase._return
+    ).all()
 
     if sort_order == "asc":
         scav_cases_query = ScavCase.query.order_by(db.asc(getattr(ScavCase, sort_by)))
@@ -36,6 +44,7 @@ def all_scav_cases():
         sort_by=sort_by,
         sort_order=sort_order,
     )
+
 
 @cases.route("/insights-data")
 def insights_data():
@@ -67,26 +76,27 @@ def insights_data():
 
         profit_over_time_chart = {
             "labels": [str(scav_case.id) for scav_case in scav_cases],
-            "profits": [(scav_case._return - scav_case.cost) for scav_case in scav_cases],
-            "costs": [scav_case.cost for scav_case in scav_cases]
+            "profits": [
+                (scav_case._return - scav_case.cost) for scav_case in scav_cases
+            ],
+            "costs": [scav_case.cost for scav_case in scav_cases],
         }
 
         items_over_time_chart = {
             "labels": [str(scav_case.id) for scav_case in scav_cases],
-            "items_count": [scav_case.number_of_items for scav_case in scav_cases]
+            "items_count": [scav_case.number_of_items for scav_case in scav_cases],
         }
 
         return_over_time_chart = {
             "labels": [str(scav_case.id) for scav_case in scav_cases],
             "returns": [scav_case._return for scav_case in scav_cases],
-            "costs": [scav_case.cost for scav_case in scav_cases]
+            "costs": [scav_case.cost for scav_case in scav_cases],
         }
 
         # no bar chart nonsense when looking at a specific case type
         avg_items_chart = None
         most_profitable_case = None
         avg_return_chart = None
-
 
     return render_template(
         "partials/insights.html",
@@ -100,8 +110,9 @@ def insights_data():
         category_labels=category_distribution["labels"],
         category_counts=category_distribution["values"],
         profit_over_time_chart=profit_over_time_chart,
-        items_over_time_chart=items_over_time_chart
+        items_over_time_chart=items_over_time_chart,
     )
+
 
 @cases.route("/insights")
 def insights():
@@ -150,7 +161,11 @@ def submit_scav_case():
         items_data = form.items_data.data
 
         files = {"image": uploaded_image}
-        data = {"scav_case_type": scav_case_type, "user_id": current_user.id, "items_data": items_data}
+        data = {
+            "scav_case_type": scav_case_type,
+            "user_id": current_user.id,
+            "items_data": items_data,
+        }
 
         response = requests.post(
             url_for("api.submit_scav_case_api", _external=True), data=data, files=files
@@ -163,15 +178,18 @@ def submit_scav_case():
 
     return render_template("create_scav_case.html", form=form)
 
+
 @cases.route("/items")
 def items():
     items = ScavCaseItem.query.all()
     return render_template("items.html", items=items)
 
+
 @cases.route("/case/<int:scav_case_id>/detail")
 def scav_case_detail(scav_case_id):
     scav_case = ScavCase.query.get_or_404(scav_case_id)
     return render_template("scav_case_detail.html", scav_case=scav_case)
+
 
 @cases.route("/case/<int:scav_case_id>/edit", methods=["GET", "POST"])
 def update_scav_case(scav_case_id):
@@ -179,11 +197,12 @@ def update_scav_case(scav_case_id):
     form = UpdateScavCaseForm(obj=scav_case)
 
     if request.method == "GET":
-        form.items_data.data = json.dumps([{
-            "id": item.id,
-            "name": item.name, 
-            "quantity": item.amount
-        } for item in scav_case.items])
+        form.items_data.data = json.dumps(
+            [
+                {"id": item.id, "name": item.name, "quantity": item.amount}
+                for item in scav_case.items
+            ]
+        )
 
     if form.validate_on_submit():
         items_data = json.loads(form.items_data.data)
@@ -191,7 +210,11 @@ def update_scav_case(scav_case_id):
         existing_items = {item.id: item for item in scav_case.items}
         received_item_ids = {item["id"] for item in items_data if "id" in item}
 
-        items_to_delete = [item for item_id, item in existing_items.items() if item_id not in received_item_ids]
+        items_to_delete = [
+            item
+            for item_id, item in existing_items.items()
+            if item_id not in received_item_ids
+        ]
         for item in items_to_delete:
             db.session.delete(item)
 
@@ -213,7 +236,7 @@ def update_scav_case(scav_case_id):
                 )
                 total_price += new_item.price * new_item.amount
                 db.session.add(new_item)
-            
+
             item_price = getattr(existing_items.get(item.get("id")), "price", None) or 0
             total_price += item_price * item["quantity"]
             total_items += item["quantity"]
@@ -221,12 +244,12 @@ def update_scav_case(scav_case_id):
         scav_case._return = total_price
         scav_case.number_of_items = len(items_data)
 
-
         db.session.commit()
         flash("Scav Case updated successfully", "success")
         return redirect(url_for("cases.scav_case_detail", scav_case_id=scav_case.id))
 
     return render_template("edit_scav_case.html", form=form, scav_case=scav_case)
+
 
 @cases.route("/case/<int:scav_case_id>/delete", methods=["GET"])
 def delete_scav_case(scav_case_id):

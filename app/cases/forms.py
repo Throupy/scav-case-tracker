@@ -27,6 +27,7 @@ class CreateScavCaseForm(FlaskForm):
                     "You must select at least one item for a scav case"
                 )
 
+
 class UpdateScavCaseForm(FlaskForm):
     items_data = HiddenField("Items Data")
     submit = SubmitField("Submit Scav Case")
