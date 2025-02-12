@@ -40,7 +40,6 @@ def search_items():
 @market.route("/get-price/<string:tarkov_item_id>", methods=["GET"])
 def get_price_htmx(tarkov_item_id: str) -> str:
     market_data = get_market_information(tarkov_item_id)
-    print(market_data)
     if not market_data or "data" not in market_data or not market_data["data"]["items"]:
         return "<span class='text-danger'>Price unavailable</span>"
 
@@ -111,4 +110,12 @@ def untrack_item(tarkov_item_id: str):
 @market.route("/")
 @login_required
 def index():
-    return render_template("market.html")
+    tracked_items = current_user.tracked_items
+
+    # if it's a htmx request (i.e. if user pressed 'refresh') return a partial
+    # with the tracked items, not the entire template page
+    if request.headers.get("HX-Request"):
+        return render_template("partials/market_tracked_items.html", tracked_items=tracked_items)
+
+    return render_template("market.html", tracked_items=tracked_items)
+
