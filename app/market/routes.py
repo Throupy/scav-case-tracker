@@ -33,7 +33,7 @@ def search_items():
         for item in results
     ])
 
-@market.route("/get-price/<string:tarkov_item_id>", methods=["GET", "POST", "OPTIONS"])
+@market.route("/get-price/<string:tarkov_item_id>", methods=["GET"])
 def get_price_htmx(tarkov_item_id: str) -> str:
     price = get_price(tarkov_item_id)
     return f"<span>₽{price:,} </span>"
@@ -73,5 +73,6 @@ def untrack_item(tarkov_item_id: str):
     """
 
 @market.route("/")
+@login_required
 def index():
     return render_template("market.html")
