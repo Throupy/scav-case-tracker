@@ -28,6 +28,7 @@ def fetch_scav_case_type_distribution():
 
     return jsonify(scav_case_types)
 
+
 @api.route("/api/discord-stats")
 def discord_stats():
     """
@@ -36,7 +37,14 @@ def discord_stats():
     total_profit = ScavCase.query.with_entities(db.func.sum(ScavCase.profit)).scalar()
     total_cases = len(ScavCase.query.all())
     total_spend = ScavCase.query.with_entities(db.func.sum(ScavCase.cost)).scalar()
-    return jsonify({"total_profit": total_profit, "total_cases": total_cases, "total_spend": total_spend})
+    return jsonify(
+        {
+            "total_profit": total_profit,
+            "total_cases": total_cases,
+            "total_spend": total_spend,
+        }
+    )
+
 
 @api.route("/api/get-image-link")
 def get_image_link_route():
@@ -63,16 +71,19 @@ def get_chart_data_route():
     scav_case_data = [
         {
             "id": scav_case.id,
-            "created_at_humanized": humanize.naturaltime(datetime.utcnow() - scav_case.created_at),  
-            "profit": scav_case.profit,                   
+            "created_at_humanized": humanize.naturaltime(
+                datetime.utcnow() - scav_case.created_at
+            ),
+            "profit": scav_case.profit,
             "type": scav_case.type,
             "return": scav_case._return,
-            "cost": scav_case.cost
+            "cost": scav_case.cost,
         }
         for scav_case in scav_cases
     ]
 
     return jsonify({"labels": labels, "scav_cases": scav_case_data})
+
 
 @api.route("/api/get-item-price/<item_id>")
 def get_item_price_route(item_id):
@@ -87,7 +98,7 @@ def submit_scav_case_api():
     uploaded_image = request.files.get("image")
     user_id = request.form.get("user_id", None)
 
-    if not scav_case_type and not (uploaded_image or items_data) :
+    if not scav_case_type and not (uploaded_image or items_data):
         return jsonify({"error": "Scav case type and image are required"}), 400
 
     try:

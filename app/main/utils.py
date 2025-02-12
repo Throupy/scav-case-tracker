@@ -168,6 +168,7 @@ def save_uploaded_image(uploaded_image):
     uploaded_image.save(file_path)
     return file_path
 
+
 def process_scav_case_image(file_path):
     """Validates and processes an image for scav case data using OCR."""
     if not validate_scav_case_image(file_path):
@@ -208,44 +209,49 @@ def create_scav_case_entry(scav_case_type, items, user_id):
     db.session.commit()
     return scav_case
 
+
 def get_most_popular_item():
     """Get the most common Tarkov item category from all scav cases."""
     return (
-        TarkovItem.query
-        .join(ScavCaseItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id)
-        .with_entities(TarkovItem.category, func.count(TarkovItem.category).label("count"))
+        TarkovItem.query.join(
+            ScavCaseItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id
+        )
+        .with_entities(
+            TarkovItem.category, func.count(TarkovItem.category).label("count")
+        )
         .group_by(TarkovItem.category)
         .order_by(func.count(TarkovItem.category).desc())
         .first()
     )
 
+
 def get_top_contributor():
     """Find the user who submitted the most scav cases."""
     return (
-        User.query
-        .join(ScavCase, ScavCase.user_id == User.id)
+        User.query.join(ScavCase, ScavCase.user_id == User.id)
         .group_by(User.id)
         .order_by(func.count(ScavCase.id).desc())
         .first()
     )
 
+
 def get_most_profitable_case():
     """Determine the most profitable case type based on average profit per run."""
     return (
-        ScavCase.query
-        .with_entities(ScavCase.type, func.avg(ScavCase._return - ScavCase.cost).label("avg_profit"))
+        ScavCase.query.with_entities(
+            ScavCase.type,
+            func.avg(ScavCase._return - ScavCase.cost).label("avg_profit"),
+        )
         .group_by(ScavCase.type)
         .order_by(func.avg(ScavCase._return - ScavCase.cost).desc())
         .first()
     )
 
+
 def get_most_valuable_item():
     """Find the most valuable single item (highest total price × amount)."""
-    return (
-        ScavCaseItem.query
-        .order_by((ScavCaseItem.price).desc())
-        .first()
-    )
+    return ScavCaseItem.query.order_by((ScavCaseItem.price).desc()).first()
+
 
 def get_dashboard_data():
     """Compute all dashboard metrics dynamically."""

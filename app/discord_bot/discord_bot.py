@@ -33,6 +33,7 @@ async def case_types(ctx):
 
     await ctx.send(embed=embed)
 
+
 @commands.command(name="stats")
 async def stats(ctx):
     api_url = "http://localhost:5000/api/discord-stats"
@@ -50,12 +51,16 @@ async def stats(ctx):
     embed = discord.Embed(
         title="Scav Case Tracker Stats",
         description="Here are the latest statistics:",
-        color=discord.Color.red()
+        color=discord.Color.red(),
     )
 
-    embed.add_field(name="📈 Total Profit", value=f"₽{round(total_profit):,}", inline=False)
+    embed.add_field(
+        name="📈 Total Profit", value=f"₽{round(total_profit):,}", inline=False
+    )
     embed.add_field(name="📦 Total Cases", value=f"{total_cases}", inline=False)
-    embed.add_field(name="💸 Total Spend", value=f"₽{round(total_spend):,}", inline=False)
+    embed.add_field(
+        name="💸 Total Spend", value=f"₽{round(total_spend):,}", inline=False
+    )
 
     embed.set_footer(text="Scav Case Tracker Bot")
     embed.set_thumbnail(

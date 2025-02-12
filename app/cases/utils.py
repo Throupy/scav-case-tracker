@@ -83,7 +83,9 @@ def get_price(tarkov_item_id: str) -> int:
         (item for item in sell_for_list if item["source"] == "fleaMarket"), None
     )
     if flea_market_price:
-        print(f"Got price of {flea_market_price['price']} for item with ID: {tarkov_item_id}")
+        print(
+            f"Got price of {flea_market_price['price']} for item with ID: {tarkov_item_id}"
+        )
         return flea_market_price["price"]
     # if no flea market possible (e.g. BTC)
     max_price_item = max(sell_for_list, key=lambda x: x["price"])
@@ -281,7 +283,8 @@ def calculate_insights(scav_cases):
     insights = [func(scav_cases) for func in insight_functions.values()]
     return [insight for insight in insights if insight is not None]
 
-def find_most_common_items(scav_cases, top_n = 3):
+
+def find_most_common_items(scav_cases, top_n=3):
     """Find the top N most common items across all scav cases."""
     item_counts = defaultdict(int)
     tarkov_item_map = {}
@@ -297,6 +300,7 @@ def find_most_common_items(scav_cases, top_n = 3):
     sorted_items = sorted(item_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
     return [(tarkov_item_map[tarkov_id], count) for tarkov_id, count in sorted_items]
 
+
 def calculate_item_category_distribution(scav_cases):
     category_counts = defaultdict(int)
 
@@ -311,6 +315,7 @@ def calculate_item_category_distribution(scav_cases):
         "labels": list(category_counts.keys()),
         "values": list(category_counts.values()),
     }
+
 
 def calculate_most_profitable(scav_cases):
     """Find the scav case type with the highest average profit."""
@@ -331,13 +336,15 @@ def calculate_most_profitable(scav_cases):
         for case_type in profit_by_case_type
     }
 
-    most_profitable_case_type = max(avg_profit_by_case_type, key=avg_profit_by_case_type.get)
+    most_profitable_case_type = max(
+        avg_profit_by_case_type, key=avg_profit_by_case_type.get
+    )
     avg_profit = avg_profit_by_case_type[most_profitable_case_type]
 
     return {
-        "type": most_profitable_case_type, 
-        "avg_profit": avg_profit,  
-        "chart_data": { 
+        "type": most_profitable_case_type,
+        "avg_profit": avg_profit,
+        "chart_data": {
             "x_value": list(avg_profit_by_case_type.keys()),
             "y_value": list(avg_profit_by_case_type.values()),
         },
@@ -366,7 +373,8 @@ def calculate_avg_items_per_case_type(scav_cases):
         },
     }
 
-def calculate_most_popular_categories(scav_cases, top_n = 3):
+
+def calculate_most_popular_categories(scav_cases, top_n=3):
     """Find the top N most frequently appearing item categories across all scav cases."""
     category_counts = defaultdict(int)
     category_map = {}
@@ -374,12 +382,14 @@ def calculate_most_popular_categories(scav_cases, top_n = 3):
     for scav_case in scav_cases:
         for item in scav_case.items:
             category_counts[item.tarkov_item.category] += 1
-            category_map[item.tarkov_item.category] = item.tarkov_item 
+            category_map[item.tarkov_item.category] = item.tarkov_item
 
     if not category_counts:
         return []
 
-    sorted_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    sorted_categories = sorted(
+        category_counts.items(), key=lambda x: x[1], reverse=True
+    )[:top_n]
     return [(category_map[category], count) for category, count in sorted_categories]
 
 
@@ -405,7 +415,9 @@ def calculate_avg_return_by_case_type(scav_cases):
         "chart_data": {
             "x_value": list(avg_return_by_case_type.keys()),
             "y_value": [
-                round(total_return_by_case_type[case_type] / count_by_case_type[case_type])
+                round(
+                    total_return_by_case_type[case_type] / count_by_case_type[case_type]
+                )
                 for case_type in total_return_by_case_type
             ],
         },
