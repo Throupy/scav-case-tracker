@@ -28,8 +28,8 @@ def load_user(user_id):
 def create_app(config_class=ConfigClass):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.jinja_env.filters['timeago'] = timeago
-    app.jinja_env.filters['item_image'] = get_item_image_filename
+    app.jinja_env.filters["timeago"] = timeago
+    app.jinja_env.filters["item_image"] = get_item_image_filename
 
     # Initialize extensions
     db.init_app(app)
@@ -60,24 +60,32 @@ def create_app(config_class=ConfigClass):
 
         # This is very much for ad-hoc database operations... no real logic here, I just change
         # it to do whatever I need doing at the time.
-        if TarkovItem.query.count() == 0 or app.config['REFRESH_TARKOV_ITEMS']:
+        if TarkovItem.query.count() == 0 or app.config["REFRESH_TARKOV_ITEMS"]:
             print("[DEBUG] Adding Tarkov items...")
             with open("../all_items.json", "r") as f:
                 item_data = json.load(f)
-                for item in item_data['items']:
+                for item in item_data["items"]:
                     tarkov_id, item_name, subcategory = item.values()
                     # put items in a broader category - the tarkov ones are so bad!!!
                     broad_category = CATEGORY_MAPPING.get(subcategory, "Unknown")
                     if broad_category == "Unknown":
-                        print(f"[!] Not sure about {item_name}. Subcategory is {subcategory}")
-                    existing_item = TarkovItem.query.filter_by(tarkov_id=tarkov_id).first()
+                        print(
+                            f"[!] Not sure about {item_name}. Subcategory is {subcategory}"
+                        )
+                    existing_item = TarkovItem.query.filter_by(
+                        tarkov_id=tarkov_id
+                    ).first()
                     # Add items only if they don't already exist
                     if existing_item:
                         if existing_item.category != broad_category:
                             existing_item.category = broad_category
-                            print(f"[UPDATE] {tarkov_id}: Changing category from {existing_item.category} to {broad_category}")
+                            print(
+                                f"[UPDATE] {tarkov_id}: Changing category from {existing_item.category} to {broad_category}"
+                            )
                     else:
-                        item = TarkovItem(name=item_name, tarkov_id=tarkov_id, category=broad_category)
+                        item = TarkovItem(
+                            name=item_name, tarkov_id=tarkov_id, category=broad_category
+                        )
                         db.session.add(item)
                         print(f"[*] Added Item with name: {item_name}")
 
