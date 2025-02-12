@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from app.models import TarkovItem
 from app.extensions import db
 from app.cases.utils import get_price
+from app.market.utils import get_market_information
 
 market = Blueprint("market", __name__, url_prefix="/market/")
 
@@ -35,8 +36,37 @@ def search_items():
 
 @market.route("/get-price/<string:tarkov_item_id>", methods=["GET"])
 def get_price_htmx(tarkov_item_id: str) -> str:
-    price = get_price(tarkov_item_id)
-    return f"<span>₽{price:,} </span>"
+    market_data = get_market_information(tarkov_item_id)
+    print(market_data)
+    if not market_data or "data" not in market_data or not market_data["data"]["items"]:
+        return "<span class='text-danger'>Price unavailable</span>"
+
+    item = market_data["data"]["items"][0]
+    high_price = item.get("high24hPrice", "N/A")
+    avg_price_24h = item.get("avg24hPrice", "N/A")
+    change_48h_percent = float(item.get("changeLast48hPercent", "0"))
+
+    change_48h_colour = "text-success" if change_48h_percent > 0 else "text-danger"
+
+    return f"""
+        <div class="col-2">
+            <div class="card-body p-2"> 
+                <h6 class="font-weight-bold card-title mb-0">₽{high_price:,}</h6> 
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card-body p-2"> 
+                <h6 class="font-weight-bold {change_48h_colour} card-title mb-0">{change_48h_percent:.2f}%</h6> 
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="card-body p-2">
+                <h6 class="card-title mb-0">    
+                    <span><strong>₽{avg_price_24h:,}</strong> 
+                </h6>
+            </div>
+        </div>
+    """
 
 # Regular routes
 @market.route("/track-item/<string:tarkov_item_id>", methods=["POST"])

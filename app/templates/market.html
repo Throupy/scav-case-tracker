@@ -1,12 +1,20 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container">
-    <h2 class="mb-3">Welcome to the market section</h2>
+    <h2 class="mb-3">Market Section - Track Live Prices</h2>
 
     <button type="button" class="btn btn-outline-danger mb-3" data-toggle="modal" data-target="#trackItemModal">
         Track New Item
     </button>
 
+    <div class="row bg-light py-2 font-weight-bold border-bottom">
+        <div class="col-2">Item</div>
+        <div class="col-3">Name</div>
+        <div class="col-2">Highest Price (24h)</div>
+        <div class="col-2">Change (48h)</div>
+        <div class="col-2">Live Price</div>
+        <div class="col-1">Actions</div>
+    </div>
 
     <div class="row">
         {% for item in current_user.tracked_items %}
@@ -24,31 +32,28 @@
                         </div>
                     </div>
 
-                    <div class="col-2">
-                        <div class="card-body p-2"> 
-                            <!-- Placeholder for 7 day change -->
-                            <h6 class="font-weight-bold text-success card-title mb-0">^52.4%</h6> 
-                        </div>
-                    </div>
-
-                    <div class="col-2">
-                        <div class="card-body p-2"> 
-                            <!-- Placeholder for 1 day change -->
-                            <h6 class="font-weight-bold text-success card-title mb-0">^12.4%</h6> 
-                        </div>
-                    </div>
-
-                    <div class="col-2">
-                        <div class="card-body p-2">
-                            <h6 class="card-title mb-0">    
-                                <span hx-get="/market/get-price/{{ item.tarkov_id }}"
-                                    hx-trigger="load"
-                                    hx-swap="outerHTML"
-                                    hx-headers='{"X-Requested-With": "XMLHttpRequest"}'
-                                    hx-credentials="include">
-                                <i>Price Loading...</i>
-                            </span>
-                            </h6>
+                    <div class="col-6" 
+                         hx-get="/market/get-price/{{ item.tarkov_id }}"
+                         hx-trigger="load"
+                         hx-swap="outerHTML"
+                         hx-headers='{"X-Requested-With": "XMLHttpRequest"}'
+                         hx-credentials="include">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-4">
+                                <div class="card-body p-2 text-center"> 
+                                    <h6 class="font-weight-bold text-muted card-title mb-0">^--%</h6> 
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="card-body p-2 text-center"> 
+                                    <h6 class="font-weight-bold text-muted card-title mb-0">^--%</h6> 
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="card-body p-2 text-center">
+                                    <h6 class="card-title mb-0"><i>Price Loading...</i></h6>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -62,7 +67,6 @@
                                 hx-on::after-request="location.reload();">
                             <i class="fa-regular fa-trash-can"></i>    
                         </button>
-
                     </div>
 
                 </div>
@@ -72,7 +76,6 @@
     </div>
 </div>
 
-<!-- add item modal -->
 <div class="modal fade" id="trackItemModal" tabindex="-1" role="dialog" aria-labelledby="trackItemModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -87,9 +90,7 @@
                        hx-get="/market/search-items" hx-trigger="keyup changed delay:250ms"
                        hx-target="#item-results" autocomplete="off">
                 
-                <div id="item-results" class="list-group mt-2">
-
-                </div>
+                <div id="item-results" class="list-group mt-2"></div>
             </div>
         </div>
     </div>
