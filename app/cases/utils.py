@@ -71,8 +71,8 @@ def get_image_link(item_id: str) -> str:
     return result["data"]["items"][0]["iconLink"]
 
 
-def get_price(item_id: str) -> int:
-    query = generate_price_query(item_id)
+def get_price(tarkov_item_id: str) -> int:
+    query = generate_price_query(tarkov_item_id)
     result = run_query(query)
     sell_for_list = result["data"]["items"][0]["sellFor"]
     # some stuff you just can't sell? e.g. GP Coin
@@ -83,7 +83,7 @@ def get_price(item_id: str) -> int:
         (item for item in sell_for_list if item["source"] == "fleaMarket"), None
     )
     if flea_market_price:
-        print(f"Got price of {flea_market_price['price']} for item with ID: {item_id}")
+        print(f"Got price of {flea_market_price['price']} for item with ID: {tarkov_item_id}")
         return flea_market_price["price"]
     # if no flea market possible (e.g. BTC)
     max_price_item = max(sell_for_list, key=lambda x: x["price"])
