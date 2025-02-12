@@ -97,6 +97,8 @@ DEFAULT_TRACKED_ITEMS = [
     "Intelligence folder",
 ]
 
+CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dquzibnsm/image/upload/v1739398246/"
+
 # Error message will read 404 - Not Found, then on new line, one of:
 MESSAGES_404 = [
     "Just like that last GPU you searched for.",

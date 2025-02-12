@@ -57,7 +57,7 @@
                 <div class="most-common-grid big-item">
                     <h5 class="mb-0 truncate">{{ most_popular_items[0][0].name }}</h5>
                     <span class="text-muted">Found {{ most_popular_items[0][1] }} times</span>
-                    <img src="{{ url_for('static', filename='items/' + most_popular_items[0][0] | item_image) }}">
+                    <img src="{{ most_popular_items[0][0] | get_item_cdn_image_url }}">
                 </div>
                 <div class="collapse" id="itemCollapse">
                     <hr>
@@ -65,7 +65,7 @@
                     <div class="most-common-grid mb-2">
                         <h6 class="mb-0 truncate">{{ item.name }}</h6>
                         <span class="text-muted">Found {{ count }} times</span>
-                        <img src="{{ url_for('static', filename='items/' + item | item_image) }}">
+                        <img src="{{ item | get_item_cdn_image_url }}">
                     </div>
                     {% endfor %}
                 </div>
@@ -83,7 +83,7 @@
                 <div class="most-common-grid big-item">
                     <h5 class="mb-0 truncate">{{ most_popular_categories[0][0].category }}</h5>
                     <span class="text-muted">Found {{ most_popular_categories[0][1] }} times</span>
-                    <img class="rounded" src="{{ url_for('static', filename='items/category_images/' + most_popular_categories[0][0].category.lower() + '.png') }}">
+                    <img class="rounded" src="{{ most_popular_categories[0][0].category | get_category_cdn_image_url }}">
                 </div>
                 <div class="collapse" id="categoryCollapse">
                     <hr>
@@ -91,7 +91,7 @@
                     <div class="most-common-grid mb-2">
                         <h6 class="mb-0 truncate">{{ category.category }}</h6>
                         <span class="text-muted">Found {{ count }} times</span>
-                        <img class="rounded" src="{{ url_for('static', filename='items/category_images/' + category.category.lower() + '.png') }}">
+                        <img class="rounded" src="{{ category.category | get_category_cdn_image_url }}">
                     </div>
                     {% endfor %}
                 </div>

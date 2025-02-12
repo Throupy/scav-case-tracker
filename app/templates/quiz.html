@@ -12,7 +12,7 @@
                 <input type="hidden" name="attachment_id" value="{{ attachment.id }}">
                 
                 <div class="text-center mb-4">
-                    <img class="img-thumbnail" width="150" src="{{ url_for('static', filename='items/' + attachment.tarkov_item.tarkov_id + '.webp') }}" alt="{{ attachment.tarkov_item.name }}">
+                    <img class="img-thumbnail" width="150" src="{{ attachment.tarkov_item | get_item_cdn_image_url }}" alt="{{ attachment.tarkov_item.name }}">
                 </div>
                 
                 <div class="mb-4">

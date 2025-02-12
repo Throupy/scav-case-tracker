@@ -15,7 +15,7 @@ from app.errors.routes import errors
 from app.quiz.routes import _quiz as quiz
 from app.cases.routes import cases
 from app.models import User, TarkovItem, WeaponAttachment, ScavCase
-from app.filters import timeago, get_item_image_filename
+from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
 from app.cases.utils import get_price
 from app.extensions import db, migrate, login_manager, bcrypt
 
@@ -29,7 +29,8 @@ def create_app(config_class=ConfigClass):
     app = Flask(__name__)
     app.config.from_object(config_class)
     app.jinja_env.filters["timeago"] = timeago
-    app.jinja_env.filters["item_image"] = get_item_image_filename
+    app.jinja_env.filters["get_category_cdn_image_url"] = get_category_cdn_image_url
+    app.jinja_env.filters["get_item_cdn_image_url"] = get_item_cdn_image_url
 
     # Initialize extensions
     db.init_app(app)

@@ -3,6 +3,7 @@ from datetime import datetime
 import humanize
 
 from app.models import TarkovItem
+from app.constants import CLOUDINARY_BASE_URL
 
 
 def timeago(dt):
@@ -12,7 +13,8 @@ def timeago(dt):
     return dt
 
 
-def get_item_image_filename(item):
+
+def get_actual_item(item):
     """
     Return the correct filename for an item's image
     This is needed because in the case of guns, the correct image actually has
@@ -30,5 +32,15 @@ def get_item_image_filename(item):
             name=f"{item.name} Default"
         ).first()
         if real_image_item:
-            return f"{real_image_item.tarkov_id}.webp"
-    return f"{item.tarkov_id}.webp"
+            return f"{real_image_item.tarkov_id}"
+    return f"{item.tarkov_id}"
+
+def get_category_cdn_image_url(query: str) -> str:
+    if isinstance(query, TarkovItem):
+        query = query.category.lower()
+    query = query.replace(" ", "_")
+    return f"{CLOUDINARY_BASE_URL}category_images/{query}.webp"
+
+def get_item_cdn_image_url(item: TarkovItem) -> str:
+    correct_item = get_actual_item(item) # just fixes some dodgy images
+    return f"{CLOUDINARY_BASE_URL}{correct_item}.webp"

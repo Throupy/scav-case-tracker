@@ -15,7 +15,7 @@
       {% set count = items | selectattr("tarkov_item.category", "equalto", category) | list | length %}
       <details style="width: 300px; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
         <summary style="font-family: Nunito; font-size: 18px; display: flex; align-items: center;">
-          <img width="32" height="32" src="{{ url_for('static', filename='items/category_images/' + category.lower() + '.png') }}" 
+          <img width="32" height="32" src="{{ category | get_category_cdn_image_url }}" 
                alt="{{ category }}" 
                style="margin-right: 10px;">
           <b>{{ category.upper() }} ({{ count }})</b>

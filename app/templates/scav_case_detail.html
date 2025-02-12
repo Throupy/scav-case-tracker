@@ -57,7 +57,7 @@
                 style="padding: 10px 15px;">
                 
                 <img class="rounded flex-shrink-0" width="28" height="28"
-                    src="{{ url_for('static', filename='items/category_images/' + item.tarkov_item.category.lower() + '.png') }}"
+                    src="{{ item.tarkov_item.category | get_category_cdn_image_url }}"
                     style="margin-right: 12px;">
             
                 <span class="text-truncate flex-grow-1" style="min-width: 0; font-size: 16px;">
@@ -94,7 +94,7 @@
                             <div class="col-md-8 text-center align-self-center">
                                 <img class="img-fluid rounded"
                                     style="max-height: 150px; object-fit: contain;"
-                                    src="{{ url_for('static', filename='items/' + item | item_image) }}">
+                                    src="{{ item | get_item_cdn_image_url }}">
                             </div>
                         </div>
                     </div>

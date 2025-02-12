@@ -150,7 +150,7 @@
                     <div class="col-auto">
                         <a href="{{ url_for('cases.scav_case_detail', scav_case_id=most_valuable_item.scav_case.id) }}">
                             <img width=40 height=40 class="mr-1 img-profile rounded-circle"
-                            src="{{ url_for('static', filename='items/' + most_valuable_item.tarkov_id + '.webp') }}">
+                            src="{{ most_valuable_item | get_item_cdn_image_url }}">
                         </a>
                     </div>
                 </div>
