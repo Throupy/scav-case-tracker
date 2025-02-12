@@ -3,10 +3,10 @@ from flask_login import login_required, current_user
 
 from app.models import TarkovItem
 from app.extensions import db
-from app.cases.utils import get_price
 from app.market.utils import get_market_information
 
 market = Blueprint("market", __name__, url_prefix="/market/")
+
 
 # HMTX routes
 @market.route("/search-items")
@@ -15,15 +15,16 @@ def search_items():
     if not query:
         return ""
 
-    results = TarkovItem.query.filter(
-        TarkovItem.name.ilike(f"%{query}%")
-    ).limit(10).all()
+    results = (
+        TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(10).all()
+    )
 
     if not results:
         return "<div class='list-group-item text-muted'>No items found.</div>"
 
-    return "".join([
-        f"""
+    return "".join(
+        [
+            f"""
         <button class="list-group-item list-group-item-action"
                 hx-post="/market/track-item/{item.tarkov_id}"
                 hx-trigger="click"
@@ -31,8 +32,10 @@ def search_items():
             {item.name}
         </button>
         """
-        for item in results
-    ])
+            for item in results
+        ]
+    )
+
 
 @market.route("/get-price/<string:tarkov_item_id>", methods=["GET"])
 def get_price_htmx(tarkov_item_id: str) -> str:
@@ -68,6 +71,7 @@ def get_price_htmx(tarkov_item_id: str) -> str:
         </div>
     """
 
+
 # Regular routes
 @market.route("/track-item/<string:tarkov_item_id>", methods=["POST"])
 @login_required
@@ -86,6 +90,7 @@ def track_item(tarkov_item_id: str):
     </script>
     """
 
+
 @market.route("/untrack-item/<string:tarkov_item_id>", methods=["DELETE"])
 @login_required
 def untrack_item(tarkov_item_id: str):
@@ -101,6 +106,7 @@ def untrack_item(tarkov_item_id: str):
         setTimeout(() => location.reload(), 500);
     </script>
     """
+
 
 @market.route("/")
 @login_required

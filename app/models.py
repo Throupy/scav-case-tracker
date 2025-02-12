@@ -17,6 +17,7 @@ class Insight:
     chart_data: dict
     chart_tooltip: str
 
+
 class ScavCase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -38,20 +39,24 @@ class ScavCase(db.Model):
 class ScavCaseItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tarkov_id = db.Column(
-        db.String(50), 
+        db.String(50),
         db.ForeignKey("tarkov_item.tarkov_id", name="fk_scav_case_item_tarkov"),
-        nullable=False
+        nullable=False,
     )
     name = db.Column(db.String(100), nullable=False)  # item name
     amount = db.Column(db.Integer, nullable=False)  # number of that item
     price = db.Column(db.Float, nullable=False)  # price of the item
     scav_case_id = db.Column(
-        db.Integer, 
+        db.Integer,
         db.ForeignKey("scav_case.id", name="fk_scav_case_item_scavcase"),
-        nullable=False
+        nullable=False,
     )  # reference to case
 
-    tarkov_item = db.relationship("TarkovItem", backref="scav_case_items", primaryjoin="ScavCaseItem.tarkov_id == TarkovItem.tarkov_id")
+    tarkov_item = db.relationship(
+        "TarkovItem",
+        backref="scav_case_items",
+        primaryjoin="ScavCaseItem.tarkov_id == TarkovItem.tarkov_id",
+    )
 
 
 class TarkovItem(db.Model):
@@ -67,12 +72,14 @@ class WeaponAttachment(db.Model):
     recoil_modifier = db.Column(db.Float)
     ergonomics_modifier = db.Column(db.Float)
 
+
 # many to many association table
 user_tracked_items = db.Table(
     "user_tracked_items",
     db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
-    db.Column("item_id", db.Integer, db.ForeignKey("tarkov_item.id"), primary_key=True)
+    db.Column("item_id", db.Integer, db.ForeignKey("tarkov_item.id"), primary_key=True),
 )
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,9 +89,12 @@ class User(db.Model, UserMixin):
     scav_cases = db.relationship("ScavCase", backref="author", lazy=True)
     # many-to-many with TarkovItem (for market section tracking)
     tracked_items = db.relationship(
-        "TarkovItem", secondary=user_tracked_items, 
-        backref="tracking_users", lazy="joined"
+        "TarkovItem",
+        secondary=user_tracked_items,
+        backref="tracking_users",
+        lazy="joined",
     )
+
 
 # upon user registration, add three default items to be tracked in the
 # users personalised 'market' section.
@@ -93,13 +103,17 @@ def add_default_items(mapper, connection, target):
     """Assign default tracked items after user creation using direct SQL insertion."""
     session = Session.object_session(target)
     if session is None:
-        return 
+        return
 
-    tarkov_items = session.query(TarkovItem.id).filter(TarkovItem.name.in_(DEFAULT_TRACKED_ITEMS)).all()
+    tarkov_items = (
+        session.query(TarkovItem.id)
+        .filter(TarkovItem.name.in_(DEFAULT_TRACKED_ITEMS))
+        .all()
+    )
 
     if tarkov_items:
         item_ids = [item[0] for item in tarkov_items]
         connection.execute(
             insert(user_tracked_items),
-            [{"user_id": target.id, "item_id": item_id} for item_id in item_ids]
+            [{"user_id": target.id, "item_id": item_id} for item_id in item_ids],
         )

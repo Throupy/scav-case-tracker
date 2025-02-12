@@ -26,13 +26,14 @@ def not_implemented():
 @main.route("/dashboard")
 def dashboard():
     dashboard_data = get_dashboard_data()
-    
+
     return render_template(
         "dashboard.html",
         scav_case_types=SCAV_CASE_TYPES,
         scav_cases=ScavCase.query.all(),
-        **dashboard_data 
+        **dashboard_data,
     )
+
 
 @main.route("/search-items")
 def search_items():
@@ -40,7 +41,5 @@ def search_items():
     query = request.args.get("q")
     if len(query) < 2:
         return render_template("partials/item_list.html", items=[])
-    items = TarkovItem.query.filter(
-        TarkovItem.name.ilike(f"%{query}%")
-    ).limit(15).all()
+    items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
     return render_template("partials/item_list.html", items=items)
