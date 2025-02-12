@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 50vh;">
+    <div class="d-flex align-items-center flex-wrap justify-content-center">
+        <img src="{{ url_for('static', filename='error-rat.webp') }}" 
+             class="img-fluid" style="max-width: 250px; height: auto;" alt="404 Image">
+        <div class="ms-4">
+            <h1 class="fw-bold">500 - Internal Server Error</h1>
+            <p class="fs-5 text-muted">{{ message }}</p>
+        </div>
+    </div>
+</div>
+{% endblock content %}
