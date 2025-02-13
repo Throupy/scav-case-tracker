@@ -2,7 +2,7 @@
     {% for item in items %}
         <li class="list-group-item d-flex align-items-center" 
         onclick="addItemToSelected('{{ item.tarkov_id }}', '{{ item.name | replace("'", "\\'") }}', 1)">
-            <img src="{{ item | get_item_cdn_image_url ) }}" alt="{{ item.name }}"
+            <img src="{{ item | get_item_cdn_image_url }}" alt="{{ item.name }}"
                  class="flex-shrink-0" style="max-height: 75px; object-fit: contain;">
             <div class="w-100 text-center">
                 <span class="text-dark">{{ item.name }}</span>
