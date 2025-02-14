@@ -44,11 +44,30 @@ def get_price_htmx(tarkov_item_id: str) -> str:
         return "<span class='text-danger'>Price unavailable</span>"
 
     item = market_data["data"]["items"][0]
-    high_price = item.get("high24hPrice", "N/A")
-    avg_price_24h = item.get("avg24hPrice", "N/A")
-    change_48h_percent = float(item.get("changeLast48hPercent", "0"))
 
+    # Extract values safely
+    high_price = item.get("high24hPrice")
+    avg_price_24h = item.get("avg24hPrice")
+    change_48h_percent = item.get("changeLast48hPercent")
+
+    # If any of the prices are missing, use the highest trader price
+    if not all((high_price, avg_price_24h, change_48h_percent)):
+        highest_trader = max(item.get("sellFor", []), key=lambda x: x["priceRUB"], default=None)
+        
+        if highest_trader:  # enusre there's a valid trader price
+            high_price = highest_trader["price"]
+        else:
+            high_price = 0  # fallback if sellFor is empty
+
+        avg_price_24h = high_price
+        change_48h_percent = 0
+
+    # Convert change percentage to float safely
+    change_48h_percent = float(change_48h_percent or 0)
+
+    # Determine price change color
     change_48h_colour = "text-success" if change_48h_percent > 0 else "text-danger"
+
 
     return f"""
         <div class="col-2">
