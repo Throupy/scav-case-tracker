@@ -15,6 +15,7 @@ from app.cases.utils import (
     calculate_avg_return_by_case_type,
     calculate_most_profitable,
     calculate_item_category_distribution,
+    check_achievements
 )
 
 cases = Blueprint("cases", __name__)
@@ -171,6 +172,7 @@ def submit_scav_case():
             url_for("api.submit_scav_case_api", _external=True), data=data, files=files
         )
         if response.status_code == 200:
+            check_achievements(current_user)
             flash("Scav Case and Items successfully added", "success")
             return redirect(url_for("main.dashboard"))
         else:

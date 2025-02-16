@@ -7,10 +7,12 @@ from flask import (
     url_for,
 )
 
+from flask_login import current_user
+
 from sqlalchemy.sql import func
 
-from app.constants import SCAV_CASE_TYPES
-from app.models import ScavCase, TarkovItem, ScavCaseItem, User
+from app.constants import SCAV_CASE_TYPES, ACHIEVEMENT_METADATA
+from app.models import ScavCase, TarkovItem, ScavCaseItem, User, UserAchievement
 from app.main.utils import get_dashboard_data
 
 main = Blueprint("main", __name__)
@@ -43,3 +45,14 @@ def search_items():
         return render_template("partials/item_list.html", items=[])
     items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
     return render_template("partials/item_list.html", items=items)
+
+@main.route("/achievements")
+def achievements():
+    user_achievements = UserAchievement.query.filter_by(user_id=current_user.id).all()
+    unlocked = {a.achievement_name: a.achieved_at for a in user_achievements}
+    # unlocked first, most recent first
+    sorted_achievements = sorted(
+        ACHIEVEMENT_METADATA.items(), 
+        key=lambda a: (-unlocked[a[0]].timestamp() if a[0] in unlocked else float("inf"))
+    )
+    return render_template("achievements.html", achievements=sorted_achievements, unlocked=unlocked)
