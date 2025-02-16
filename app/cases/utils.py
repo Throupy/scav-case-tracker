@@ -7,11 +7,12 @@ from collections import defaultdict
 import requests
 import pytesseract
 from PIL import Image, ImageFilter
-from flask import current_app
+from flask import flash, current_app
 from rapidfuzz import process, fuzz
 from werkzeug.utils import secure_filename
 
-from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem
+from app.constants import ACHIEVEMENT_CHECKS, ACHIEVEMENT_METADATA
+from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem, UserAchievement
 from app.extensions import db
 
 
@@ -422,3 +423,20 @@ def calculate_avg_return_by_case_type(scav_cases):
             ],
         },
     }
+
+def check_achievements(user):
+    """Check which achievements a user qualifies for and unlock them"""
+    unlocked_achievements = {a.achievement_name for a in user.achievements}
+
+    for achievement_name, check_func in ACHIEVEMENT_CHECKS.items():
+        print(f"{achievement_name} : {check_func(user)}")
+        if achievement_name not in unlocked_achievements and check_func(user):
+            unlock_achievement(user, achievement_name)
+
+def unlock_achievement(user, achievement_name):
+    """Unlock an achievement and store it in the database."""
+    new_achievement = UserAchievement(user_id=user.id, achievement_name=achievement_name)
+    db.session.add(new_achievement)
+    db.session.commit()
+
+    flash(f"🎉 Achievement Unlocked: {achievement_name}!", "success")

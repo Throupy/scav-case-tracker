@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2 class="mb-4 text-center">🏆 {{ current_user.username }}'s Achievements ({{ unlocked | length }}/{{ achievements | length }})</h2>
+
+<div class="row justify-content-center">
+    {% for achievement, data in achievements %}
+        <div class="col-md-3 mb-4 d-flex">
+            <div class="achievement-card p-3 text-center w-100 d-flex flex-column">
+                <div class="d-flex justify-content-center align-items-center">
+                    {% if achievement in unlocked %}
+                        <img src="{{ url_for('static', filename='achievement_images/' + data.icon) }}" class="achievement-icon">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='achievement_images/' + data.icon) }}" class="achievement-icon locked">
+                    {% endif %}
+                </div>
+                {% if achievement in unlocked %}
+                    <h5 class="mt-2 font-weight-bold">{{ achievement }}</h5>
+                    <p class="text-muted">{{ data.description }}</p>
+                    <p class="text-success font-weight-bold mt-auto">{{ unlocked[achievement] | timeago }}</p>
+                {% else %}
+                    <h5 class="mt-2">{{ achievement }}</h5>
+                    <p class="text-muted">{{ data.description }}</p>
+                    <p class="text-muted mt-auto">Not Unlocked</p>
+                {% endif %}
+            </div>
+        </div>
+        {% if loop.index is divisibleby 3 %} </div><div class="row justify-content-center"> {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

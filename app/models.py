@@ -94,6 +94,7 @@ class User(db.Model, UserMixin):
         backref="tracking_users",
         lazy="joined",
     )
+    achievements = db.relationship("UserAchievement", backref='user', lazy='dynamic')
 
 
 # upon user registration, add three default items to be tracked in the
@@ -117,3 +118,13 @@ def add_default_items(mapper, connection, target):
             insert(user_tracked_items),
             [{"user_id": target.id, "item_id": item_id} for item_id in item_ids],
         )
+
+
+class UserAchievement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    achievement_name = db.Column(db.String(100), nullable=False)
+    achieved_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # make sure user cannot get same achievement twice
+    __table_args__ = (db.UniqueConstraint("user_id", "achievement_name"), )
