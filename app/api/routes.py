@@ -122,3 +122,26 @@ def submit_scav_case_api():
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
+
+@api.route("/api/get-latest-scav-case", methods=["GET"])
+def latest_scav_case():
+    latest_case = ScavCase.query.order_by(ScavCase.created_at.desc()).first()
+    if not latest_case:
+        return jsonify({"error": "No scav case found"}), 404
+
+    return jsonify({
+        "created_at": latest_case.created_at,
+        "type": latest_case.type,
+        "profit": latest_case.profit,
+        "return": latest_case._return,
+        "cost": latest_case.cost,
+        "items": [
+            {
+                "name": item.name,
+                "tarkov_id": item.tarkov_id,
+                "price": item.price,
+                "amount": item.amount,
+            }
+            for item in latest_case.items
+        ],
+    })
