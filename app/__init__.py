@@ -15,6 +15,7 @@ from app.errors.routes import errors
 from app.quiz.routes import _quiz as quiz
 from app.circles.routes import circles
 from app.cases.routes import cases
+from app.leaderboards.routes import leaderboards
 from app.models import User, TarkovItem, WeaponAttachment, ScavCase
 from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
 from app.cases.utils import get_price
@@ -143,6 +144,7 @@ def create_app(config_class=ConfigClass):
     app.register_blueprint(errors)
     app.register_blueprint(cases)
     app.register_blueprint(circles)
+    app.register_blueprint(leaderboards)
 
     if app.config["START_DISCORD_BOT"] and (
         not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true"

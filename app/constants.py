@@ -192,3 +192,25 @@ ACHIEVEMENT_METADATA = {
     "Lone Survivor": {"description": "Have only one item in a Scav Case", "icon": "lone_survivor.png"},
 }
 
+LEADERBOARD_METRICS = {
+    "total_profit": {
+        "title": "Top profits",
+        "desc": "Sum of profit across all cases",
+        "column": "total_profit",
+    },
+    "case_count": {
+        "title": "Most cases",
+        "desc": "Total number of scav cases opened",
+        "column": "case_count",
+    },
+    "avg_profit": {
+        "title": "Highest average profit",
+        "desc": "Average profit per case",
+        "column": "avg_profit",
+    },
+    "most_expensive_item": {
+        "title": "Most expensive item",
+        "desc": "Highest single item value found",
+        "column": "most_expensive_item",
+    },
+}
