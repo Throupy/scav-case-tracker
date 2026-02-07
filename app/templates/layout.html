@@ -44,30 +44,33 @@
             <hr class="sidebar-divider">
 
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('cases.submit_scav_case') }}">
-                    <i class="fas fa-fw fa-plus"></i>
-                    <span>Record</span></a>
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#scav-cases-dropdown"
+                    aria-expanded="true" aria-controls="scav-cases-dropdown">
+                    <i class="fas fa-fw fa-box"></i>
+                    <span>Scav Cases</span>
+                </a>
+                <div id="scav-cases-dropdown" class="collapse" aria-labelledby="scav-cases-dropdown-heading" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ url_for('cases.submit_scav_case', quiz_type='recoil') }}">New Case</a>
+                        <a class="collapse-item" href="{{ url_for('cases.all_scav_cases', quiz_type='ergonomics') }}">All Cases</a>
+                        <a class="collapse-item" href="{{ url_for('cases.insights', quiz_type='ergonomics') }}">Insights</a>
+                        <a class="collapse-item" href="{{ url_for('cases.items', quiz_type='ergonomics') }}">All Items</a>
+                    </div>
+                </div>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('cases.all_scav_cases') }}">
-                    <i class="fas fa-fw fa-list"></i>
-                    <span>All Cases</span></a>
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#cultist-circles-dropdown"
+                    aria-expanded="true" aria-controls="cultist-circles-dropdown">
+                    <i class="fas fa-fw fa-box"></i>
+                    <span>Cultist Circles</span>
+                </a>
+                <div id="cultist-circles-dropdown" class="collapse" aria-labelledby="cultist-circles-dropdown-heading" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{{ url_for('circles.create_circle', quiz_type='recoil') }}">New Entry</a>
+                    </div>
+                </div>
             </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('cases.insights') }}">
-                    <i class="fas fa-fw fa-wrench"></i>
-                    <span>Insights</span></a>
-            </li>
-            
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('cases.items') }}">
-                    <i class="fas fa-fw fa-table-list"></i>
-                    <span>Items</span></a>
-            </li>
-
-            <hr class="sidebar-divider">
 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
@@ -82,8 +85,6 @@
                     </div>
                 </div>
             </li>
-
-            <hr class="sidebar-divider">
 
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('market.index') }}">

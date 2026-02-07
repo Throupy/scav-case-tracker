@@ -13,6 +13,7 @@ from app.users.routes import users
 from app.market.routes import market
 from app.errors.routes import errors
 from app.quiz.routes import _quiz as quiz
+from app.circles.routes import circles
 from app.cases.routes import cases
 from app.models import User, TarkovItem, WeaponAttachment, ScavCase
 from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
@@ -141,6 +142,7 @@ def create_app(config_class=ConfigClass):
     app.register_blueprint(quiz)
     app.register_blueprint(errors)
     app.register_blueprint(cases)
+    app.register_blueprint(circles)
 
     if app.config["START_DISCORD_BOT"] and (
         not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true"
