@@ -26,12 +26,20 @@ class DatabaseManager:
     def seed_discord_bot_user(self):
         """Create the user for the discord bot, if it doesn't exist"""
         # check if the user already exists
-        if User.query.filter_by(username=DISCORD_BOT_USER_USERNAME).first() != 0:
+        if User.query.filter_by(username=DISCORD_BOT_USER_USERNAME).first() is not None:
             return
         self.app.logger.info("Creating Discord Bot user...")
+
+        # retrive the bot password secret
+        password = os.getenv("DISCORD_BOT_USER_PASSWORD")
+        if not password:
+            self.app.logger.error("DISCORD_BOT_USER_PASSWORD environment variable not set, cannot create user")
+            return
+
         hashed_password = bcrypt.generate_password_hash(
-            os.getenv("DISCORD_BOT_USER_PASSWORD")
+            password
         ).decode("utf-8")
+        
         discord_bot_user = User(
             username="Discord Bot",
             password=hashed_password,
