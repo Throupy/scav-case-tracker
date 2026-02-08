@@ -214,3 +214,5 @@ LEADERBOARD_METRICS = {
         "column": "most_expensive_item",
     },
 }
+
+DISCORD_BOT_USER_USERNAME = "Discord Bot"
