@@ -181,7 +181,7 @@ class ScavCaseService(BaseService):
             "costs": [case.cost for case in scav_cases],
         }
 
-    def _build_items_chart(self, scav_case: List[ScavCase]) -> Dict[str, Any]:
+    def _build_items_chart(self, scav_cases: List[ScavCase]) -> Dict[str, Any]:
         """Build items count chart data"""
         return {
             "labels": [str(case.id) for case in scav_cases],

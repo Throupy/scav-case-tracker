@@ -8,11 +8,11 @@ class BaseService(ABC):
         self.db = db
 
     # generic CRUD ops, will be abstract here and defined in children
-    def save(self, object: db.Model) -> db.Model:
+    def save(self, obj: db.Model) -> db.Model:
         """Save an object to the database"""
         try:
             self.db.session.add(obj)
-            self.sb.session.commit
+            self.sb.session.commit()
             return obj
         # Don't like being this generic.. but it's an abstract class
         # will implement lower-level catching in the children
