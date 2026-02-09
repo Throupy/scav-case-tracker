@@ -35,7 +35,6 @@ def all_scav_cases():
 def insights_data():
     case_type = request.args.get("case_type", "all")
     insights = scav_case_service.calculate_insights_data(case_type)
-    print(f"Insights is {insights}")
     
     return render_template(
         "partials/insights.html",
@@ -47,7 +46,6 @@ def insights_data():
 @cases.route("/insights")
 def insights():
     insights = scav_case_service.calculate_insights_data("all")
-    print(f"Insights is: {insights}")
 
     if not scav_case_service.get_cases_by_type("all"):
         flash("No Data to show", "warning")
