@@ -7,7 +7,7 @@ instance/*
 .webassets-cache
 .env
 
-### Gunicorn logs
+### Gunicorn + APP logs
 logs/*
 *.log
 

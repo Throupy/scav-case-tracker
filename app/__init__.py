@@ -1,3 +1,5 @@
+import os
+import logging.handlers
 from logging.config import dictConfig
 
 from flask import Flask
@@ -32,6 +34,12 @@ def create_app(config_class=ConfigClass):
     return app
 
 def _configure_logging():
+
+    # Create log dir if it doesn't exist
+    log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+
+    # this 1 call basically overwrwites the logging configuration with the JSON param
     dictConfig({
         "version": 1,
         "disable_existing_loggers": False,
@@ -39,6 +47,11 @@ def _configure_logging():
         "formatters": {
             "default": {
                 "format": "[%(asctime)s] %(levelname)s in %(name)s: %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S"
+            },
+            "detailed": {
+                "format": "[%(asctime)s] %(levelname)s in %(name)s [%(pathname)s:%(lineno)d]: %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S"
             }
         },
 
@@ -47,12 +60,34 @@ def _configure_logging():
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stderr",
                 "formatter": "default",
+            },
+            # traditional 'app.log' (or 'access.log'...)
+            "file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "level": "INFO",
+                "formatter": "detailed",
+                "filename": os.path.join(log_dir, "app.log"),
+                "maxBytes": 10485760,  # 10 MB
+                # this is like NGINX capability, create access.log, access.log.1, access.log.2 (to 3)
+                # of 'rotating' backups of the log file
+                "backupCount": 3,
+                "encoding": "utf8"
+            },
+            # separated error.log
+            "error_file": {
+                "class": "logging.handlers.RotatingFileHandler", 
+                "level": "ERROR",
+                "formatter": "detailed",
+                "filename": os.path.join(log_dir, "error.log"),
+                "maxBytes": 10485760,  # 10 MB
+                "backupCount": 3,
+                "encoding": "utf8"
             }
         },
 
         "root": {
             "level": "INFO",
-            "handlers": ["wsgi"],
+            "handlers": ["wsgi", "file", "error_file"],
         },
     })
 
