@@ -52,7 +52,6 @@ class ScavCaseService(BaseService):
         """Calculate values and form structure for insights page, for a given case type"""
         # TODO: Can this be refined, done better, shipped to API... 
         scav_cases = self.get_cases_by_type(case_type)
-
         # Common calculations
         most_popular_items = find_most_common_items(scav_cases)
         most_popular_categories = calculate_most_popular_categories(scav_cases)

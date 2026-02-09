@@ -280,11 +280,11 @@
 
 
     createChart('itemCategoryChart', 'pie',
-        {{ category_labels | tojson }},
-        {{ category_counts | tojson }},
+        {{ category_distribution['labels'] | tojson }},
+        {{ category_distribution['values'] | tojson }},
         'Item Categories',
-        ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
-        '#858796', '#f8f9fc', '#5a5c69', '#bcf60c', '#fabebe', 
+        ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+        '#858796', '#f8f9fc', '#5a5c69', '#bcf60c', '#fabebe',
         '#008080', '#e6beff', '#9A6324', '#fffac8', '#800000']);
 
     {% if case_type == "all" %}
