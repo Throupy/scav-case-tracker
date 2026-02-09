@@ -12,7 +12,7 @@ class BaseService(ABC):
         """Save an object to the database"""
         try:
             self.db.session.add(obj)
-            self.sb.session.commit()
+            self.db.session.commit()
             return obj
         # Don't like being this generic.. but it's an abstract class
         # will implement lower-level catching in the children
