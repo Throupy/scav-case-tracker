@@ -169,6 +169,10 @@ ACHIEVEMENT_CHECKS = {
     ),
     "Nothing But Trash": lambda user: any((case._return - case.cost) <= 5000 for case in user.scav_cases),
     "Lone Survivor": lambda user: any(len(case.items) == 1 for case in user.scav_cases),
+    "Combat Medic": lambda user: any(
+        sum(1 for item in case.items if item.tarkov_item.name == "LEDX Skin Transilluminator") >= 1
+        for case in user.scav_cases
+    ),
 }
 
 ACHIEVEMENT_METADATA = {
@@ -190,6 +194,7 @@ ACHIEVEMENT_METADATA = {
     "Jackpot!": {"description": "Find 3+ Bitcoins in a single Scav Case", "icon": "jackpot.png"},
     "Nothing But Trash": {"description": "Get an entry worth less than 5,000 rubles", "icon": "nothing_but_trash.png"},
     "Lone Survivor": {"description": "Have only one item in a Scav Case", "icon": "lone_survivor.png"},
+    "Combat Medic": {"description": "Find a LEDX in a Scav Case", "icon": "combat_medic.png"},
 }
 
 LEADERBOARD_METRICS = {

@@ -427,7 +427,9 @@ def calculate_avg_return_by_case_type(scav_cases):
 def check_achievements(user):
     """Check which achievements a user qualifies for and unlock them"""
     unlocked_achievements = {a.achievement_name for a in user.achievements}
-
+    # TODO: What if a scav case is deleted, or the items changed. Achievements should be removed
+    # TODO: Create new lock_achievement (or similar) function
+    # TODO: Will need to add checks in the scav_case_service.py 
     for achievement_name, check_func in ACHIEVEMENT_CHECKS.items():
         print(f"{achievement_name} : {check_func(user)}")
         if achievement_name not in unlocked_achievements and check_func(user):
