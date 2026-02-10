@@ -122,42 +122,6 @@ class ScavCaseService(BaseService):
             current_app.logger.error(f"Error creating scav case: {e}")
             return {"success": False, "message": "An unexpected error occurred"}
 
-
-        files = {"image": uploaded_image}
-        data = {
-            "scav_case_type": scav_case_type,
-            "user_id": user.id,
-            "items_data": items_data
-        }
-
-        try:
-            response = requests.post(
-                url_for("api.submit_scav_case_api", _external=True),
-                data = data,
-                files = files,
-                timeout = 30
-            )
-
-            if response.status_code == 200:
-                check_achievements(user)
-                return {
-                    "success": True,
-                    "message": "Scav Case and Items successfully added"
-                }
-            else:
-                error_msg = response.json().get("error", "Unknown error occurred")
-                return {
-                    "success": False,
-                    "message": f"There was an error: {error_msg}"
-                }
-        
-        except requests.RequestException as e:
-            current_app.logger.error(f"API request failed: {e}")
-            return {
-                "success": False,
-                "message": "Failed to communicate with API"
-            }
-
     def update_scav_case_items(self, scav_case: ScavCase, items_data: List[Dict]) -> None:
         """Update items for an existing scav case"""
         existing_items = {item.id: item for item in scav_case.items}

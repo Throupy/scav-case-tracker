@@ -89,35 +89,6 @@ def get_chart_data_route():
 def get_item_price_route(item_id):
     price = get_price(item_id)
     return jsonify({"price": price})
-    scav_case_type = request.form.get("scav_case_type")
-    items_data = request.form.get("items_data")
-    uploaded_image = request.files.get("image")
-    user_id = request.form.get("user_id", None)
-
-    if not scav_case_type and not (uploaded_image or items_data):
-        return jsonify({"error": "Scav case type and image are required"}), 400
-
-    try:
-        if uploaded_image:
-            file_path = save_uploaded_image(uploaded_image)
-            items = process_scav_case_image(file_path)
-        else:
-            items = json.loads(items_data)
-
-        scav_case = create_scav_case_entry(scav_case_type, items, user_id)
-
-        return jsonify(
-            {
-                "message": "Scav case successfully added",
-                "scav_case_id": scav_case.id,
-                "items": items,
-            }
-        ), 200
-
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
 @api.route("/api/get-latest-scav-case", methods=["GET"])
 def latest_scav_case():
