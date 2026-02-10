@@ -155,49 +155,57 @@ class ImageDownloaderClient(commands.Bot):
                         )
                         await status_message.edit(embed=status_embed)
         except Exception as e:
+            raise e
             status_embed.description = f"Error downloading image: {str(e)}"
             await status_message.edit(embed=status_embed)
 
     async def submit_image_to_flask(
         self, message, image_path, scav_case_type, status_embed, status_message
     ):
-        url = "http://localhost:5000/api/submit-scav-case"
-        headers = {"X-BOT-REQUEST": "true"}
-        data = {"scav_case_type": scav_case_type, "user_id": "1"}
-
+        """Submit scav case to Flask using the single unified route"""
+        url = "http://localhost:5000/submit-scav-case"  # Single route!
+        headers = {
+            "X-BOT-REQUEST": "true",
+            "X-BOT-KEY": os.getenv('DISCORD_BOT_API_KEY')
+        }
+        
         try:
             async with aiohttp.ClientSession() as session:
                 with open(image_path, "rb") as image_file:
                     form_data = aiohttp.FormData()
-                    form_data.add_field(
-                        "image", image_file, filename=os.path.basename(image_path)
-                    )
+                    form_data.add_field("image", image_file, 
+                                    filename=os.path.basename(image_path))
                     form_data.add_field("scav_case_type", scav_case_type)
-                    form_data.add_field("user_id", data["user_id"])
 
-                    async with session.post(
-                        url, headers=headers, data=form_data
-                    ) as response:
+                    async with session.post(url, headers=headers, data=form_data) as response:
+                        response_data = await response.json()
+                        
                         if response.status == 200:
-                            # Update message after successful submission
-                            response_msg = await response.json()
-                            status_embed.description = "Image successfully processed and added to scav case. The following items were detected:"
-                            for item in response_msg["items"]:
-                                status_embed.add_field(
-                                    name=item["name"],
-                                    value=f"|---> Quantity: {item['quantity']}",
-                                    inline=False,
+                            await status_message.edit(
+                                embed=discord.Embed(
+                                    title="✅ Success!",
+                                    description=response_data.get("message", "Scav case submitted successfully!"),
+                                    color=discord.Color.green()
                                 )
-                            await status_message.edit(embed=status_embed)
-                        else:
-                            error_msg = await response.json()
-                            status_embed.description = (
-                                f"Failed to process image: {error_msg['error']}"
                             )
-                            await status_message.edit(embed=status_embed)
+                        else:
+                            error_msg = response_data.get("error", f"HTTP {response.status}")
+                            await status_message.edit(
+                                embed=discord.Embed(
+                                    title="❌ Error",
+                                    description=f"Failed to submit: {error_msg}",
+                                    color=discord.Color.red()
+                                )
+                            )
+                            
         except Exception as e:
-            status_embed.description = f"Error submitting image to Flask: {str(e)}"
-            await status_message.edit(embed=status_embed)
+            await status_message.edit(
+                embed=discord.Embed(
+                    title="❌ Connection Error",
+                    description=f"Could not connect to Flask app: {str(e)}",
+                    color=discord.Color.red()
+                )
+            )
 
 
 intents = discord.Intents.default()

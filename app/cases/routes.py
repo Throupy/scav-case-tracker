@@ -1,7 +1,9 @@
+import os
 import json
-from collections import defaultdict
 import requests
-from flask import Blueprint, request, render_template, redirect, url_for, flash
+from collections import defaultdict
+
+from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
 
 from app.models import ScavCase, ScavCaseItem
@@ -11,6 +13,7 @@ from app.services.scav_case_service import ScavCaseService
 
 cases = Blueprint("cases", __name__)
 scav_case_service = ScavCaseService()
+
 
 @cases.route("/all-scav-cases", methods=["GET"])
 def all_scav_cases():
@@ -61,28 +64,86 @@ def create_scav_case():
         return redirect(url_for("users.login"))
     return render_template("create_scav_case.html")
 
+def is_discord_bot_request():
+    """Check if a request is from discord bot with valid credentials"""
+    bot_header = request.headers.get("X-BOT-REQUEST")
+    bot_key = request.headers.get("X-BOT-KEY")
+    expected_key = os.getenv("DISCORD_BOT_API_KEY")
+
+    return bot_header == "true" and bot_key == expected_key
 
 @cases.route("/submit-scav-case", methods=["GET", "POST"])
-@login_required
+# no login_required - integrations will hit this (with key-based auth), check for integration first, then check login if webapp
 def submit_scav_case():
+    # special handling for the discord bot integration
+    if request.method == "POST" and is_discord_bot_request():
+        return handle_discord_bot_submission()
+
+    # this will be a webapp user, check they are authenticated
+    if not current_user.is_authenticated:
+        return redirect(url_for("users.login", next=request.url))
+
+    # Create the form instance to display to web user
     form = CreateScavCaseForm()
-    
+
     if form.validate_on_submit():
-        result = scav_case_service.create_scav_case_via_api(
+        result = scav_case_service.create_scav_case(
             scav_case_type=form.scav_case_type.data,
             uploaded_image=form.scav_case_image.data,
             items_data=form.items_data.data,
             user=current_user
         )
-        
+        print(f"Result from service.create_scav_case is: {result}")
         if result["success"]:
             flash(result["message"], "success")
             return redirect(url_for("main.dashboard"))
         else:
             flash(result["message"], "danger")
     
+    # render HTML with CreateScavCase form
     return render_template("create_scav_case.html", form=form)
 
+def handle_discord_bot_submission():
+    from app.models import User
+    from app.constants import DISCORD_BOT_USER_USERNAME
+
+    try:
+        # Get the Discord bot user
+        discord_bot_user = User.query.filter_by(username='Discord Bot').first()
+        if not discord_bot_user:
+            current_app.logger.error("Discord bot user not found in database")
+            return jsonify({"error": "Discord bot user not found"}), 500
+        
+        current_app.logger.info(f"Found Discord bot user: {discord_bot_user.username}")
+        
+        # Extract form data
+        scav_case_type = request.form.get("scav_case_type")
+        uploaded_image = request.files.get("image")
+        items_data = request.form.get("items_data", "")
+        
+        current_app.logger.info(f"Form data - Type: {scav_case_type}, Has Image: {bool(uploaded_image)}")
+        
+        if not scav_case_type:
+            return jsonify({"error": "scav_case_type is required"}), 400
+        
+        # Create the scav case
+        result = scav_case_service.create_scav_case(
+            scav_case_type=scav_case_type,
+            uploaded_image=uploaded_image,
+            items_data=items_data,
+            user=discord_bot_user
+        )
+        
+        current_app.logger.info(f"Service result: {result}")
+        
+        if result["success"]:
+            return jsonify({"message": result["message"]}), 200
+        else:
+            return jsonify({"error": result["message"]}), 400
+            
+    except Exception as e:
+        current_app.logger.error(f"Discord bot submission error: {e}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @cases.route("/items")
 def items():

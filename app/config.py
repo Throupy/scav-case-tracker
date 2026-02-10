@@ -10,6 +10,7 @@ REFRESH_TARKOV_ITEMS: when this is set to true, the application will read a new 
 """
 
 import os
+import secrets
 
 from dotenv import load_dotenv
 
@@ -21,10 +22,12 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI", "sqlite:///scav_case.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key")
     UPLOAD_FOLDER = "static/uploads/"
     ALLOWED_EXTENSIONS = [".png", ".jpg"]
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB
+
+    # validated for dev/prod at bottom
+    SECRET_KEY = os.getenv("SECRET_KEY")
 
     DISCORD_CHANNEL_ID = os.getenv("DISCORD_SCAV_CASE_CHANNEL_ID")
     DISCORD_DOWNLOAD_DIR = "app/static/uploads/discord_bot"
@@ -49,12 +52,17 @@ class ProductionConfig(Config):
     SEED_ENTRIES_COUNT = 1000
     REFRESH_TARKOV_ITEMS = False
 
-
 env = os.getenv(
-    "FLASK_ENV", "development"
+    "FLASK_ENV", "production"
 )  # default to development, set to PRODUCTION in prod
 
 if env == "production":
     ConfigClass = ProductionConfig
+    if not ConfigClass.SECRET_KEY:
+        raise RuntimeError(
+            "SECRET_KEY must be set in production.\n"
+            "Generate one with: \n"
+            "\n\tpython -c 'import secrets; print('SECRET_KEY=' + secrets.token_hex(32))' >> .env\n"
+        )
 else:
     ConfigClass = DevelopmentConfig

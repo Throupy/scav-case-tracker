@@ -14,7 +14,10 @@ from app.cases.utils import (
     calculate_avg_return_by_case_type,
     calculate_most_profitable,
     calculate_item_category_distribution,
-    check_achievements
+    check_achievements,
+    save_uploaded_image,
+    process_scav_case_image,
+    create_scav_case_entry
 )
 
 class ScavCaseService(BaseService):
@@ -84,6 +87,43 @@ class ScavCaseService(BaseService):
                 "avg_return_chart": None,
             }
     
+    def create_scav_case(self, scav_case_type: str, uploaded_image, items_data: str, user: User) -> Dict[str, Any]:
+        """Create a new scav case entry - centralised function for web and integrations (e.g. discord bot)"""
+        try:
+            # uploaded_image is for integrations such as discord bot
+            if uploaded_image:
+                # save image, and process via OCR to get items
+                file_path = save_uploaded_image(uploaded_image)
+                items = process_scav_case_image(file_path)
+            elif items_data:
+                # process the items_data JSON passed in (i.e. via webapp)
+                items = json.loads(items_data)
+            else:
+                raise ValueError("Either image or items_data must be provided")
+            
+            # TODO: Perhaps the functionality from the below method should be moved into here (service)
+            scav_case = create_scav_case_entry(scav_case_type, items, user.id)
+
+            check_achievements(user)
+
+            current_app.logger.info(f"Scav case createds successfully for user: '{user.username}'")
+
+            return {
+                "success": True,
+                "message": "Scav Case and Items successfully added",
+                "scav_case_id": scav_case.id
+            }
+            
+        except json.JSONDecodeError:
+            return {"success": False, "message": "Invalid items data format"}
+        except ValueError as e:
+            return {"success": False, "message": str(e)}
+        except Exception as e:
+            current_app.logger.error(f"Error creating scav case: {e}")
+            return {"success": False, "message": "An unexpected error occurred"}
+
+                
+
     def create_scav_case_via_api(
         self, scav_case_type: str, uploaded_image, 
         items_data: str, user: User
