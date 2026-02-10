@@ -2,8 +2,9 @@ import json
 from typing import List, Dict, Any, Optional
 
 import requests
-from flask import url_for, current_app
+from flask import url_for, current_app, jsonify
 
+from app.constants import DISCORD_BOT_USER_USERNAME
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.services import BaseService
 from app.cases.utils import (
@@ -169,6 +170,49 @@ class ScavCaseService(BaseService):
     def delete_scav_case(self, scav_case: ScavCase) -> bool:
         """Delete a scav case"""
         return self.delete(scav_case)
+
+    def handle_discord_bot_submission(self, request):
+        """
+        Handle Discord bot scav case submission
+        Returns: (response_dict, status_code)
+        """
+        try:
+            # Get the Discord bot user
+            discord_bot_user = User.query.filter_by(username='Discord Bot').first()
+            if not discord_bot_user:
+                current_app.logger.error("Discord bot user not found in database")
+                return jsonify({"error": "Discord bot user not found"}), 500
+            
+            current_app.logger.info(f"Found Discord bot user: {discord_bot_user.username}")
+            
+            # Extract form data
+            scav_case_type = request.form.get("scav_case_type")
+            uploaded_image = request.files.get("image")
+            items_data = request.form.get("items_data", "")
+            
+            current_app.logger.info(f"Form data - Type: {scav_case_type}, Has Image: {bool(uploaded_image)}")
+            
+            if not scav_case_type:
+                return jsonify({"error": "scav_case_type is required"}), 400
+            
+            # Create the scav case
+            result = self.create_scav_case(
+                scav_case_type=scav_case_type,
+                uploaded_image=uploaded_image,
+                items_data=items_data,
+                user=discord_bot_user
+            )
+            
+            current_app.logger.info(f"Service result: {result}")
+            
+            if result["success"]:
+                return jsonify({"message": result["message"]}), 200
+            else:
+                return jsonify({"error": result["message"]}), 400
+                
+        except Exception as e:
+            current_app.logger.error(f"Discord bot submission error: {e}")
+            return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
     def _build_profit_chart(self, scav_cases: List[ScavCase]) -> Dict[str, Any]:
         """Build profit over time chart data"""

@@ -73,6 +73,7 @@ def get_image_link(item_id: str) -> str:
 
 
 def get_price(tarkov_item_id: str) -> int:
+    # TODO: Hell of a chunk of work, but this (and possibly other things) should / could be moved to celery tasks?
     query = generate_price_query(tarkov_item_id)
     result = run_query(query)
     sell_for_list = result["data"]["items"][0]["sellFor"]
@@ -84,13 +85,13 @@ def get_price(tarkov_item_id: str) -> int:
         (item for item in sell_for_list if item["source"] == "fleaMarket"), None
     )
     if flea_market_price:
-        print(
+        current_app.logger.info(
             f"Got price of {flea_market_price['price']} for item with ID: {tarkov_item_id}"
         )
         return flea_market_price["price"]
     # if no flea market possible (e.g. BTC)
     max_price_item = max(sell_for_list, key=lambda x: x["price"])
-    print(
+    current_app.logger.info(
         "No flea market price available. Highest price from other sources is {} from {}.".format(
             max_price_item["price"], max_price_item["source"]
         )
@@ -178,10 +179,10 @@ def extract_items_from_ocr(text: str):
     Raises:
         ItemNotFoundException: If an item is not recognized in the database.
     """
-    print(f"[DEBUG] Extracting Items from OCR Text : {text}")
+    current_app.logger.info(f"[DEBUG] Extracting Items from OCR Text : {text}")
     item_pattern = r"([A-Za-z0-9\s\.\'\-\(\)x]+)\s+\(([\d\/]+)\)"
     matches = re.findall(item_pattern, text)
-    print(f"[DEBUG] Found {len(matches)} items within the text")
+    current_app.logger.info(f"[DEBUG] Found {len(matches)} items within the text")
 
     items = []
     for match in matches:
@@ -431,7 +432,6 @@ def check_achievements(user):
     # TODO: Create new lock_achievement (or similar) function
     # TODO: Will need to add checks in the scav_case_service.py 
     for achievement_name, check_func in ACHIEVEMENT_CHECKS.items():
-        print(f"{achievement_name} : {check_func(user)}")
         if achievement_name not in unlocked_achievements and check_func(user):
             unlock_achievement(user, achievement_name)
 
@@ -442,3 +442,23 @@ def unlock_achievement(user, achievement_name):
     db.session.commit()
 
     flash(f"🎉 Achievement Unlocked: {achievement_name}!", "success")
+
+def is_discord_bot_request(request):
+    """Check if a request is from discord bot with valid credentials"""
+    bot_header = request.headers.get("X-BOT-REQUEST")
+    bot_key = request.headers.get("X-BOT-KEY")
+    expected_key = os.getenv("DISCORD_BOT_API_KEY")
+
+    if not bot_key:
+        return False
+
+    if not expected_key:
+        # TODO: This function should probably return ok, reason, status (bool, str|None, int).
+        # In general, the consistency of responses from the service/view layer are just pretty inconsistent
+        # and it needs to be sorted out. Currently, this will just crap out if this condition hits, and the user
+        # won't get anything meaningful. Bit task of work, but needs done.
+        error_text = "Retrieved a suspected discord bot request. Cannot proceed because DISCORD_BOT_API_KEY is not set"
+        current_app.logger.error(error_text)
+        return False
+
+    return bot_header == "true" and bot_key == expected_key

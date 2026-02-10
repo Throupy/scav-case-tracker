@@ -166,7 +166,7 @@ class ImageDownloaderClient(commands.Bot):
         url = "http://localhost:5000/submit-scav-case"  # Single route!
         headers = {
             "X-BOT-REQUEST": "true",
-            "X-BOT-KEY": os.getenv('DISCORD_BOT_API_KEY')
+            "X-BOT-KEY": os.getenv('DISCORD_BOT_API_KEY', 'blank') # fallback to non-None, because None cannot be serialised
         }
         
         try:

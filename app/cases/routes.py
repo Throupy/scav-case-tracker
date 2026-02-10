@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 
 from app.models import ScavCase, ScavCaseItem
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
+from app.cases.utils import is_discord_bot_request
 from app.services.scav_case_service import ScavCaseService
 
 
@@ -64,28 +65,12 @@ def create_scav_case():
         return redirect(url_for("users.login"))
     return render_template("create_scav_case.html")
 
-def is_discord_bot_request():
-    """Check if a request is from discord bot with valid credentials"""
-    bot_header = request.headers.get("X-BOT-REQUEST")
-    bot_key = request.headers.get("X-BOT-KEY")
-    expected_key = os.getenv("DISCORD_BOT_API_KEY")
-
-    if not expected_key:
-        current_app.logger.error("DISCORD_BOT_API_KEY not configured")
-        return False
-
-    if not boy_key:
-        current_app.logger.warning("Missing X-BOT-KEY Header")
-        return False
-
-    return bot_header == "true" and bot_key == expected_key
-
 @cases.route("/submit-scav-case", methods=["GET", "POST"])
 # no login_required - integrations will hit this (with key-based auth), check for integration first, then check login if webapp
 def submit_scav_case():
     # special handling for the discord bot integration
-    if request.method == "POST" and is_discord_bot_request():
-        return handle_discord_bot_submission()
+    if request.method == "POST" and is_discord_bot_request(request):
+        return scav_case_service.handle_discord_bot_submission(request)
 
     # this will be a webapp user, check they are authenticated
     if not current_user.is_authenticated:
@@ -101,7 +86,7 @@ def submit_scav_case():
             items_data=form.items_data.data,
             user=current_user
         )
-        print(f"Result from service.create_scav_case is: {result}")
+
         if result["success"]:
             flash(result["message"], "success")
             return redirect(url_for("main.dashboard"))
@@ -110,48 +95,6 @@ def submit_scav_case():
     
     # render HTML with CreateScavCase form
     return render_template("create_scav_case.html", form=form)
-
-def handle_discord_bot_submission():
-    from app.models import User
-    from app.constants import DISCORD_BOT_USER_USERNAME
-
-    try:
-        # Get the Discord bot user
-        discord_bot_user = User.query.filter_by(username='Discord Bot').first()
-        if not discord_bot_user:
-            current_app.logger.error("Discord bot user not found in database")
-            return jsonify({"error": "Discord bot user not found"}), 500
-        
-        current_app.logger.info(f"Found Discord bot user: {discord_bot_user.username}")
-        
-        # Extract form data
-        scav_case_type = request.form.get("scav_case_type")
-        uploaded_image = request.files.get("image")
-        items_data = request.form.get("items_data", "")
-        
-        current_app.logger.info(f"Form data - Type: {scav_case_type}, Has Image: {bool(uploaded_image)}")
-        
-        if not scav_case_type:
-            return jsonify({"error": "scav_case_type is required"}), 400
-        
-        # Create the scav case
-        result = scav_case_service.create_scav_case(
-            scav_case_type=scav_case_type,
-            uploaded_image=uploaded_image,
-            items_data=items_data,
-            user=discord_bot_user
-        )
-        
-        current_app.logger.info(f"Service result: {result}")
-        
-        if result["success"]:
-            return jsonify({"message": result["message"]}), 200
-        else:
-            return jsonify({"error": result["message"]}), 400
-            
-    except Exception as e:
-        current_app.logger.error(f"Discord bot submission error: {e}")
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @cases.route("/items")
 def items():
@@ -192,6 +135,7 @@ def update_scav_case(scav_case_id):
 
 @cases.route("/case/<int:scav_case_id>/delete", methods=["GET"])
 def delete_scav_case(scav_case_id):
+    # TODO: Delete shouldn't use GET
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
     
     if scav_case_service.delete_scav_case(scav_case):
@@ -199,4 +143,4 @@ def delete_scav_case(scav_case_id):
     else:
         flash("Error deleting ScavCase", "danger")
         
-    return redirect(url_for("main.dashboard"))
+    return redirect(url_for("cases.all_scav_cases"))

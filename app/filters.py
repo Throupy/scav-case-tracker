@@ -27,7 +27,6 @@ def get_actual_item(item):
     else:
         category = item.tarkov_item.category
     if category == "Guns":
-        print(f"Finding where name = '{item.name} Default'")
         real_image_item = TarkovItem.query.filter_by(
             name=f"{item.name} Default"
         ).first()
