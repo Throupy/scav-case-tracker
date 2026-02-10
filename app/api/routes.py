@@ -89,10 +89,6 @@ def get_chart_data_route():
 def get_item_price_route(item_id):
     price = get_price(item_id)
     return jsonify({"price": price})
-
-
-@api.route("/api/submit-scav-case", methods=["POST"])
-def submit_scav_case_api():
     scav_case_type = request.form.get("scav_case_type")
     items_data = request.form.get("items_data")
     uploaded_image = request.files.get("image")

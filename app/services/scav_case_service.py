@@ -122,12 +122,6 @@ class ScavCaseService(BaseService):
             current_app.logger.error(f"Error creating scav case: {e}")
             return {"success": False, "message": "An unexpected error occurred"}
 
-                
-
-    def create_scav_case_via_api(
-        self, scav_case_type: str, uploaded_image, 
-        items_data: str, user: User
-    ) -> Dict[str, Any]:
 
         files = {"image": uploaded_image}
         data = {

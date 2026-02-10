@@ -70,6 +70,14 @@ def is_discord_bot_request():
     bot_key = request.headers.get("X-BOT-KEY")
     expected_key = os.getenv("DISCORD_BOT_API_KEY")
 
+    if not expected_key:
+        current_app.logger.error("DISCORD_BOT_API_KEY not configured")
+        return False
+
+    if not boy_key:
+        current_app.logger.warning("Missing X-BOT-KEY Header")
+        return False
+
     return bot_header == "true" and bot_key == expected_key
 
 @cases.route("/submit-scav-case", methods=["GET", "POST"])

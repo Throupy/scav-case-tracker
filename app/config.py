@@ -58,7 +58,7 @@ env = os.getenv(
 
 if env == "production":
     ConfigClass = ProductionConfig
-    if not ConfigClass.SECRET_KEY:
+    if not Config.SECRET_KEY:
         raise RuntimeError(
             "SECRET_KEY must be set in production.\n"
             "Generate one with: \n"
@@ -66,3 +66,6 @@ if env == "production":
         )
 else:
     ConfigClass = DevelopmentConfig
+    if not Config.SECRET_KEY:
+        Config.SECRET_KEY = secrets.token_hex(32)
+        print("WARNING: Using auto-generated SECRET_KEY for development.")
