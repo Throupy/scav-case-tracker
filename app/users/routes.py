@@ -43,7 +43,7 @@ def register():
     return render_template("register.html", form=form)
 
 
-@users.route("/logout")
+@users.route("/logout", methods=["POST"])
 def logout():
     logout_user()
     flash("You are now logged out", "success")

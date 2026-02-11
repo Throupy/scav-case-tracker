@@ -20,13 +20,13 @@ api = Blueprint("api", __name__)
 
 @api.route("/api/scav-case-type-distribution")
 def fetch_scav_case_type_distribution():
-    scav_cases = ScavCase.query.all()
-
-    scav_case_types = {}
-    for scav_case in scav_cases:
-        scav_case_types[scav_case.type] = scav_case_types.get(scav_case.type, 0) + 1
-
-    return jsonify(scav_case_types)
+    rows = (
+        db.session.query(ScavCase.type, db.func.count(ScavCase.id))
+        .group_by(ScavCase.type)
+        .all()
+    )
+    
+    return jsonify({case_type: count for case_type, count in rows})
 
 
 @api.route("/api/discord-stats")
@@ -35,7 +35,7 @@ def discord_stats():
     Stats results to be fetched by the discord bot
     """
     total_profit = ScavCase.query.with_entities(db.func.sum(ScavCase.profit)).scalar()
-    total_cases = len(ScavCase.query.all())
+    total_cases = ScavCase.query.count()
     total_spend = ScavCase.query.with_entities(db.func.sum(ScavCase.cost)).scalar()
     return jsonify(
         {

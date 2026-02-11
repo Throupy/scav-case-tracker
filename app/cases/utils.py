@@ -52,18 +52,21 @@ def generate_image_query(item_id):
 
 
 def run_query(query):
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(
-        "https://api.tarkov.dev/graphql", headers=headers, json={"query": query}
-    )
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(
-            "Query failed to run by returning code of {}. {}".format(
-                response.status_code, query
-            )
+    try:
+        response = requests.post(
+            "https://api.tarkov.dev/graphql", 
+            headers={"Content-Type": "application/json"}, 
+            json={"query": query},
+            timeout=(3, 10), # connect, read
         )
+        response.raise_for_status()
+        return response.json()
+    except requests.Timeout as e:
+        current_app.logger.error("Tarkov API Timed out")
+        raise e
+    except requests.RequestException as e:
+        current_app.logger.error(f"Tarkov API request failed: {e}")
+        raise e
 
 
 def get_image_link(item_id: str) -> str:
@@ -129,18 +132,17 @@ def validate_scav_case_image(image_path: str) -> bool:
     return False
 
 
-def fuzzy_match_ocr_to_database(ocr_text: str):
+def fuzzy_match_ocr_to_database(ocr_text: str, item_names: list[str]) -> str | None:
     """
     Perform a fuzzy match of OCR text to item names in the database.
 
     Args:
         ocr_text (str): The text extracted from OCR.
+        item_names (list[str]): the item names to search through
 
     Returns:
         TarkovItem or None: The best matching TarkovItem if found, None otherwise.
     """
-    all_items = TarkovItem.query.with_entities(TarkovItem.name).all()
-    item_names = [item[0] for item in all_items]
     best_match = process.extractOne(ocr_text, item_names, scorer=fuzz.ratio)
 
     if best_match and best_match[1] > 50:
@@ -183,12 +185,16 @@ def extract_items_from_ocr(text: str):
     item_pattern = r"([A-Za-z0-9\s\.\'\-\(\)x]+)\s+\(([\d\/]+)\)"
     matches = re.findall(item_pattern, text)
     current_app.logger.info(f"[DEBUG] Found {len(matches)} items within the text")
+    
+    all_items = TarkovItem.query.with_entities(TarkovItem.tarkov_id, TarkovItem.name).all()
+    item_names = [name for _, name in all_items]
+    name_to_item = {name: tid for tid, name in all_items}
 
     items = []
     for match in matches:
         item_name = match[0].strip()
         quantity = match[1].strip()
-        matched_item = fuzzy_match_ocr_to_database(item_name)
+        matched_item = fuzzy_match_ocr_to_database(item_name, item_names)
         if matched_item:
             items.append(
                 {
@@ -245,33 +251,38 @@ def process_scav_case_image(file_path):
     return extract_items_from_ocr(ocr_text)
 
 
-def create_scav_case_entry(scav_case_type, items, user_id):
+def create_scav_case_entry(scav_case_type: str, items: list[TarkovItem], user_id: int) -> ScavCase:
     """Creates a scav case entry and associated items in the database."""
-    scav_case = ScavCase(type=scav_case_type, user_id=user_id)
-    if scav_case_type.lower() == "moonshine":
-        scav_case.cost = get_price("5d1b376e86f774252519444e")
-    elif scav_case_type.lower() == "intelligence":
-        scav_case.cost = get_price("5c12613b86f7743bbe2c3f76")
-    else:
-        scav_case.cost = int(scav_case_type.replace("₽", "").strip())
+    try:      
+        scav_case = ScavCase(type=scav_case_type, user_id=user_id)
+        if scav_case_type.lower() == "moonshine":
+            scav_case.cost = get_price("5d1b376e86f774252519444e")
+        elif scav_case_type.lower() == "intelligence":
+            scav_case.cost = get_price("5c12613b86f7743bbe2c3f76")
+        else:
+            scav_case.cost = int(scav_case_type.replace("₽", "").strip())
 
-    db.session.add(scav_case)
-    db.session.commit()
+        db.session.add(scav_case)
+        db.session.flush()
 
-    for item in items:
-        scav_case_item = ScavCaseItem(
-            scav_case_id=scav_case.id,
-            tarkov_id=item["id"],
-            price=get_price(item["id"]),
-            name=item["name"],
-            amount=item["quantity"],
-        )
-        db.session.add(scav_case_item)
-        scav_case.number_of_items += 1
-        scav_case._return += scav_case_item.price * item["quantity"]
+        for item in items:
+            scav_case_item = ScavCaseItem(
+                scav_case_id=scav_case.id,
+                tarkov_id=item["id"],
+                price=get_price(item["id"]),
+                name=item["name"],
+                amount=item["quantity"],
+            )
+            db.session.add(scav_case_item)
+            scav_case.number_of_items += 1
+            scav_case._return += scav_case_item.price * item["quantity"]
 
-    db.session.commit()
-    return scav_case
+        db.session.commit()
+        return scav_case
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"There was an error inserting a scav case into the database {e}")
+        raise
 
 
 def calculate_insights(scav_cases):

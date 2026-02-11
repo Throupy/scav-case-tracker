@@ -7,7 +7,7 @@ from flask import (
     url_for,
 )
 
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from sqlalchemy.sql import func
 
@@ -47,6 +47,7 @@ def search_items():
     return render_template("partials/item_list.html", items=items)
 
 @main.route("/achievements")
+@login_required
 def achievements():
     user_achievements = UserAchievement.query.filter_by(user_id=current_user.id).all()
     unlocked = {a.achievement_name: a.achieved_at for a in user_achievements}

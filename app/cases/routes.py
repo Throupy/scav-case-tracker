@@ -17,6 +17,7 @@ scav_case_service = ScavCaseService()
 
 
 @cases.route("/all-scav-cases", methods=["GET"])
+@login_required
 def all_scav_cases():
     page = request.args.get("page", 1, type=int)
     sort_by = request.args.get("sort_by", "type")
@@ -48,6 +49,7 @@ def insights_data():
 
 
 @cases.route("/insights")
+@login_required
 def insights():
     insights = scav_case_service.calculate_insights_data("all")
 
@@ -97,6 +99,7 @@ def submit_scav_case():
     return render_template("create_scav_case.html", form=form)
 
 @cases.route("/items")
+@login_required
 def items():
     items = ScavCaseItem.query.all()
     return render_template("items.html", items=items)
@@ -109,8 +112,13 @@ def scav_case_detail(scav_case_id):
 
 
 @cases.route("/case/<int:scav_case_id>/edit", methods=["GET", "POST"])
+@login_required
 def update_scav_case(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
+    # does the user own the case
+    if scav_case.user_id != current_user.id:
+        abort(403)
+
     form = UpdateScavCaseForm(obj=scav_case)
     
     if request.method == "GET":
@@ -134,10 +142,15 @@ def update_scav_case(scav_case_id):
 
 
 @cases.route("/case/<int:scav_case_id>/delete", methods=["GET"])
+@login_required
 def delete_scav_case(scav_case_id):
     # TODO: Delete shouldn't use GET
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
     
+    # does the user own the case
+    if scav_case.user_id != current_user.id:
+        abort(403)
+
     if scav_case_service.delete_scav_case(scav_case):
         flash("Your ScavCase was successfully deleted", "success")
     else:
