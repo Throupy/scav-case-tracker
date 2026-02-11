@@ -65,12 +65,6 @@ def run_query(query):
         )
 
 
-def get_image_link(item_id: str) -> str:
-    query = generate_image_query(item_id)
-    result = run_query(query)
-    return result["data"]["items"][0]["iconLink"]
-
-
 def get_price(item_id: str) -> int:
     query = generate_price_query(item_id)
     result = run_query(query)

@@ -69,12 +69,6 @@ def run_query(query):
         raise e
 
 
-def get_image_link(item_id: str) -> str:
-    query = generate_image_query(item_id)
-    result = run_query(query)
-    return result["data"]["items"][0]["iconLink"]
-
-
 def get_price(tarkov_item_id: str) -> int:
     # TODO: Hell of a chunk of work, but this (and possibly other things) should / could be moved to celery tasks?
     query = generate_price_query(tarkov_item_id)

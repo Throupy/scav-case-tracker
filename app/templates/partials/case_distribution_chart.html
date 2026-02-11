@@ -20,8 +20,8 @@
       fetch('/api/scav-case-type-distribution')
           .then(response => response.json())
           .then(data => {
-              let labels = Object.keys(data);  
-              let values = Object.values(data); 
+              let labels = Object.keys(data.data);  
+              let values = Object.values(data.data); 
   
 
               var ctx = document.getElementById("caseTypeDistribution");

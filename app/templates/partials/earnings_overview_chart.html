@@ -1,69 +1,173 @@
 <div class="card shadow mb-4">
-  <!-- Card Header - Dropdown -->
-  <div
-      class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
       <h6 class="m-0 font-weight-bold text-danger">Earnings Overview - 15 Most Recent Cases</h6>
+  
       <div class="dropdown no-arrow">
-            <a class="text-reset dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span id="selected-case-type">All</span>
-              <i class="fas fa-caret-down fa-sm fa-fw text-gray-400 ml-2"></i>
-          </a>
-          <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-              aria-labelledby="dropdownMenuLink">
-              <div class="dropdown-header">Case Type:</div>
-              <a class="dropdown-item" href="javascript:void(0);" data-case-type="all">All</a>
-              <div class="dropdown-divider"></div>
-              {% for type in scav_case_types %}
-                <a class="dropdown-item" href="javascript:void(0);" onclick="updateChart('{{ type }}')">{{ type }}</a>
-              {% endfor %}
-          </div>
+        <a class="text-reset dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span id="selected-case-type">All</span>
+          <i class="fas fa-caret-down fa-sm fa-fw text-gray-400 ml-2"></i>
+        </a>
+  
+        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+          <div class="dropdown-header">Case Type:</div>
+  
+          <a class="dropdown-item" href="javascript:void(0);" data-case-type="All">All</a>
+          <div class="dropdown-divider"></div>
+  
+          {% for type in scav_case_types %}
+            <a class="dropdown-item" href="javascript:void(0);" data-case-type="{{ type }}">{{ type }}</a>
+          {% endfor %}
+        </div>
       </div>
-  </div>
-
-  <div id="warning-message" class="alert alert-warning d-none" role="alert">
-    <strong>Heads Up!</strong> There is not enough data to plot, try adding some more.
-  </div>
-
-  <div class="card-body">
+    </div>
+  
+    <div id="warning-message" class="alert alert-warning d-none" role="alert">
+      <strong>Heads Up!</strong> There is not enough data to plot, try adding some more.
+    </div>
+  
+    <div class="card-body">
       <div class="chart-area">
-          <canvas id="recentEarningsChart"></canvas>
+        <canvas id="recentEarningsChart"></canvas>
       </div>
+    </div>
   </div>
-</div>
-
-<script>
-let recentEarningsChart;
-
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll('.dropdown-item[data-case-type]').forEach(item => {
-    item.addEventListener('click', () => updateChart(item.dataset.caseType));
-  });
-  var ctx = document.getElementById("recentEarningsChart").getContext("2d");
-  recentEarningsChart = new Chart(ctx, {
+  
+  <script>
+  let recentEarningsChart;
+  let selectedCaseType = 'All';
+  
+  const FIXED_COST_THRESHOLDS = {
+    '₽2500': 2500,
+    '₽15000': 15000,
+    '₽95000': 95000
+  };
+  
+  function toProperCase(str) {
+    return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  }
+  
+  function number_format(number, decimals, dec_point, thousands_sep) {
+    number = (number + '').replace(',', '').replace(' ', '');
+    var n = !isFinite(+number) ? 0 : +number,
+        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+        s = '',
+        toFixedFix = function(n, prec) {
+            var k = Math.pow(10, prec);
+            return '' + Math.round(n * k) / k;
+        };
+    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+    if (s[0].length > 3) s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+    if ((s[1] || '').length < prec) {
+        s[1] = s[1] || '';
+        s[1] += new Array(prec - s[1].length + 1).join('0');
+    }
+    return s.join(dec);
+  }
+  
+  function updateSelectedLabel() {
+    document.getElementById('selected-case-type').textContent = toProperCase(selectedCaseType);
+  }
+  
+  async function fetchChartData() {
+    const resp = await fetch(`/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`);
+    const json = await resp.json();
+    return json.data;
+  }
+  
+  function setWarningVisible(isVisible) {
+    document.getElementById('warning-message').classList.toggle('d-none', !isVisible);
+  }
+  
+  function setEmptyChart() {
+    recentEarningsChart.data.labels = [];
+    recentEarningsChart.data.datasets[0].data = [];
+    recentEarningsChart.data.datasets[1].data = [];
+    recentEarningsChart.data.datasets[0].scav_cases = [];
+    recentEarningsChart.data.datasets[1].scav_cases = [];
+  }
+  
+  function applyChartData(data) {
+    const scavCases = data.scav_cases || [];
+    const isFixedCostType = Object.prototype.hasOwnProperty.call(FIXED_COST_THRESHOLDS, selectedCaseType);
+    const threshold = isFixedCostType ? FIXED_COST_THRESHOLDS[selectedCaseType] : null;
+  
+    if (scavCases.length < 3) {
+      setWarningVisible(true);
+      setEmptyChart();
+      recentEarningsChart.options.plugins.horizontalLine.y = null;
+      recentEarningsChart.update();
+      return;
+    }
+  
+    setWarningVisible(false);
+  
+    recentEarningsChart.data.labels = data.labels || [];
+  
+    // Return / earnings dataset
+    recentEarningsChart.data.datasets[0].data = scavCases.map(e => e.return);
+    recentEarningsChart.data.datasets[0].scav_cases = scavCases;
+  
+    // Cost dataset OR horizontal line (fixed cost)
+    if (isFixedCostType) {
+      recentEarningsChart.data.datasets[1].hidden = true;
+      recentEarningsChart.options.plugins.horizontalLine.y = threshold;
+    } else {
+      recentEarningsChart.data.datasets[1].hidden = false;
+      recentEarningsChart.data.datasets[1].data = scavCases.map(e => e.cost);
+      recentEarningsChart.data.datasets[1].scav_cases = scavCases;
+      recentEarningsChart.options.plugins.horizontalLine.y = null;
+    }
+  
+    recentEarningsChart.update();
+  }
+  
+  async function updateChart(caseType) {
+    selectedCaseType = caseType;
+    updateSelectedLabel();
+  
+    try {
+      const data = await fetchChartData();
+      applyChartData(data);
+    } catch (e) {
+      console.error('Error fetching chart data:', e);
+    }
+  }
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.dropdown-item[data-case-type]').forEach(item => {
+      item.addEventListener('click', () => updateChart(item.dataset.caseType));
+    });
+  
+    const ctx = document.getElementById("recentEarningsChart").getContext("2d");
+  
+    recentEarningsChart = new Chart(ctx, {
       type: 'line',
       data: {
-          labels: [],
-          datasets: [
-            {
-                label: "Earnings",
-                lineTension: 0.3,
-                backgroundColor: "rgba(78, 115, 223, 0.05)",
-                borderColor: "rgb(231, 74, 59)",
-                pointRadius: 3,
-                pointBackgroundColor: "rgb(231, 74, 59)",
-                pointBorderColor: "rgb(231, 74, 59)",
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: "rgb(231, 74, 59)",
-                pointHoverBorderColor: "rgb(231, 74, 59)",
-                pointHitRadius: 10,
-                pointBorderWidth: 2,
-                data: [], // populated later
-                types: []
+        labels: [],
+        datasets: [
+          {
+            label: "Earnings",
+            lineTension: 0.3,
+            backgroundColor: "rgba(78, 115, 223, 0.05)",
+            borderColor: "rgb(231, 74, 59)",
+            pointRadius: 3,
+            pointBackgroundColor: "rgb(231, 74, 59)",
+            pointBorderColor: "rgb(231, 74, 59)",
+            pointHoverRadius: 7,
+            pointHoverBackgroundColor: "rgb(231, 74, 59)",
+            pointHoverBorderColor: "rgb(231, 74, 59)",
+            pointHitRadius: 10,
+            pointBorderWidth: 2,
+            data: [],
+            scav_cases: []
           },
           {
             label: "Cost",
-            pointRadius: 3, 
-            pointBackgroundColor: "rgb(40, 167, 69)",  // green
+            pointRadius: 3,
+            pointBackgroundColor: "rgb(40, 167, 69)",
             pointBorderColor: "rgb(40, 167, 69)",
             pointHoverRadius: 7,
             pointHoverBackgroundColor: "rgb(40, 167, 69)",
@@ -72,238 +176,113 @@ document.addEventListener("DOMContentLoaded", function() {
             lineTension: 0.3,
             fill: false,
             borderDash: [5,5],
-            showLine: true,  
-            data: [],  
-          }],
+            showLine: true,
+            data: [],
+            scav_cases: [],
+            hidden: false
+          }
+        ]
       },
       options: {
-          onClick: function(event, elements) {
-            if (elements.length > 0) {
-                var datasetIndex = elements[0].datasetIndex;
-                var dataIndex = elements[0].index;
-                var entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases[dataIndex];
-
-                if (entry && entry.id) {
-                    window.location.href = `/case/${entry.id}/detail`;
-                }
+        onClick: function(event, elements) {
+          if (!elements.length) return;
+  
+          const datasetIndex = elements[0].datasetIndex;
+          const dataIndex = elements[0].index;
+          const entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases?.[dataIndex];
+  
+          if (entry?.id) window.location.href = `/case/${entry.id}/detail`;
+        },
+        maintainAspectRatio: false,
+        layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+        scales: {
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { maxTicksLimit: 7 }
+          },
+          y: {
+            min: 0,
+            ticks: {
+              maxTicksLimit: 5,
+              padding: 10,
+              callback: value => '₽' + number_format(value)
+            },
+            grid: {
+              color: "rgb(234, 236, 244)",
+              zeroLineColor: "rgb(234, 236, 244)",
+              drawBorder: false,
+              borderDash: [2],
+              zeroLineBorderDash: [2]
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            backgroundColor: "rgb(255,255,255)",
+            bodyColor: "#858796",
+            titleMarginBottom: 10,
+            titleColor: '#6e707e',
+            titleFont: { size: 14 },
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            padding: 15,
+            displayColors: false,
+            intersect: true,
+            mode: 'nearest',
+            position: 'nearest',
+            caretPadding: 10,
+            callbacks: {
+              title: function(tooltipItems) {
+                const idx = tooltipItems?.[0]?.dataIndex;
+                const entry = recentEarningsChart.data.datasets[0].scav_cases?.[idx];
+                return entry ? ('Case Type: ' + entry.type) : '';
+              },
+              label: function(tooltipItem) {
+                const dsIdx = tooltipItem.datasetIndex;
+                const ptIdx = tooltipItem.dataIndex;
+                const entry = recentEarningsChart.data.datasets[dsIdx].scav_cases?.[ptIdx];
+                if (!entry) return [];
+  
+                return [
+                  'Profit: ₽' + number_format(entry.profit),
+                  'Cost: ₽' + number_format(entry.cost),
+                  'Submitted: ' + entry.created_at_humanized
+                ];
+              }
             }
           },
-          maintainAspectRatio: false,
-          layout: {
-              padding: {
-                  left: 10,
-                  right: 25,
-                  top: 25,
-                  bottom: 0
-              }
-          },
-          scales: {
-              x: {
-                  time: {
-                      unit: 'date'
-                  },
-                  grid: {
-                      display: false,
-                      drawBorder: false
-                  },
-                  ticks: {
-                      maxTicksLimit: 7,
-                  }
-              },
-              y: {
-                  min: 0,
-                  ticks: {
-                      maxTicksLimit: 5,
-                      padding: 10,
-                      callback: function(value) {
-                          return '₽' + number_format(value);
-                      }
-                  },
-                  grid: {
-                      color: "rgb(234, 236, 244)",
-                      zeroLineColor: "rgb(234, 236, 244)",
-                      drawBorder: false,
-                      borderDash: [2],
-                      zeroLineBorderDash: [2]
-                  }
-              },
-          },
-          plugins: {
-              tooltip: {
-                  backgroundColor: "rgb(255,255,255)",
-                  bodyColor: "#858796",
-                  titleMarginBottom: 10,
-                  titleColor: '#6e707e',
-                  titleFont: {
-                      size: 14
-                  },
-                  borderColor: '#dddfeb',
-                  borderWidth: 1,
-                  padding: 15,
-                  displayColors: false,
-                  intersect: true,
-                  mode: 'nearest',
-                  position:'nearest',
- 
-                  caretPadding: 10,
-                  callbacks: {
-                    title: function(tooltipItems) {
-                        if (!tooltipItems || tooltipItems.length === 0 || !tooltipItems[0]) return ''; 
-                        var dataIndex = tooltipItems[0].dataIndex;
-                        var entry = recentEarningsChart.data.datasets[0].scav_cases[dataIndex];
-                        if (!entry) return ''; 
-                        
-                        return 'Case Type: ' + entry.type;
-                    },
-                    label: function(tooltipItem) {
-                        var datasetIndex = tooltipItem.datasetIndex;
-                        var dataPointIndex = tooltipItem.dataIndex;
-                        var entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases[dataPointIndex];
-                        var labels = [];
-                        labels.push('Profit: ₽' + number_format(entry.profit));
-                        labels.push('Cost: ₽' + number_format(entry.cost));
-                        labels.push('Submitted: ' + entry.created_at_humanized);
-                        return labels;
-                    }
-                }
-              },
-              horizontalLine: { 
-                  y: null 
-              },
-              legend: {
-                display: false
-              }
-          }
+          horizontalLine: { y: null },
+          legend: { display: false }
+        }
       },
       plugins: [{
         id: 'horizontalLine',
         beforeDraw: function(chart) {
-            if (chart.config.options.plugins.horizontalLine.y !== null) {
-                let yScale = chart.scales['y'];
-                let yValue = chart.config.options.plugins.horizontalLine.y;
-                let yPixel = yScale.getPixelForValue(yValue);
-
-                let ctx = chart.ctx;
-                ctx.save();
-                ctx.beginPath();
-                ctx.moveTo(chart.chartArea.left, yPixel);
-                ctx.lineTo(chart.chartArea.right, yPixel);
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = 'rgb(40, 167, 69)'; // Green cost line
-                ctx.stroke();
-                ctx.restore();
-
-                ctx.save();
-                ctx.fillStyle = 'rgb(40, 167, 69)';
-                ctx.fillText("Cost", chart.chartArea.right - 70, yPixel - 5);
-                ctx.restore();
-            }
+          const yVal = chart.config.options.plugins.horizontalLine.y;
+          if (yVal === null || yVal === undefined) return;
+  
+          const yScale = chart.scales['y'];
+          const yPixel = yScale.getPixelForValue(yVal);
+          const ctx = chart.ctx;
+  
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(chart.chartArea.left, yPixel);
+          ctx.lineTo(chart.chartArea.right, yPixel);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgb(40, 167, 69)';
+          ctx.stroke();
+          ctx.restore();
+  
+          ctx.save();
+          ctx.fillStyle = 'rgb(40, 167, 69)';
+          ctx.fillText("Cost", chart.chartArea.right - 70, yPixel - 5);
+          ctx.restore();
         }
-    }]
+      }]
+    });
+  
+    updateChart('All');
   });
-
-  updateChart('All');
-});
-
-let selectedCaseType = 'All'
-let profitThreshold = null;  
-
-function updateChart(caseType) {
-  selectedCaseType = caseType;
-
-
-  let thresholds = {
-      '₽2500': 2500,
-      '₽15000': 15000,
-      '₽95000': 95000
-  };
-
-  if (thresholds[caseType]) {
-      profitThreshold = thresholds[caseType];
-      updateChartWithThreshold(profitThreshold);
-  }
-
-  else if (caseType === 'Moonshine' || caseType === 'Intelligence') {
-      let itemId = (caseType === 'Moonshine') ? '5d1b376e86f774252519444e' : '5c12613b86f7743bbe2c3f76';
-
-
-      fetch(`/api/get-item-price/${itemId}`)
-          .then(response => response.json())
-          .then(data => {
-              profitThreshold = data.price;
-              updateChartWithThreshold(profitThreshold);
-          })
-          .catch(error => console.error('Error fetching item price:', error));
-  }
-  else {
-      profitThreshold = null;
-      updateChartWithThreshold(profitThreshold);
-  }
-}
-
-function toProperCase(str) {
-    return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-}
-
-async function updateChartWithThreshold(threshold) {
-  try {
-    const response = await fetch(`/api/get-chart-data?type=${selectedCaseType}`);
-    const data = await response.json();
-
-    document.getElementById('selected-case-type').textContent = toProperCase(selectedCaseType);
-
-    const fixedCostTypes = ['₽2500', '₽15000', '₽95000'];
-    const showCostDots = !fixedCostTypes.includes(selectedCaseType);
-
-    if (data.scav_cases.length < 3) {
-      document.getElementById('warning-message').classList.remove('d-none');
-      recentEarningsChart.data.labels = [];
-      recentEarningsChart.data.datasets[0].data = [];
-      recentEarningsChart.data.datasets[1].data = [];
-      recentEarningsChart.data.datasets[0].scav_cases = [];
-      recentEarningsChart.data.datasets[1].scav_cases = [];
-    } else {
-      document.getElementById('warning-message').classList.add('d-none');
-      recentEarningsChart.data.labels = data.labels;
-
-      recentEarningsChart.data.datasets[0].data = data.scav_cases.map(entry => entry.return);
-      recentEarningsChart.data.datasets[0].scav_cases = data.scav_cases;
-
-      if (showCostDots) {
-        recentEarningsChart.data.datasets[1].data = data.scav_cases.map(entry => entry.cost);
-        recentEarningsChart.data.datasets[1].scav_cases = data.scav_cases;
-        recentEarningsChart.data.datasets[1].hidden = false;
-        recentEarningsChart.options.plugins.horizontalLine.y = null; 
-      } else {
-        recentEarningsChart.data.datasets[1].hidden = true;
-        recentEarningsChart.options.plugins.horizontalLine.y = threshold;
-      }
-    }
-    recentEarningsChart.update();
-  } catch (error) {
-    console.error('Error fetching chart data:', error);
-  }
-}
-
-function number_format(number, decimals, dec_point, thousands_sep) {
-  number = (number + '').replace(',', '').replace(' ', '');
-  var n = !isFinite(+number) ? 0 : +number,
-      prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-      sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-      dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-      s = '',
-      toFixedFix = function(n, prec) {
-          var k = Math.pow(10, prec);
-          return '' + Math.round(n * k) / k;
-      };
-  s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-  if (s[0].length > 3) {
-      s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-  }
-  if ((s[1] || '').length < prec) {
-      s[1] = s[1] || '';
-      s[1] += new Array(prec - s[1].length + 1).join('0');
-  }
-  return s.join(dec);
-}
-</script>
+  </script>
+  
