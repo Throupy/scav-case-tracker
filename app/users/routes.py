@@ -13,14 +13,14 @@ users = Blueprint("users", __name__)
 @users.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("main.dashboard"))
+        return redirect(url_for("cases.dashboard"))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
             flash("You are now logged in", "success")
-            return redirect(url_for("main.dashboard"))
+            return redirect(url_for("cases.dashboard"))
         else:
             flash("Login Unsuccessful. Please check username and password", "danger")
     return render_template("login.html", form=form)
@@ -29,7 +29,7 @@ def login():
 @users.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for("main.dashboard"))
+        return redirect(url_for("cases.dashboard"))
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode(

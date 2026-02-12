@@ -3,6 +3,8 @@ from typing import List, Dict, Any, Optional
 
 import requests
 from flask import url_for, current_app, jsonify
+from sqlalchemy.sql import func
+from sqlalchemy.orm import joinedload
 
 from app.constants import DISCORD_BOT_USER_USERNAME
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
@@ -213,6 +215,87 @@ class ScavCaseService(BaseService):
         except Exception as e:
             current_app.logger.error(f"Discord bot submission error: {e}")
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+    # TODO: Maybe split this into a DashboardService
+    def generate_dashboard_data(self):
+        """Compute all dashboard metrics dynamically."""
+        return {
+            **self._get_totals(), # total spent, total return, number of cases, and profit
+            "most_popular_category": self._get_most_popular_category_name(),
+            "top_contributor": self._get_top_contributor(),
+            "most_profitable_case_type": self._get_most_profitable_case_type_name(),
+            "most_valuable_item": self._get_most_valuable_item(),
+        }
+
+    def _get_totals(self) -> dict:
+        total_cases, total_cost, total_return, total_profit = (
+            self.db.session.query(
+                func.count(ScavCase.id),
+                func.coalesce(func.sum(ScavCase.cost), 0),
+                func.coalesce(func.sum(ScavCase._return), 0),
+                func.coalesce(func.sum(ScavCase._return - ScavCase.cost), 0)
+            )
+            .one()
+        )
+        return {
+            "total_cases": int(total_cases),
+            "total_cost": float(total_cost),
+            "total_return": float(total_return),
+            "total_profit": float(total_profit),
+        }
+
+    def _get_most_popular_category_name(self) -> str | None:
+        """Get the most popular category of item (not hinged on quantity)"""
+        row = (
+            self.db.session.query(TarkovItem.category)
+            .join(ScavCaseItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id)
+            .filter(TarkovItem.category.isnot(None))
+            .group_by(TarkovItem.category)
+            .order_by(func.count(ScavCaseItem.id).desc(), TarkovItem.category.asc())
+            .limit(1)
+            .scalar()
+        )
+
+        return row
+
+
+    def _get_top_contributor(self) -> User | None:
+        """Find the user who submitted the most scav cases."""
+        top_user_id = (
+            self.db.session.query(ScavCase.user_id)
+            .group_by(ScavCase.user_id)
+            .order_by(func.count(ScavCase.id).desc(), ScavCase.user_id.asc())
+            .limit(1)
+            .scalar()
+        )
+        if not top_user_id:
+            return None
+
+        return self.db.session.get(User, top_user_id)
+
+
+    def _get_most_profitable_case_type_name(self) -> str | None:
+        """Determine the most profitable case type based on average profit per run."""
+        return (
+            self.db.session.query(ScavCase.type)
+            .group_by(ScavCase.type)
+            .order_by(
+                func.avg(ScavCase._return - ScavCase.cost).desc(),
+                ScavCase.type.asc(),
+            )
+            .limit(1)
+            .scalar()
+        )
+
+
+    def _get_most_valuable_item(self) -> ScavCaseItem | None:
+        """Find the most valuable single item"""
+        return (
+            self.db.session.query(ScavCaseItem)
+            .options(joinedload(ScavCaseItem.scav_case))
+            .order_by((ScavCaseItem.price * ScavCaseItem.amount).desc(), ScavCaseItem.id.desc())
+            .first()
+        )
 
     def _build_profit_chart(self, scav_cases: List[ScavCase]) -> Dict[str, Any]:
         """Build profit over time chart data"""

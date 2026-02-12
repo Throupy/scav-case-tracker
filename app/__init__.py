@@ -1,19 +1,31 @@
 import os
-import logging.handlers
 from logging.config import dictConfig
 
 from flask import Flask
 
 from app.config import ConfigClass
+from app.constants import SCAV_CASE_TYPES
 from app.extensions import db, migrate, login_manager, bcrypt
 from app.database.manager import db_manager
 from app.discord_bot.manager import discord_manager
 from app.models import User
+from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
+
+from app.main.routes import main
+from app.api.routes import api
+from app.users.routes import users
+from app.market.routes import market
+from app.errors.routes import errors
+from app.quiz.routes import _quiz as quiz
+from app.circles.routes import circles
+from app.cases.routes import cases
+from app.leaderboards.routes import leaderboards
+
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 def create_app(config_class=ConfigClass):
@@ -27,6 +39,7 @@ def create_app(config_class=ConfigClass):
 
     _init_extensions(app)
     _register_template_filters(app)
+    _register_template_context(app)
     _register_blueprints(app)
     _init_database(app)
     _init_discord_bot(app)
@@ -34,7 +47,6 @@ def create_app(config_class=ConfigClass):
     return app
 
 def _configure_logging():
-
     # Create log dir if it doesn't exist
     log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
     os.makedirs(log_dir, exist_ok=True)
@@ -109,24 +121,19 @@ def _init_extensions(app: Flask) -> None:
 
 def _register_template_filters(app: Flask) -> None:
     """Register jinja2 template filters"""
-    from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
-
     app.jinja_env.filters["timeago"] = timeago
     app.jinja_env.filters["get_item_cdn_image_url"] = get_item_cdn_image_url
     app.jinja_env.filters["get_category_cdn_image_url"] = get_category_cdn_image_url
 
+def _register_template_context(app: Flask) -> None:
+    # registers globals for templates. SCAV_CASE_TYPES is needed throughout a number of templates,
+    # and it's safe to make global, so let's do it.
+    @app.context_processor
+    def inject_template_globals():
+        return {"scav_case_types": SCAV_CASE_TYPES}
+
 def _register_blueprints(app: Flask) -> None:
     """Register application blueprints (route mappings)"""
-    from app.main.routes import main
-    from app.api.routes import api
-    from app.users.routes import users
-    from app.market.routes import market
-    from app.errors.routes import errors
-    from app.quiz.routes import _quiz as quiz
-    from app.circles.routes import circles
-    from app.cases.routes import cases
-    from app.leaderboards.routes import leaderboards
-    
     app.register_blueprint(main)
     app.register_blueprint(api)
     app.register_blueprint(users)

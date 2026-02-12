@@ -4,7 +4,7 @@ from flask import url_for, get_flashed_messages
 
 def test_dashboard_route(client):
     """Test the dashboard route."""
-    response = client.get(url_for("main.dashboard"))
+    response = client.get(url_for("cases.dashboard"))
     assert response.status_code == 200
     assert b"Dashboard" in response.data
 

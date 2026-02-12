@@ -65,30 +65,6 @@ def run_query(query):
         )
 
 
-def get_price(item_id: str) -> int:
-    query = generate_price_query(item_id)
-    result = run_query(query)
-    sell_for_list = result["data"]["items"][0]["sellFor"]
-    # some stuff you just can't sell? e.g. GP Coin
-    if len(sell_for_list) == 0:
-        return None
-    # try to get the flea market price
-    flea_market_price = next(
-        (item for item in sell_for_list if item["source"] == "fleaMarket"), None
-    )
-    if flea_market_price:
-        print(f"Got price of {flea_market_price['price']} for item with ID: {item_id}")
-        return flea_market_price["price"]
-    # if no flea market possible (e.g. BTC)
-    max_price_item = max(sell_for_list, key=lambda x: x["price"])
-    print(
-        "No flea market price available. Highest price from other sources is {} from {}.".format(
-            max_price_item["price"], max_price_item["source"]
-        )
-    )
-    return max_price_item["price"]
-
-
 def validate_scav_case_image(image_path: str) -> bool:
     img = Image.open(image_path)
     img = img.convert("L")
@@ -172,37 +148,6 @@ def process_scav_case_image(file_path):
 
     ocr_text = process_image_for_items(file_path)
     return extract_items_from_ocr(ocr_text)
-
-
-def create_scav_case_entry(scav_case_type, items, user_id):
-    """Creates a scav case entry and associated items in the database."""
-    scav_case = ScavCase(type=scav_case_type, user_id=user_id)
-
-    if scav_case_type.lower() == "moonshine":
-        scav_case.cost = get_price("5d1b376e86f774252519444e")
-    elif scav_case_type.lower() == "intelligence":
-        scav_case.cost = get_price("5c12613b86f7743bbe2c3f76")
-    else:
-        scav_case.cost = int(scav_case_type.replace("₽", "").strip())
-
-    db.session.add(scav_case)
-    db.session.commit()
-
-    for item in items:
-        scav_case_item = ScavCaseItem(
-            scav_case_id=scav_case.id,
-            tarkov_id=item["id"],
-            price=get_price(item["id"]),
-            name=item["name"],
-            amount=item["quantity"],
-        )
-        db.session.add(scav_case_item)
-        scav_case.number_of_items += 1
-        scav_case._return += scav_case_item.price * item["quantity"]
-
-    db.session.commit()
-    return scav_case
-
 
 def get_most_popular_item():
     """Get the most common Tarkov item category from all scav cases."""

@@ -21,20 +21,10 @@ main = Blueprint("main", __name__)
 @main.route("/not-implemented")
 def not_implemented():
     flash("This feature hasn't been implemented yet", "warning")
-    return redirect(url_for("main.dashboard"))
+    return redirect(url_for("cases.dashboard"))
 
 
-@main.route("/")
-@main.route("/dashboard")
-def dashboard():
-    dashboard_data = get_dashboard_data()
 
-    return render_template(
-        "dashboard.html",
-        scav_case_types=SCAV_CASE_TYPES,
-        scav_cases=ScavCase.query.all(),
-        **dashboard_data,
-    )
 
 
 @main.route("/search-items")

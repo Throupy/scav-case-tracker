@@ -53,7 +53,7 @@ class ProductionConfig(Config):
     REFRESH_TARKOV_ITEMS = False
 
 env = os.getenv(
-    "FLASK_ENV", "production"
+    "FLASK_ENV", "development"
 )  # default to development, set to PRODUCTION in prod
 
 if env == "production":

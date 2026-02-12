@@ -15,7 +15,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                             Total Cases</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ scav_cases | length }} Cases</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cases }} Cases</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-box fa-2x text-gray-300"></i>
@@ -32,10 +32,10 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                             Total Profit</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(scav_cases | sum(attribute='profit') | int) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_profit | int) }}</div>
                     </div>
                     <div class="col-auto">
-                        {% if scav_cases | sum(attribute='profit') | int < 0 %}
+                        {% if total_profit | int < 0 %}
                             <i class="fas text-danger fa-dollar-sign fa-2x"></i>
                         {% else %}
                             <i class="fas text-success fa-dollar-sign fa-2x"></i>
@@ -53,7 +53,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                             Total Spent</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(scav_cases | sum(attribute='cost') | int) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_cost | int) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -70,7 +70,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                             Total Return</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(scav_cases | sum(attribute='_return') | int) }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_return | int) }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -88,7 +88,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                             Most Common Item Type</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_popular_item[0] }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_popular_category }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-tag fa-2x text-gray-300"></i>
@@ -121,7 +121,7 @@
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                             Most Profitable Case Type</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_profitable_case.type }}</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_profitable_case_type }}</div>
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-box fa-2x text-gray-300"></i>

@@ -7,6 +7,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from flask_login import login_required, current_user
 
 from app.models import ScavCase, ScavCaseItem
+from app.constants import SCAV_CASE_TYPES
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
 from app.cases.utils import is_discord_bot_request
 from app.services.scav_case_service import ScavCaseService
@@ -17,6 +18,15 @@ from app.http.responses import success_response
 cases = Blueprint("cases", __name__)
 scav_case_service = ScavCaseService()
 
+@cases.route("/")
+@cases.route("/dashboard")
+def dashboard():
+    # for the 'kpis' on the dashboard, e.g. "total spent", "total profit", etc.
+    dashboard_data = scav_case_service.generate_dashboard_data()
+
+    return render_template(
+        "dashboard.html", **dashboard_data
+    )
 
 @cases.route("/all-scav-cases", methods=["GET"])
 @login_required
@@ -93,7 +103,7 @@ def submit_scav_case():
 
         if result["success"]:
             flash(result["message"], "success")
-            return redirect(url_for("main.dashboard"))
+            return redirect(url_for("cases.dashboard"))
         else:
             flash(result["message"], "danger")
     
