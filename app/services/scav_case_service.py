@@ -293,7 +293,7 @@ class ScavCaseService(BaseService):
         return (
             self.db.session.query(ScavCaseItem)
             .options(joinedload(ScavCaseItem.scav_case))
-            .order_by((ScavCaseItem.price * ScavCaseItem.amount).desc(), ScavCaseItem.id.desc())
+            .order_by((ScavCaseItem.price).desc(), ScavCaseItem.id.desc())
             .first()
         )
 
