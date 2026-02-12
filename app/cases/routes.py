@@ -11,12 +11,14 @@ from app.constants import SCAV_CASE_TYPES
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
 from app.cases.utils import is_discord_bot_request
 from app.services.scav_case_service import ScavCaseService
+from app.services.user_service import UserService
 from app.http.errors import AuthorizationError
 from app.http.responses import success_response
 
 
 cases_bp = Blueprint("cases", __name__)
 scav_case_service = ScavCaseService()
+user_service = UserService()
 
 # util / helpers
 @cases_bp.route("/cases/search-items")
@@ -25,12 +27,11 @@ def search_items():
     query = request.args.get("q")
     if len(query) < 2:
         return render_template("partials/scav_case_search_item_list.html", items=[])
+
     items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
     return render_template("partials/scav_case_search_item_list.html", items=items)
 
-
-@cases_bp.route("/cases")
-@cases_bp.route("/cases/dashboard")
+@cases_bp.route("/cases/global-dashboard")
 def dashboard():
     # for the 'kpis' on the dashboard, e.g. "total spent", "total profit", etc.
     dashboard_data = scav_case_service.generate_dashboard_data()
@@ -46,7 +47,7 @@ def all_scav_cases():
     sort_by = request.args.get("sort_by", "type")
     sort_order = request.args.get("sort_order", "asc")
     
-    pagination = scav_case_service.get_paginated_cases(
+    pagination = scav_case_service.get_all_cases_paginated(
         page=page, sort_by=sort_by, sort_order=sort_order
     )
     
@@ -58,6 +59,11 @@ def all_scav_cases():
         sort_order=sort_order,
     )
 
+@cases_bp.route("/users/<int:user_id>/cases")
+def users_cases(user_id: int):
+    user = user_service.get_user_by_id_or_404(user_id)
+    users_cases_data = scav_case_service.generate_users_cases_data(user_id)
+    return render_template("users_cases.html", username=user.username, **users_cases_data)
 
 @cases_bp.route("/cases/insights-data")
 def insights_data():

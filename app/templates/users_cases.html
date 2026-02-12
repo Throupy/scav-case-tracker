@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {{ username }}'s Scav Cases
+            <small class="text-muted ml-2">({{ total_cases }} total)</small>
+        </h1>
+    </div>
+
+    <div class="row">
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Total Profit
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ "{:,.0f}".format(total_profit) }} ₽
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ruble-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Average Profit
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ "{:,.0f}".format(avg_profit|round) }} ₽
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-area fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a href="{{ url_for('cases.scav_case_detail', scav_case_id=most_profitable_case.id) }}"
+               class="text-decoration-none stretched-link">
+                <div class="card border-left-danger shadow h-100 py-2 hover-shadow">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                    Best Case
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    {{ "{:,.0f}".format(most_profitable_case._return) }} ₽
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-trophy fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Profitable Case Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ profitable_cases_pcnt }}%
+                                <small class="text-muted ml-2">({{ (total_cases * profitable_cases_pcnt / 100)|round(0)|int }} runs)</small>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow mb-4 border-left-danger">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-gradient-danger text-white">
+            <h6 class="m-0 font-weight-bold">Top Performing Cases</h6>
+            <small>Best profit • Showing {{ good_cases|length }} of {{ total_cases }}</small>
+        </div>
+        <div class="card-body p-0">
+            {% if good_cases %}
+            <div class="list-group list-group-flush">
+                {% for case in good_cases %}
+                {% set rank = loop.index %}
+                <a href="{{ url_for('cases.scav_case_detail', scav_case_id=case.id) }}" 
+                   class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="d-flex w-100 justify-content-between">
+                        <div class="d-flex align-items-center">
+                            {% set rank_badge_class %}
+                            {% if rank == 1 %}bg-warning text-dark
+                            {% elif rank == 2 %}bg-secondary text-white
+                            {% elif rank == 3 %}bg-info text-white 
+                            {% else %}bg-dark text-white     
+                            {% endif %}
+                        {% endset %}
+                        
+                        <span class="badge badge-pill {{ rank_badge_class }} mr-3 px-3 py-2 font-weight-bold" 
+                              style="min-width: 42px; font-size: 1.1rem;">
+                            #{{ rank }}
+                        </span>
+                            <div>
+                                <h5 class="mb-1">{{ case.type|capitalize }} Case</h5>
+                                <p class="mb-1 small text-muted">
+                                    {{ case.created_at.strftime('%d %b %Y  %H:%M') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <h5 class="mb-0 {% if case.profit >= 0 %}text-success{% else %}text-danger{% endif %} font-weight-bold">
+                                {{ "{:+,.0f}".format(case.profit) }} ₽
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="mt-1 small text-muted">
+                        Cost: {{ "{:,.0f}".format(case.cost) }} ₽ • Return: {{ "{:,.0f}".format(case._return) }} ₽
+                        • Items: {{ case.number_of_items }}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+                <p class="lead mb-1">No top cases yet</p>
+                <small>Submit some scav runs to populate this list</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

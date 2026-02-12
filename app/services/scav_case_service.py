@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 
 import requests
 from flask import url_for, current_app, jsonify
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, case
 from sqlalchemy.orm import joinedload
 
 from app.constants import DISCORD_BOT_USER_USERNAME
@@ -25,7 +25,10 @@ from app.cases.utils import (
 
 class ScavCaseService(BaseService):
     """Service class for handling biz logic for ScavCase functionality"""
-    def get_paginated_cases(
+    def get_all_cases(self) -> list[ScavCase] | None:
+        return ScavCase.query.all()
+        
+    def get_all_cases_paginated(
         self, page: int, per_page: int = 10,
         sort_by: str = "type", sort_order: str = "asc"
     ):
@@ -39,6 +42,9 @@ class ScavCaseService(BaseService):
             query = ScavCase.query.order_by(self.db.desc(sort_attr))
 
         return query.paginate(page=page, per_page=per_page)
+
+    def get_all_cases_by_user(self, user: User) -> list[ScavCase] | None:
+        return ScavCase.query.filter_by(user_id=user.id).all()
 
     def get_case_by_id(self, case_id: int) -> Optional[ScavCase]:
         """Get scav case by ID or return None"""
@@ -227,16 +233,123 @@ class ScavCaseService(BaseService):
             "most_valuable_item": self._get_most_valuable_item(),
         }
 
-    def _get_totals(self) -> dict:
-        total_cases, total_cost, total_return, total_profit = (
-            self.db.session.query(
-                func.count(ScavCase.id),
-                func.coalesce(func.sum(ScavCase.cost), 0),
-                func.coalesce(func.sum(ScavCase._return), 0),
-                func.coalesce(func.sum(ScavCase._return - ScavCase.cost), 0)
-            )
-            .one()
+    def generate_users_cases_data(self, user_id: int) -> dict:
+        """Generate data for the /users/XXXX/cases page"""
+        return {
+            **self._get_totals(user_id=user_id),
+            "good_cases": self._get_best_cases(user_id=user_id),
+            "avg_profit": self._get_avg_profit_per_case(user_id=user_id),
+            "most_profitable_case": self._get_most_profitable_case(user_id=user_id),
+            "profitable_cases_pcnt": self._get_profitable_cases_percentage(user_id=user_id)
+        }
+
+    def _get_profitable_cases_percentage(self, user_id: int = None) -> float:
+        """
+        Return the percentage of profitable cases (return > cost).
+        Optionally restrict to a specific user.
+        Rounded to 1d.p
+        """
+
+        q = self.db.session.query(
+            func.count(ScavCase.id).label("total_cases"),
+            func.sum(
+                case(
+                    (ScavCase._return > ScavCase.cost, 1),
+                    else_=0
+                )
+            ).label("profitable_cases")
         )
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+
+        total_cases, profitable_cases = q.one()
+
+        if not total_cases:
+            return 0.0
+
+        percentage = (profitable_cases / total_cases) * 100
+
+        return round(percentage, 1)
+
+    def _get_most_profitable_case(self, user_id: int = None) -> float:
+        """
+        Return the `_return` value of the most profitable case.
+        Optionally restrict to a specific user.
+        """
+        q = self.db.session.query(ScavCase)
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+
+        case_obj = (
+            q.order_by(
+                (ScavCase._return - ScavCase.cost).desc(),
+                ScavCase.created_at.desc()
+            )
+            .first()
+        )
+
+        if not case_obj:
+            return 0.0
+
+        return case_obj
+
+    def _get_avg_profit_per_case(self, case_type: str = None, user_id: int = None) -> float:
+        """
+        Return the average profit per case.
+        Optionally filter by case_type and/or user_id.
+        """
+        q = self.db.session.query(
+            func.coalesce(
+                func.avg(ScavCase._return - ScavCase.cost),
+                0.0
+            )
+        )
+
+        if case_type is not None:
+            q = q.filter(ScavCase.type == case_type)
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+
+        avg_profit = q.scalar()
+
+        return float(avg_profit)
+
+
+    def _get_best_cases(self, n: int = 6, user_id: int = None) -> list[ScavCase]:
+        """
+        Return the top N most profitable scav cases (desc).
+        If user_id is provided, restrict to that user's cases.
+        """
+        q = self.db.session.query(ScavCase)
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+
+        return (
+            q.order_by(
+                (ScavCase._return - ScavCase.cost).desc(),
+                ScavCase.created_at.desc(),  # deterministic tie-breaker
+            )
+            .limit(n)
+            .all()
+        )
+
+    def _get_totals(self, user_id: int = None) -> dict:
+        q = self.db.session.query(
+            func.count(ScavCase.id),
+            func.coalesce(func.sum(ScavCase.cost), 0),
+            func.coalesce(func.sum(ScavCase._return), 0),
+            func.coalesce(func.sum(ScavCase._return - ScavCase.cost), 0),
+        )
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+
+        total_cases, total_cost, total_return, total_profit = q.one()
+
         return {
             "total_cases": int(total_cases),
             "total_cost": float(total_cost),
@@ -244,23 +357,57 @@ class ScavCaseService(BaseService):
             "total_profit": float(total_profit),
         }
 
-    def _get_most_popular_category_name(self) -> str | None:
-        """Get the most popular category of item (not hinged on quantity)"""
-        row = (
+    def _get_most_popular_category_name(self, user_id: int = None) -> str | None:
+        """Most popular item category by count of items (not quantity), optionally per-user."""
+        q = (
             self.db.session.query(TarkovItem.category)
             .join(ScavCaseItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id)
             .filter(TarkovItem.category.isnot(None))
-            .group_by(TarkovItem.category)
+        )
+
+        if user_id is not None:
+            # Need to constrain to the user's scav cases
+            q = q.join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id).filter(ScavCase.user_id == user_id)
+
+        return (
+            q.group_by(TarkovItem.category)
             .order_by(func.count(ScavCaseItem.id).desc(), TarkovItem.category.asc())
             .limit(1)
             .scalar()
         )
 
-        return row
+    def _get_most_profitable_case_type_name(self, user_id: int = None) -> str | None:
+        """Most profitable case type by average profit per run (optionally per-user)."""
+        q = self.db.session.query(ScavCase.type)
 
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+
+        return (
+            q.group_by(ScavCase.type)
+            .order_by(
+                func.avg(ScavCase._return - ScavCase.cost).desc(),
+                ScavCase.type.asc(),
+            )
+            .limit(1)
+            .scalar()
+        )
+
+
+    def _get_most_valuable_item(self, user_id: int = None) -> ScavCaseItem | None:
+        """Most valuable single item (optionally per-user)."""
+        q = (
+            self.db.session.query(ScavCaseItem)
+            .options(joinedload(ScavCaseItem.scav_case))
+        )
+
+        if user_id is not None:
+            q = q.join(ScavCase).filter(ScavCase.user_id == user_id)
+
+        return q.order_by(ScavCaseItem.price.desc(), ScavCaseItem.id.desc()).first()
 
     def _get_top_contributor(self) -> User | None:
-        """Find the user who submitted the most scav cases."""
+        """Find the user who submitted the most scav cases globally."""
         top_user_id = (
             self.db.session.query(ScavCase.user_id)
             .group_by(ScavCase.user_id)
@@ -272,30 +419,6 @@ class ScavCaseService(BaseService):
             return None
 
         return self.db.session.get(User, top_user_id)
-
-
-    def _get_most_profitable_case_type_name(self) -> str | None:
-        """Determine the most profitable case type based on average profit per run."""
-        return (
-            self.db.session.query(ScavCase.type)
-            .group_by(ScavCase.type)
-            .order_by(
-                func.avg(ScavCase._return - ScavCase.cost).desc(),
-                ScavCase.type.asc(),
-            )
-            .limit(1)
-            .scalar()
-        )
-
-
-    def _get_most_valuable_item(self) -> ScavCaseItem | None:
-        """Find the most valuable single item"""
-        return (
-            self.db.session.query(ScavCaseItem)
-            .options(joinedload(ScavCaseItem.scav_case))
-            .order_by((ScavCaseItem.price).desc(), ScavCaseItem.id.desc())
-            .first()
-        )
 
     def _build_profit_chart(self, scav_cases: List[ScavCase]) -> Dict[str, Any]:
         """Build profit over time chart data"""

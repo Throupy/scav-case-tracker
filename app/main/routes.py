@@ -17,6 +17,10 @@ from app.main.utils import get_dashboard_data
 
 main_bp = Blueprint("main", __name__)
 
+@main_bp.route("/")
+def index():
+    # 'home', change as needed.
+    return redirect(url_for("cases.dashboard"))
 
 @main_bp.route("/not-implemented")
 def not_implemented():

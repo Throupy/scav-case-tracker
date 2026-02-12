@@ -10,7 +10,7 @@ from app.users.forms import LoginForm, RegistrationForm, UpdateAccountForm
 users_bp = Blueprint("users", __name__)
 
 
-@users_bp.route("/login", methods=["GET", "POST"])
+@users_bp.route("/users/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("cases.dashboard"))
@@ -26,7 +26,7 @@ def login():
     return render_template("login.html", form=form)
 
 
-@users_bp.route("/register", methods=["GET", "POST"])
+@users_bp.route("/users/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("cases.dashboard"))
@@ -43,14 +43,14 @@ def register():
     return render_template("register.html", form=form)
 
 
-@users_bp.route("/logout", methods=["POST"])
+@users_bp.route("/users/logout", methods=["POST"])
 def logout():
     logout_user()
     flash("You are now logged out", "success")
     return redirect(url_for("users.login"))
 
 
-@users_bp.route("/account", methods=["GET", "POST"])
+@users_bp.route("/users/account", methods=["GET", "POST"])
 @login_required
 def account():
     form = UpdateAccountForm()
