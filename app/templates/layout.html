@@ -51,10 +51,10 @@
                 </a>
                 <div id="scav-cases-dropdown" class="collapse" aria-labelledby="scav-cases-dropdown-heading" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ url_for('cases.submit_scav_case', quiz_type='recoil') }}">New Case</a>
-                        <a class="collapse-item" href="{{ url_for('cases.all_scav_cases', quiz_type='ergonomics') }}">All Cases</a>
-                        <a class="collapse-item" href="{{ url_for('cases.insights', quiz_type='ergonomics') }}">Insights</a>
-                        <a class="collapse-item" href="{{ url_for('cases.items', quiz_type='ergonomics') }}">All Items</a>
+                        <a class="collapse-item" href="{{ url_for('cases.submit_scav_case') }}">New Case</a>
+                        <a class="collapse-item" href="{{ url_for('cases.all_scav_cases') }}">All Cases</a>
+                        <a class="collapse-item" href="{{ url_for('cases.insights') }}">Insights</a>
+                        <a class="collapse-item" href="{{ url_for('cases.items') }}">All Items</a>
                     </div>
                 </div>
             </li>
@@ -67,7 +67,7 @@
                 </a>
                 <div id="cultist-circles-dropdown" class="collapse" aria-labelledby="cultist-circles-dropdown-heading" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ url_for('circles.create_circle', quiz_type='recoil') }}">New Entry</a>
+                        <a class="collapse-item" href="{{ url_for('circles.create_circle') }}">New Entry</a>
                     </div>
                 </div>
             </li>
