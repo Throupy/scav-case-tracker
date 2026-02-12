@@ -15,10 +15,10 @@ from app.constants import SCAV_CASE_TYPES, ACHIEVEMENT_METADATA
 from app.models import ScavCase, TarkovItem, ScavCaseItem, User, UserAchievement
 from app.main.utils import get_dashboard_data
 
-main = Blueprint("main", __name__)
+main_bp = Blueprint("main", __name__)
 
 
-@main.route("/not-implemented")
+@main_bp.route("/not-implemented")
 def not_implemented():
     flash("This feature hasn't been implemented yet", "warning")
     return redirect(url_for("cases.dashboard"))
@@ -27,7 +27,7 @@ def not_implemented():
 
 
 
-@main.route("/search-items")
+@main_bp.route("/search-items")
 def search_items():
     """HTMX search route"""
     query = request.args.get("q")
@@ -36,14 +36,3 @@ def search_items():
     items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
     return render_template("partials/item_list.html", items=items)
 
-@main.route("/achievements")
-@login_required
-def achievements():
-    user_achievements = UserAchievement.query.filter_by(user_id=current_user.id).all()
-    unlocked = {a.achievement_name: a.achieved_at for a in user_achievements}
-    # unlocked first, most recent first
-    sorted_achievements = sorted(
-        ACHIEVEMENT_METADATA.items(), 
-        key=lambda a: (-unlocked[a[0]].timestamp() if a[0] in unlocked else float("inf"))
-    )
-    return render_template("achievements.html", achievements=sorted_achievements, unlocked=unlocked)

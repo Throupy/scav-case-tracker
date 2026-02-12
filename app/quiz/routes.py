@@ -4,10 +4,10 @@ from app.models import WeaponAttachment
 from app.extensions import db
 from app.quiz.utils import generate_quiz_options
 
-_quiz = Blueprint("quiz", __name__)
+quiz_bp = Blueprint("quiz", __name__)
 
 
-@_quiz.route("/quiz/<quiz_type>", methods=["GET", "POST"])
+@quiz_bp.route("/quiz/<quiz_type>", methods=["GET", "POST"])
 def quiz(quiz_type):
     if request.method == "POST":
         user_answer = float(request.form["selected_modifier"])

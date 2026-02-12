@@ -7,7 +7,7 @@ from app.constants import MESSAGES_403, MESSAGES_404, MESSAGES_500
 from app.http.errors import AppError
 from app.http.responses import error_response
 
-errors = Blueprint("errors", __name__)
+errors_bp = Blueprint("errors", __name__)
 
 
 def get_random_message(error_list):
@@ -28,7 +28,7 @@ def wants_json_response() -> bool:
         >= request.accept_mimetypes["text/html"]
     )
 
-@errors.app_errorhandler(AppError)
+@errors_bp.app_errorhandler(AppError)
 def handle_app_error(error: AppError):
     if wants_json_response():
         return error_response(
@@ -45,7 +45,7 @@ def handle_app_error(error: AppError):
         template = "errors/404.html"
     return render_template(template, message=error.message), error.status_code
 
-@errors.app_errorhandler(HTTPException)
+@errors_bp.app_errorhandler(HTTPException)
 def handle_http_exception(error: HTTPException):
     if wants_json_response():
         return error_response(
@@ -67,7 +67,7 @@ def handle_http_exception(error: HTTPException):
         "errors/500.html", message=get_random_message(MESSAGES_500)
     ), error.code
 
-@errors.app_errorhandler(Exception)
+@errors_bp.app_errorhandler(Exception)
 def handle_unexpected_exception(error: Exception):
     current_app.logger.exception("Unhandled exception: %s", error)
 

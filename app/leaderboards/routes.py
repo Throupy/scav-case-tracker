@@ -6,18 +6,17 @@ from flask import (
     request,
     url_for,
 )
+from sqlalchemy import func
 
 from app.models import User, ScavCase, ScavCaseItem
 from app.constants import LEADERBOARD_METRICS
-
-leaderboards = Blueprint("leaderboards", __name__)
-
-from flask import request, render_template
-from sqlalchemy import func
 from app.extensions import db
 from app.leaderboards.utils import leaderboard_base_query
 
-@leaderboards.route("/leaderboards")
+
+leaderboards_bp = Blueprint("leaderboards", __name__)
+
+@leaderboards_bp.route("/leaderboards")
 def index():
     metric = request.args.get("metric", "total_profit")
     if metric not in LEADERBOARD_METRICS:

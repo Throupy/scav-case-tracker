@@ -11,16 +11,16 @@ from app.discord_bot.manager import discord_manager
 from app.models import User
 from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
 
-from app.main.routes import main
-from app.api.routes import api
-from app.users.routes import users
-from app.market.routes import market
-from app.errors.routes import errors
-from app.quiz.routes import _quiz as quiz
-from app.circles.routes import circles
-from app.cases.routes import cases
-from app.leaderboards.routes import leaderboards
-
+from app.main.routes import main_bp
+from app.api.routes import api_bp
+from app.users.routes import users_bp
+from app.market.routes import market_bp
+from app.errors.routes import errors_bp
+from app.quiz.routes import quiz_bp
+from app.circles.routes import circles_bp
+from app.cases.routes import cases_bp
+from app.leaderboards.routes import leaderboards_bp
+from app.achievements.routes import achievements_bp
 
 
 @login_manager.user_loader
@@ -134,15 +134,16 @@ def _register_template_context(app: Flask) -> None:
 
 def _register_blueprints(app: Flask) -> None:
     """Register application blueprints (route mappings)"""
-    app.register_blueprint(main)
-    app.register_blueprint(api)
-    app.register_blueprint(users)
-    app.register_blueprint(market)
-    app.register_blueprint(quiz)
-    app.register_blueprint(errors)
-    app.register_blueprint(cases)
-    app.register_blueprint(circles)
-    app.register_blueprint(leaderboards)
+    app.register_blueprint(main_bp)
+    app.register_blueprint(api_bp)
+    app.register_blueprint(users_bp)
+    app.register_blueprint(market_bp)
+    app.register_blueprint(quiz_bp)
+    app.register_blueprint(errors_bp)
+    app.register_blueprint(cases_bp)
+    app.register_blueprint(circles_bp)
+    app.register_blueprint(leaderboards_bp)
+    app.register_blueprint(achievements_bp)
 
 def _init_database(app: Flask) -> None:
     """Initialise and optionally, seed, the database"""

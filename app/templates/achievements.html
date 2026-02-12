@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2 class="mb-4 text-center">🏆 {{ current_user.username }}'s Achievements ({{ unlocked | length }}/{{ achievements | length }})</h2>
+<h2 class="mb-4 text-center">🏆 {{ user.username }}'s Achievements ({{ unlocked | length }}/{{ achievements | length }})</h2>
 
 <div class="row justify-content-center">
     {% for achievement, data in achievements %}

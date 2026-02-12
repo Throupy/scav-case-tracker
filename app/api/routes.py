@@ -11,10 +11,10 @@ from app.http.responses import success_response, error_response
 from app.http.errors import ValidationError, NotFoundError
 
 
-api = Blueprint("api", __name__)
+api_bp = Blueprint("api", __name__)
 
 # queried by case_distribution_chart template (within dashboard)
-@api.route("/api/scav-case-type-distribution")
+@api_bp.route("/api/scav-case-type-distribution")
 def fetch_scav_case_type_distribution():
     rows = (
         db.session.query(ScavCase.type, db.func.count(ScavCase.id))
@@ -26,7 +26,7 @@ def fetch_scav_case_type_distribution():
     return success_response(data=data, message="Scav case type distribution fetched")
 
 # queried by earnings_overview_chart template (within dashboard)
-@api.route("/api/get-chart-data")
+@api_bp.route("/api/get-chart-data")
 def get_chart_data_route():
     case_type = request.args.get("type", "all")
 
@@ -59,7 +59,7 @@ def get_chart_data_route():
     )
 
 # queried by discord bot
-@api.route("/api/discord-stats")
+@api_bp.route("/api/discord-stats")
 def discord_stats():
     """Stats results to be fetched by the discord bot"""
     total_profit = ScavCase.query.with_entities(db.func.sum(ScavCase.profit)).scalar() or 0

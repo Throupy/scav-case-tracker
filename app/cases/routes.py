@@ -15,11 +15,11 @@ from app.http.errors import AuthorizationError
 from app.http.responses import success_response
 
 
-cases = Blueprint("cases", __name__)
+cases_bp = Blueprint("cases", __name__)
 scav_case_service = ScavCaseService()
 
-@cases.route("/")
-@cases.route("/dashboard")
+@cases_bp.route("/")
+@cases_bp.route("/dashboard")
 def dashboard():
     # for the 'kpis' on the dashboard, e.g. "total spent", "total profit", etc.
     dashboard_data = scav_case_service.generate_dashboard_data()
@@ -28,7 +28,7 @@ def dashboard():
         "dashboard.html", **dashboard_data
     )
 
-@cases.route("/all-scav-cases", methods=["GET"])
+@cases_bp.route("/all-scav-cases", methods=["GET"])
 @login_required
 def all_scav_cases():
     page = request.args.get("page", 1, type=int)
@@ -48,7 +48,7 @@ def all_scav_cases():
     )
 
 
-@cases.route("/insights-data")
+@cases_bp.route("/insights-data")
 def insights_data():
     case_type = request.args.get("case_type", "all")
     insights = scav_case_service.calculate_insights_data(case_type)
@@ -60,7 +60,7 @@ def insights_data():
     )
 
 
-@cases.route("/insights")
+@cases_bp.route("/insights")
 @login_required
 def insights():
     insights = scav_case_service.calculate_insights_data("all")
@@ -71,7 +71,7 @@ def insights():
     return render_template("insights.html", case_type="all", **insights)
 
 
-@cases.route("/create-scav-case", methods=["GET"])
+@cases_bp.route("/create-scav-case", methods=["GET"])
 @login_required
 def create_scav_case():
     if not current_user.is_authenticated:
@@ -79,7 +79,7 @@ def create_scav_case():
         return redirect(url_for("users.login"))
     return render_template("create_scav_case.html")
 
-@cases.route("/submit-scav-case", methods=["GET", "POST"])
+@cases_bp.route("/submit-scav-case", methods=["GET", "POST"])
 # no login_required - integrations will hit this (with key-based auth), check for integration first, then check login if webapp
 def submit_scav_case():
     # special handling for the discord bot integration
@@ -110,20 +110,20 @@ def submit_scav_case():
     # render HTML with CreateScavCase form
     return render_template("create_scav_case.html", form=form)
 
-@cases.route("/items")
+@cases_bp.route("/items")
 @login_required
 def items():
     items = ScavCaseItem.query.all()
     return render_template("items.html", items=items)
 
 
-@cases.route("/case/<int:scav_case_id>/detail")
+@cases_bp.route("/case/<int:scav_case_id>/detail")
 def scav_case_detail(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
     return render_template("scav_case_detail.html", scav_case=scav_case)
 
 
-@cases.route("/case/<int:scav_case_id>/edit", methods=["GET", "POST"])
+@cases_bp.route("/case/<int:scav_case_id>/edit", methods=["GET", "POST"])
 @login_required
 def update_scav_case(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
@@ -153,7 +153,7 @@ def update_scav_case(scav_case_id):
     return render_template("edit_scav_case.html", form=form, scav_case=scav_case)
 
 
-@cases.route("/case/<int:scav_case_id>/delete", methods=["GET"])
+@cases_bp.route("/case/<int:scav_case_id>/delete", methods=["GET"])
 @login_required
 def delete_scav_case(scav_case_id):
     # TODO: Delete shouldn't use GET
