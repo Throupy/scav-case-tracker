@@ -6,7 +6,7 @@
     </div>
 
     <div class="card-body">
-        <div class="chart-pie pt-4 pb-2">
+        <div class="chart-pie">
             <canvas id="caseTypeDistribution"></canvas>
         </div>
         <div class="mt-4 text-center small">
@@ -16,52 +16,77 @@
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-      fetch('/api/scav-case-type-distribution')
-          .then(response => response.json())
-          .then(data => {
-              let labels = Object.keys(data.data);  
-              let values = Object.values(data.data); 
-  
+function applyPieTheme(chart) {
+  if (!chart) return;
 
-              var ctx = document.getElementById("caseTypeDistribution");
-              const myPieChart = new Chart(ctx, {
-                  type: 'doughnut',
-                  data: {
-                      labels: labels,
-                      datasets: [{
-                          label: 'Scav Case Type Distribution',
-                          data: values,
-                          backgroundColor: [
-                              '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'
-                          ],
-                          hoverBackgroundColor: [
-                              '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'
-                          ]
-                      }]
-                  },
-                  options: {
-                      maintainAspectRatio: false,
-                      devicePixelRatio: 3,
-                      tooltips: {
-                          backgroundColor: "rgb(255,255,255)",
-                          bodyFontColor: "#858796",
-                          borderColor: '#dddfeb',
-                          borderWidth: 1,
-                          xPadding: 15,
-                          yPadding: 15,
-                          displayColors: false,
-                          caretPadding: 10,
-                      },
-                      legend: {
-                          display: true,
-                          position: 'bottom',
-                          padding: 10
-                      },
-                      cutoutPercentage: 80,
-                  },
-              });
-          })
-          .catch(error => console.error('Error fetching Scav Case Type Distribution data:', error));
-  });
+  const dark = document.body.classList.contains("dark");
+
+  // Legend label colour
+  chart.options.plugins.legend.labels.color = dark ? "#ffffff" : "#858796";
+
+  // Tooltip colours
+  chart.options.plugins.tooltip.backgroundColor = dark ? "#151924" : "#ffffff";
+  chart.options.plugins.tooltip.titleColor = dark ? "#ffffff" : "#6e707e";
+  chart.options.plugins.tooltip.bodyColor = dark ? "#ffffff" : "#858796";
+  chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
+  chart.options.plugins.tooltip.borderWidth = 1;
+
+  chart.update();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("/api/scav-case-type-distribution")
+    .then((r) => r.json())
+    .then((resp) => {
+      const labels = Object.keys(resp.data);
+      const values = Object.values(resp.data);
+
+      const ctx = document.getElementById("caseTypeDistribution");
+
+      const myPieChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Scav Case Type Distribution",
+              data: values,
+              backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"],
+              hoverBackgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"],
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          devicePixelRatio: 3,
+
+          cutout: "50%", 
+
+          plugins: {
+            legend: {
+              display: true,
+              position: "top",
+              labels: {
+                // color will be set by applyPieTheme()
+              },
+            },
+            tooltip: {
+              enabled: true,
+              displayColors: false,
+              padding: 15,
+              caretPadding: 10,
+            },
+          },
+        },
+      });
+
+      applyPieTheme(myPieChart);
+
+      document.addEventListener("theme:changed", function () {
+        setTimeout(() => applyPieTheme(myPieChart), 0);
+      });
+    })
+    .catch((e) => console.error("Error fetching Scav Case Type Distribution data:", e));
+});
+
   </script>

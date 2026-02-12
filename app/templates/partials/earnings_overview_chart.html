@@ -71,6 +71,29 @@
     document.getElementById('selected-case-type').textContent = toProperCase(selectedCaseType);
   }
   
+  function isDarkMode() {
+    return document.body.classList.contains("dark");
+    }
+
+    function applyChartTheme(chart) {
+    if (!chart) return;
+
+    const dark = isDarkMode();
+
+    chart.options.scales.x.ticks.color = dark ? "#e6e6e6" : undefined;
+    chart.options.scales.y.ticks.color = dark ? "#e6e6e6" : undefined;
+
+    chart.options.scales.y.grid.color = dark ? "rgba(255,255,255,0.12)" : "rgb(234, 236, 244)";
+    chart.options.scales.x.grid.color = dark ? "rgba(255,255,255,0.08)" : undefined;
+
+    chart.options.plugins.tooltip.backgroundColor = dark ? "#151924" : "rgb(255,255,255)";
+    chart.options.plugins.tooltip.titleColor = dark ? "#e6e6e6" : "#6e707e";
+    chart.options.plugins.tooltip.bodyColor = dark ? "#e6e6e6" : "#858796";
+    chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
+
+    chart.update();
+    }
+
   async function fetchChartData() {
     const resp = await fetch(`/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`);
     const json = await resp.json();
@@ -110,7 +133,6 @@
     recentEarningsChart.data.datasets[0].data = scavCases.map(e => e.return);
     recentEarningsChart.data.datasets[0].scav_cases = scavCases;
   
-    // Cost dataset OR horizontal line (fixed cost)
     if (isFixedCostType) {
       recentEarningsChart.data.datasets[1].hidden = true;
       recentEarningsChart.options.plugins.horizontalLine.y = threshold;
@@ -281,8 +303,13 @@
         }
       }]
     });
-  
+    applyChartTheme(recentEarningsChart);
+    document.addEventListener("theme:changed", function() {
+        applyChartTheme(recentEarningsChart);
+    });
+
     updateChart('All');
   });
+  
   </script>
   

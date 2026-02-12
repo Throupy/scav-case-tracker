@@ -1,0 +1,104 @@
+/* app/static/css/dark-mode.css */
+body.dark,
+body.dark #page-top,
+body.dark #wrapper,
+body.dark #content-wrapper,
+body.dark #content {
+  background-color: #0f1115 !important;
+  color: #e6e6e6;
+}
+body.dark .container-fluid {
+  background-color: transparent !important;
+}
+body.dark .topbar,
+body.dark nav.navbar.topbar,
+body.dark footer.sticky-footer {
+  background-color: #121622 !important;
+  border-color: #2a3142 !important;
+}
+body.dark .text-gray-600,
+body.dark .text-gray-700,
+body.dark .text-gray-800,
+body.dark .text-gray-900 {
+  color: #e6e6e6 !important;
+}
+body.dark .collapse-inner {
+  background-color: #151924 !important;
+}
+
+body.dark .collapse-item {
+  color: #e6e6e6 !important;
+}
+body.dark .collapse-item:hover {
+  background-color: #1d2333 !important;
+}
+body.dark {
+    background: #0f1115;
+    color: #e6e6e6;
+  }
+
+  body.dark .card {
+    background: #151924;
+    border-color: #2a3142;
+  }
+  body.dark .card-header {
+    background: #151924;
+    border-bottom-color: #2a3142;
+  }
+
+  body.dark .sidebar,
+  body.dark .topbar {
+    background: #121622 !important;
+  }
+  body.dark .topbar {
+    border-bottom: 1px solid #2a3142;
+  }
+
+  body.dark .text-gray-800,
+  body.dark .text-gray-900 {
+    color: #e6e6e6 !important;
+  }
+  body.dark .text-gray-600,
+  body.dark .text-gray-700 {
+    color: #b7bfd1 !important;
+  }
+
+  body.dark .table {
+    color: #e6e6e6;
+  }
+  body.dark .table thead th {
+    border-bottom-color: #2a3142;
+  }
+  body.dark .table td,
+  body.dark .table th {
+    border-top-color: #2a3142;
+  }
+
+  body.dark .form-control {
+    background: #0f1115;
+    border-color: #2a3142;
+    color: #e6e6e6;
+  }
+  body.dark .form-control:focus {
+    background: #0f1115;
+    color: #e6e6e6;
+  }
+
+  body.dark .dropdown-menu {
+    background: #151924;
+    border-color: #2a3142;
+  }
+  body.dark .dropdown-item {
+    color: #e6e6e6;
+  }
+  body.dark .dropdown-item:hover {
+    background: #1d2333;
+  }
+
+  body.dark a {
+    color: #9bbcff;
+  }
+  body.dark a:hover {
+    color: #c3d6ff;
+  }
+  
