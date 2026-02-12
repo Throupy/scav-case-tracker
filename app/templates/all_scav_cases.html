@@ -139,9 +139,18 @@
                                                class="px-2 text-danger"><i class="fa-regular fa-eye"></i></a>
                                         </li>
                                         <li class="list-inline-item">
-                                            <a href="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}" 
-                                               data-bs-toggle="tooltip" data-bs-placement="top" title="Delete" 
-                                               class="px-2 text-danger"><i class="fa-regular fa-trash-can"></i></a>
+                                            <form action="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}"
+                                                    method="POST"
+                                                    style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <button type="submit"
+                                                        class="btn btn-link px-2 text-danger p-0"
+                                                        data-toggle="tooltip"
+                                                        data-placement="top"
+                                                        title="Delete">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </form>
                                         </li>
                                     </ul>
                                 </td>

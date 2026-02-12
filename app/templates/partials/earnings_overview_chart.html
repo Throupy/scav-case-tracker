@@ -191,7 +191,7 @@
           const dataIndex = elements[0].index;
           const entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases?.[dataIndex];
   
-          if (entry?.id) window.location.href = `/case/${entry.id}/detail`;
+          if (entry?.id) window.location.href = `/cases/${entry.id}`;
         },
         maintainAspectRatio: false,
         layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },

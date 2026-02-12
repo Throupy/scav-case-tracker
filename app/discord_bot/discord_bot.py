@@ -163,7 +163,7 @@ class ImageDownloaderClient(commands.Bot):
         self, message, image_path, scav_case_type, status_embed, status_message
     ):
         """Submit scav case to Flask using the single unified route"""
-        url = "http://localhost:5000/submit-scav-case"  # Single route!
+        url = "http://localhost:5000/cases/submit" 
         headers = {
             "X-BOT-REQUEST": "true",
             "X-BOT-KEY": os.getenv('DISCORD_BOT_API_KEY', 'blank') # fallback to non-None, because None cannot be serialised

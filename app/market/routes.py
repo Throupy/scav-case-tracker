@@ -4,12 +4,12 @@ from flask_login import login_required, current_user
 
 from app.services.market_service import MarketService
 
-market_bp = Blueprint("market", __name__, url_prefix="/market/")
+market_bp = Blueprint("market", __name__)
 market_service = MarketService()
 
 
 # HTMX routes
-@market_bp.route("/search-items")
+@market_bp.route("/market/search-items")
 def search_items():
     query = request.args.get("q", "").strip()
     results = market_service.search_items(query)
@@ -30,7 +30,7 @@ def search_items():
     ])
 
 
-@market_bp.route("/get-price/<string:tarkov_item_id>", methods=["GET"])
+@market_bp.route("/market/get-price/<string:tarkov_item_id>", methods=["GET"])
 def get_price_htmx(tarkov_item_id: str) -> str:
     price_data = market_service.get_item_price_data(tarkov_item_id)
     
@@ -59,7 +59,7 @@ def get_price_htmx(tarkov_item_id: str) -> str:
 
 
 # Regular routes
-@market_bp.route("/track-item/<string:tarkov_item_id>", methods=["POST"])
+@market_bp.route("/market/track-item/<string:tarkov_item_id>", methods=["POST"])
 @login_required
 def track_item(tarkov_item_id: str):
     success = market_service.track_item_for_user(current_user, tarkov_item_id)
@@ -73,7 +73,7 @@ def track_item(tarkov_item_id: str):
     """
 
 
-@market_bp.route("/untrack-item/<string:tarkov_item_id>", methods=["DELETE"])
+@market_bp.route("/market/untrack-item/<string:tarkov_item_id>", methods=["DELETE"])
 @login_required  
 def untrack_item(tarkov_item_id: str):
     success = market_service.untrack_item_for_user(current_user, tarkov_item_id)
@@ -87,7 +87,7 @@ def untrack_item(tarkov_item_id: str):
     """
 
 
-@market_bp.route("/")
+@market_bp.route("/market/")
 @login_required
 def index():
     tracked_items = market_service.get_user_tracked_items(current_user)

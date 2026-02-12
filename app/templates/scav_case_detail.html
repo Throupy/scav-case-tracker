@@ -119,7 +119,13 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                <a href="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}" class="btn btn-outline-danger">Delete</a>
+                <form action="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}"
+                      method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-outline-danger">
+                        Delete
+                    </button>
+                </form>    
             </div>
         </div>
     </div>

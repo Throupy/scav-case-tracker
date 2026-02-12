@@ -5,7 +5,7 @@ from flask import Flask
 
 from app.config import ConfigClass
 from app.constants import SCAV_CASE_TYPES
-from app.extensions import db, migrate, login_manager, bcrypt
+from app.extensions import db, migrate, login_manager, bcrypt, csrf
 from app.database.manager import db_manager
 from app.discord_bot.manager import discord_manager
 from app.models import User
@@ -114,6 +114,8 @@ def _init_extensions(app: Flask) -> None:
     login_manager.login_message_category = "danger"
     # flask-bcrypt
     bcrypt.init_app(app)
+    # flask-wtf csrfprotect
+    csrf.init_app(app)
 
     # custom managers
     db_manager.init_app(app)

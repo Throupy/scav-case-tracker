@@ -23,16 +23,3 @@ def not_implemented():
     flash("This feature hasn't been implemented yet", "warning")
     return redirect(url_for("cases.dashboard"))
 
-
-
-
-
-@main_bp.route("/search-items")
-def search_items():
-    """HTMX search route"""
-    query = request.args.get("q")
-    if len(query) < 2:
-        return render_template("partials/item_list.html", items=[])
-    items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
-    return render_template("partials/item_list.html", items=items)
-
