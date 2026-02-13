@@ -1,39 +1,38 @@
 (function () {
     const key = "darkMode";
-    const body = document.body;
-    const toggleItem = document.getElementById("themeToggleItem");
-    const toggleText = document.getElementById("themeToggleText");
-
-    if (!toggleItem || !toggleText) return;
-
+    const root = document.documentElement;
+  
     function isDark() {
-        return body.classList.contains("dark");
+      return root.classList.contains("dark");
     }
-
-    function apply(isDarkMode) {
-        if (isDarkMode) {
-            body.classList.add("dark");
-        } else {
-            body.classList.remove("dark");
-        }
-        updateText();
+  
+    function setDark(on) {
+      root.classList.toggle("dark", on);
     }
-
+  
     function updateText() {
-        toggleText.textContent = isDark()
-            ? "Switch to Light Mode"
-            : "Switch to Dark Mode";
+      const toggleText = document.getElementById("themeToggleText");
+      if (!toggleText) return;
+      toggleText.textContent = isDark() ? "Switch to Light Mode" : "Switch to Dark Mode";
     }
-
-    const saved = localStorage.getItem(key);
-    apply(saved === "on");
-
-    toggleItem.addEventListener("click", function (e) {
-        e.preventDefault();
-
-        const newState = !isDark();
-        localStorage.setItem(key, newState ? "on" : "off");
-        apply(newState);
-        document.dispatchEvent(new CustomEvent("theme:changed"));
+  
+    // Apply saved mode (safe even if head script already did it)
+    setDark(localStorage.getItem(key) === "on");
+    updateText();
+  
+    // Wire up toggle if it exists on this page
+    document.addEventListener("click", function (e) {
+      const toggleItem = e.target.closest("#themeToggleItem");
+      if (!toggleItem) return;
+  
+      e.preventDefault();
+  
+      const newState = !isDark();
+      localStorage.setItem(key, newState ? "on" : "off");
+      setDark(newState);
+      updateText();
+  
+      document.dispatchEvent(new CustomEvent("theme:changed"));
     });
-})();
+  })();
+  

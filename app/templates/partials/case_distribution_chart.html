@@ -17,7 +17,7 @@
     function applyPieTheme(chart) {
         if (!chart) return;
 
-        const dark = document.body.classList.contains("dark");
+        const dark = document.documentElement.classList.contains("dark");
 
         chart.options.plugins.legend.labels.color = dark ? "#ffffff" : "#858796";
 
