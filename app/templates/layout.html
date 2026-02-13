@@ -110,7 +110,7 @@
         </ul>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
-                <nav class="navbar navbar-expand navbar-dark topbar mb-4 static-top shadow">
+                <nav class="navbar navbar-expand navbar-dark topbar mb-4 static-top ">
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -125,7 +125,7 @@
                                     src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
                             </a>
 
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                            <div class="dropdown-menu dropdown-menu-right  animated--grow-in"
                                 aria-labelledby="userDropdown">
                                 <a class="dropdown-item" href="{{ url_for('users.account') }}">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
