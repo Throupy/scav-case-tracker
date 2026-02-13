@@ -108,6 +108,6 @@ def index():
 
     # If it's an HTMX request, return partial template
     if request.headers.get("HX-Request"):
-        return render_template("partials/market_tracked_items.html", tracked_items=tracked_items)
+        return render_template("partials/_market_tracked_items.html", tracked_items=tracked_items)
 
     return render_template("market.html", tracked_items=tracked_items)

@@ -24,10 +24,10 @@ def search_items():
     """HTMX search route"""
     query = request.args.get("q")
     if len(query) < 2:
-        return render_template("partials/scav_case_search_item_list.html", items=[])
+        return render_template("partials/_scav_case_search_item_list.html", items=[])
 
     items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
-    return render_template("partials/scav_case_search_item_list.html", items=items)
+    return render_template("partials/_scav_case_search_item_list.html", items=items)
 
 @cases_bp.route("/cases/global-dashboard")
 def dashboard():
@@ -64,7 +64,7 @@ def insights_data():
     insights = scav_case_service.calculate_insights_data(case_type)
     
     return render_template(
-        "partials/insights.html",
+        "partials/_insights.html",
         case_type=case_type,
         **insights
     )

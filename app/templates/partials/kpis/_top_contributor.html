@@ -1,0 +1,29 @@
+<div class="card border-left-danger shadow h-100 py-2">
+    <div class="card-body">
+        <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Top Contributor</div>
+
+                {% if top_contributor %}
+                <div class="h5 mb-0 font-weight-bold">
+                    <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}"
+                        class="text-reset text-decoration-none">
+                        {{ top_contributor.username }}
+                    </a>
+                </div>
+                {% else %}
+                <div class="h5 mb-0 font-weight-bold text-gray-800">N/A</div>
+                {% endif %}
+            </div>
+
+            <div class="col-auto">
+                {% if top_contributor %}
+                <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}">
+                    <img width="36" height="36" class="mr-1 img-profile rounded-circle"
+                        src="{{ url_for('static', filename='profile_pics/' + top_contributor.image_file) }}">
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -9,7 +9,7 @@
             </h4>
         </div>
         <a href="{{ url_for('main.not_implemented') }}"
-           class="btn btn-outline-danger btn-sm px-4 shadow-sm d-flex align-items-center">
+            class="btn btn-outline-danger btn-sm px-4 shadow-sm d-flex align-items-center">
             <i class="fas fa-download mr-2"></i>
             Export
         </a>
@@ -17,176 +17,23 @@
 </div>
 
 <div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Total Cases</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cases }} Cases</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-box fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Total Profit</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_profit | int) }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        {% if total_profit | int < 0 %} <i class="fas text-danger fa-dollar-sign fa-2x"></i>
-                            {% else %}
-                            <i class="fas text-success fa-dollar-sign fa-2x"></i>
-                            {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Total Spent</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_cost | int) }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Total Return</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_return | int) }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_total_cases.html" %}</div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_total_profit.html" %}</div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_total_spent.html" %}</div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_total_return.html" %}</div>
 </div>
 
 <div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Most Common Item Type</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_popular_category }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-tag fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Top Contributor
-                        </div>
-
-                        <div class="h5 mb-0 font-weight-bold">
-                            <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}"
-                                class="text-reset text-decoration-none">
-                                {{ top_contributor.username }}
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="col-auto">
-                        <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}">
-                            <img width="36" height="36" class="mr-1 img-profile rounded-circle"
-                                src="{{ url_for('static', filename='profile_pics/' + top_contributor.image_file) }}">
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Most Profitable Case Type</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ most_profitable_case_type }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-box fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Most Valuable Item to Date
-                        </div>
-                        <!-- Item name with truncation + tooltip -->
-                        <div class="h5 mb-0 font-weight-bold text-gray-800 text-truncate" style="max-width: 200px;"
-                            data-toggle="tooltip" data-placement="top" title="{{ most_valuable_item.name }}">
-                            {{ most_valuable_item.name }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <a href="{{ url_for('cases.scav_case_detail', scav_case_id=most_valuable_item.scav_case.id) }}">
-                            <img width=40 height=40 class="mr-1 img-profile rounded-circle"
-                                src="{{ most_valuable_item | get_item_cdn_image_url }}">
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_most_common_item_type.html" %}</div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_top_contributor.html" %}</div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_most_profitable_case_type.html" %}</div>
+    <div class="col-xl-3 col-md-6 mb-4">{% include "partials/kpis/_most_valuable_item.html" %}</div>
 </div>
 
-<div class="row">
-    <!-- earnings overview graph -->
-    <div class="col-xl-8 col-lg-7">
-        {% include('partials/earnings_overview_chart.html') %}
-    </div>
 
-    <!-- case distribution pie -->
-    <div class="col-xl-4 col-lg-5">
-        {% include('partials/case_distribution_chart.html') %}
-    </div>
+<div class="row">
+    <div class="col-xl-8 col-lg-7">{% include('partials/graphs/_earnings_overview_chart.html') %}</div>
+    <div class="col-xl-4 col-lg-5">{% include('partials/graphs/_case_distribution_chart.html') %}</div>
 </div>
 
 {% endblock content %}
