@@ -11,6 +11,7 @@ from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.services import BaseService
 from app.cases.utils import (
     get_price,
+    get_prices,
     calculate_most_popular_categories,
     find_most_common_items,
     calculate_avg_items_per_case_type,
@@ -20,7 +21,6 @@ from app.cases.utils import (
     check_achievements,
     save_uploaded_image,
     process_scav_case_image,
-    create_scav_case_entry
 )
 
 class ScavCaseService(BaseService):
@@ -112,7 +112,7 @@ class ScavCaseService(BaseService):
 
     def calculate_insights_data(self, case_type: str = "all") -> Dict[str, Any]:
         """Calculate values and form structure for insights page, for a given case type"""
-        # TODO: Can this be refined, done better, shipped to API... 
+
         scav_cases = self.get_cases_by_type(case_type)
         # Common calculations
         most_popular_items = find_most_common_items(scav_cases)
@@ -161,7 +161,7 @@ class ScavCaseService(BaseService):
                 raise ValueError("Either image or items_data must be provided")
             
             # TODO: Perhaps the functionality from the below method should be moved into here (service)
-            scav_case = create_scav_case_entry(scav_case_type, items, user.id)
+            scav_case = self._create_scav_case_entry(scav_case_type, items, user.id)
 
             check_achievements(user)
 
@@ -367,7 +367,6 @@ class ScavCaseService(BaseService):
 
         return float(avg_profit)
 
-
     def _get_best_cases(self, n: int = 6, user_id: int = None) -> list[ScavCase]:
         """
         Return the top N most profitable scav cases (desc).
@@ -492,3 +491,116 @@ class ScavCaseService(BaseService):
             "returns": [case._return for case in scav_cases],
             "costs": [case.cost for case in scav_cases],
         }
+
+    def _create_scav_case_entry(
+        self, scav_case_type: str, items: list[dict[str, Any]], user_id: int,
+    ) -> ScavCase:
+        """Create ScavCase + ScavCaseItems."""
+
+        def _parse_case_cost(case_type: str) -> float:
+            """resolve cost of the case
+            - Moonshine / Intel -> dynamic price lookup
+            - static costs -> parsed integers
+            """
+            ct = (case_type or "").strip()
+            ctl = ct.lower()
+
+            if ctl == "moonshine":
+                p = get_price("5d1b376e86f774252519444e")
+                return float(p or 0.0)
+            if ctl == "intelligence":
+                p = get_price("5c12613b86f7743bbe2c3f76")
+                return float(p or 0.0)
+
+            # parse the static cost
+            try:
+                return float(int(ct.replace("₽", "").replace(",", "").strip()))
+            except Exception as e:
+                raise ValueError(f"Invalid scav_case_type cost: {case_type!r}") from e
+
+        # validate and normalise items
+        normalized: list[dict[str, Any]] = []
+        for i, item in enumerate(items or []):
+            # confirm the tarkov id, name, and quantity vars exist
+            try:
+                tid = str(item["id"]).strip()
+                name = str(item.get("name", "")).strip()
+                qty = int(item.get("quantity", 0))
+            except Exception as e:
+                raise ValueError(f"Invalid item payload at index {i}: {item!r}") from e
+
+            if not tid:
+                raise ValueError(f"Missing item id at index {i}")
+            if qty <= 0:
+                raise ValueError(f"Invalid quantity for item {tid}: {qty}")
+
+            normalized.append({"id": tid, "name": name, "quantity": qty})
+
+        # compute case cost after validation
+        cost = _parse_case_cost(scav_case_type)
+
+        # prepare IDs for bulk price lookup
+        unique_ids = list({x["id"] for x in normalized})
+        prices_by_id: dict[str, Optional[int]]
+        try:
+            # bulk call to graphql endpoint
+            prices_by_id = get_prices(unique_ids)
+        except Exception:
+            current_app.logger.exception("Price lookup failed (bulk). Falling back to None prices.")
+            prices_by_id = {tid: None for tid in unique_ids}
+
+        # use real session obj, not scoped proxy
+        session = self.db.session()
+
+        try:
+            # if we are already in a trransaction, use a savepoint, otherwise new trans.
+            tx_ctx = session.begin_nested() if session.in_transaction() else session.begin()
+
+            with tx_ctx:
+                scav_case = ScavCase(
+                    type=scav_case_type,
+                    user_id=user_id,
+                    cost=cost,
+                    number_of_items=len(normalized),
+                    _return=0.0,
+                )
+                session.add(scav_case)
+                # flush so scav_case.id is rdy for FK refs
+                session.flush() 
+
+                total_return = 0.0
+                case_items: list[ScavCaseItem] = []
+
+                for item in normalized:
+                    tid = item["id"]
+                    qty = item["quantity"]
+
+                    # 'freeze' price at creation time
+                    price_i = prices_by_id.get(tid)
+                    price_f = float(price_i) if price_i is not None else 0.0
+
+                    case_items.append(
+                        ScavCaseItem(
+                            scav_case_id=scav_case.id,
+                            tarkov_id=tid,
+                            price=price_f,
+                            name=item["name"],
+                            amount=qty,
+                        )
+                    )
+                    total_return += price_f * qty
+
+                session.add_all(case_items)
+                # compute return val
+                scav_case._return = total_return
+
+            # if the outer transaction was started then commit it. if the caller started then they can commit
+            if not session.in_transaction():
+                session.commit()
+
+            return scav_case
+
+        except Exception:
+            session.rollback()
+            current_app.logger.exception("Error inserting scav case into the database")
+            raise

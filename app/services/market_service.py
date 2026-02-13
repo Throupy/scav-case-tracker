@@ -27,7 +27,7 @@ class MarketService(BaseService):
         # TODO: https://flask.palletsprojects.com/en/stable/patterns/viewdecorators/#caching-decorator
         # TODO: Or Flask-Caching library, which would be heavier
         market_data = get_market_information(tarkov_item_id)
-        # TODO: Seemingly the response to the above has changed... Investigate
+
         if not market_data or "data" not in market_data or not market_data["data"]["items"]:
             return {"error": "Price unavailable"}
         
