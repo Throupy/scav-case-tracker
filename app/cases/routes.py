@@ -43,7 +43,7 @@ def dashboard():
 def all_scav_cases():
     page = request.args.get("page", 1, type=int)
     sort_by = request.args.get("sort_by", "created_at")
-    sort_order = request.args.get("sort_order", "asc")
+    sort_order = request.args.get("sort_order", "desc")
     
     pagination = scav_case_service.get_all_cases_paginated(
         page=page, sort_by=sort_by, sort_order=sort_order
