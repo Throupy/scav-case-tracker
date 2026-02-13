@@ -9,6 +9,7 @@
             <h5 class="card-title">{{ quiz_question }}</h5>
             
             <form id="quiz-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="attachment_id" value="{{ attachment.id }}">
                 
                 <div class="text-center mb-4">
