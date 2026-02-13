@@ -1,15 +1,16 @@
-/* Remove the default blue background and add a red outline */
+/* Mostly just style overrrides, it has been annoying using bs4 instead of bs5, so this is pretty
+messy tbh */
+
 .page-item.active .page-link {
-  background-color: transparent !important;  /* Remove blue background */
-  border: 1px solid #f56e6e !important;  /* Add red border */
-  color: #f56e6e !important;  /* Change text color to red */
+    background-color: transparent !important;
+    border: 1px solid #f56e6e !important;
+    color: #f56e6e !important;
 }
 
-/* Customize the hover state for the pagination buttons */
 .page-item .page-link:hover {
-  background-color: #f8d7da;  /* Add a light red background on hover */
-  border-color: #f56e6e;  /* Red border */
-  color: #f56e6e;  /* Red text color */
+    background-color: #f8d7da;
+    border-color: #f56e6e;
+    color: #f56e6e;
 }
 
 .achievements-container {
@@ -38,20 +39,22 @@
     opacity: 0.5;
 }
 
-
 .collapse-toggle {
     cursor: pointer;
     transition: transform 0.3s ease-in-out;
 }
+
 .collapse-toggle[aria-expanded="true"] {
     transform: rotate(180deg);
 }
+
 .most-common-grid {
     display: grid;
     grid-template-columns: 2fr 1fr 0.7fr;
     gap: 10px;
     align-items: center;
 }
+
 .most-common-grid .truncate {
     white-space: nowrap;
     overflow: hidden;
@@ -59,11 +62,13 @@
     max-width: 250px;
     display: inline-block;
 }
+
 .most-common-grid img {
     width: 52px;
     height: 52px;
     object-fit: contain;
 }
+
 .big-item img {
     width: 64px;
     height: 64px;
@@ -81,85 +86,122 @@
     column-gap: 20px;
 }
 
-body{
-    background-color:#eee;
-    }
-    .project-list-table {
-        border-collapse: separate;
-        border-spacing: 0 12px
-    }
-    
-    .project-list-table tr {
-        background-color: #fff
-    }
-    
-    .table-nowrap td, .table-nowrap th {
-        white-space: nowrap;
-    }
-    .table-borderless>:not(caption)>*>* {
-        border-bottom-width: 0;
-    }
-    .table>:not(caption)>*>* {
-        padding: 0.75rem 0.75rem;
-        background-color: var(--bs-table-bg);
-        border-bottom-width: 1px;
-        box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
-    }
-    
-    .avatar-sm {
-        height: 2rem;
-        width: 2rem;
-    }
-    .rounded-circle {
-        border-radius: 50%!important;
-    }
-    .me-2 {
-        margin-right: 0.5rem!important;
-    }
-    img, svg {
-        vertical-align: middle;
-    }
-    
-    a {
-        color: #3b76e1;
-        text-decoration: none;
-    }
-    
-    .badge-soft-danger {
-        color: #f56e6e !important;
-        background-color: rgba(245,110,110,.1);
-    }
-    .badge-soft-success {
-        color: #63ad6f !important;
-        background-color: rgba(99,173,111,.1);
-    }
+body {
+    background-color: #eee;
+}
 
-    .badge-soft-warning {
-        color: #ffc107 !important;
-        background-color: rgba(99,173,111,.1);
-    }
-    
-    .badge-soft-primary {
-        color: #3b76e1 !important;
-        background-color: rgba(59,118,225,.1);
-    }
-    
-    .badge-soft-info {
-        color: #57c9eb !important;
-        background-color: rgba(87,201,235,.1);
-    }
-    
-    .avatar-title {
-        align-items: center;
-        background-color: #3b76e1;
-        color: #fff;
-        display: flex;
-        font-weight: 500;
-        height: 100%;
-        justify-content: center;
-        width: 100%;
-    }
-    .bg-soft-primary {
-        background-color: rgba(59,118,225,.25)!important;
-    }
+.project-list-table {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+}
 
+.project-list-table tr {
+    background-color: #fff;
+}
+
+.table-nowrap td,
+.table-nowrap th {
+    white-space: nowrap;
+}
+
+.table-borderless> :not(caption)>*>* {
+    border-bottom-width: 0;
+}
+
+.table> :not(caption)>*>* {
+    padding: 0.75rem 0.75rem;
+    background-color: var(--bs-table-bg);
+    border-bottom-width: 1px;
+    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+}
+
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+}
+
+.rounded-circle {
+    border-radius: 50% !important;
+}
+
+.me-2 {
+    margin-right: 0.5rem !important;
+}
+
+img,
+svg {
+    vertical-align: middle;
+}
+
+a {
+    color: #3b76e1;
+    text-decoration: none;
+}
+
+.badge-soft-danger {
+    color: #f56e6e !important;
+    background-color: rgba(245, 110, 110, 0.1);
+}
+
+.badge-soft-success {
+    color: #63ad6f !important;
+    background-color: rgba(99, 173, 111, 0.1);
+}
+
+.badge-soft-warning {
+    color: #ffc107 !important;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.badge-soft-primary {
+    color: #3b76e1 !important;
+    background-color: rgba(59, 118, 225, 0.1);
+}
+
+.badge-soft-info {
+    color: #57c9eb !important;
+    background-color: rgba(87, 201, 235, 0.1);
+}
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 500;
+    color: #fff;
+    background-color: #3b76e1;
+}
+
+.bg-soft-primary {
+    background-color: rgba(59, 118, 225, 0.25) !important;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.topbar #userDropdown,
+.topbar #userDropdown:hover {
+    color: inherit !important;
+}
+
+.leaderboard-rank {
+    padding: 0.35rem 0.55rem;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.export-btn {
+    font-weight: 500;
+    transition: all 0.2s ease;
+}

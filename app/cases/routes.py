@@ -63,6 +63,7 @@ def all_scav_cases():
 def users_cases(user_id: int):
     user = user_service.get_user_by_id_or_404(user_id)
     users_cases_data = scav_case_service.generate_users_cases_data(user_id)
+    print(users_cases_data)
     return render_template("users_cases.html", username=user.username, **users_cases_data)
 
 @cases_bp.route("/cases/insights-data")

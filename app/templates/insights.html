@@ -4,12 +4,8 @@
 <div class="row mb-3">
     <div class="col-md-3">
         <label for="case-filter" class="form-label">Select Scav Case Type</label>
-        <select id="case-filter" class="form-control"
-            hx-get="{{ url_for('cases.insights_data') }}"
-            hx-trigger="change"
-            hx-target="#insights-content"
-            hx-indicator="#loading-spinner"
-            name="case_type">
+        <select id="case-filter" class="form-control" hx-get="{{ url_for('cases.insights_data') }}" hx-trigger="change"
+            hx-target="#insights-content" hx-indicator="#loading-spinner" name="case_type">
             <option value="all">All</option>
             <option value="₽2500">₽2500</option>
             <option value="₽15000">₽15000</option>

@@ -27,6 +27,7 @@ def index():
         avg_profit = (r.total_profit / r.case_count) if r.case_count else 0
 
         rows.append({
+            "user_id": r.user_id,
             "username": r.username,
             "image_file": r.image_file,
             "total_profit": float(r.total_profit),

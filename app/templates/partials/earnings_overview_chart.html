@@ -1,315 +1,313 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-      <h6 class="m-0 font-weight-bold text-danger">Earnings Overview - 15 Most Recent Cases</h6>
-  
-      <div class="dropdown no-arrow">
-        <a class="text-reset dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <span id="selected-case-type">All</span>
-          <i class="fas fa-caret-down fa-sm fa-fw text-gray-400 ml-2"></i>
-        </a>
-  
-        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-          <div class="dropdown-header">Case Type:</div>
-  
-          <a class="dropdown-item" href="javascript:void(0);" data-case-type="All">All</a>
-          <div class="dropdown-divider"></div>
-  
-          {% for type in scav_case_types %}
-            <a class="dropdown-item" href="javascript:void(0);" data-case-type="{{ type }}">{{ type }}</a>
-          {% endfor %}
+        <h6 class="m-0 font-weight-bold text-danger">Earnings Overview - 15 Most Recent Cases</h6>
+
+        <div class="dropdown no-arrow">
+            <a class="text-reset dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <span id="selected-case-type">All</span>
+                <i class="fas fa-caret-down fa-sm fa-fw text-gray-400 ml-2"></i>
+            </a>
+
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                <div class="dropdown-header">Case Type:</div>
+
+                <a class="dropdown-item" href="javascript:void(0);" data-case-type="All">All</a>
+                <div class="dropdown-divider"></div>
+
+                {% for type in scav_case_types %}
+                <a class="dropdown-item" href="javascript:void(0);" data-case-type="{{ type }}">{{ type }}</a>
+                {% endfor %}
+            </div>
         </div>
-      </div>
     </div>
-  
+
     <div id="warning-message" class="alert alert-warning d-none" role="alert">
-      <strong>Heads Up!</strong> There is not enough data to plot, try adding some more.
+        <strong>Heads Up!</strong> There is not enough data to plot, try adding some more.
     </div>
-  
+
     <div class="card-body">
-      <div class="chart-area">
-        <canvas id="recentEarningsChart"></canvas>
-      </div>
+        <div class="chart-area">
+            <canvas id="recentEarningsChart"></canvas>
+        </div>
     </div>
-  </div>
-  
-  <script>
-  let recentEarningsChart;
-  let selectedCaseType = 'All';
-  
-  const FIXED_COST_THRESHOLDS = {
-    '₽2500': 2500,
-    '₽15000': 15000,
-    '₽95000': 95000
-  };
-  
-  function toProperCase(str) {
-    return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-  }
-  
-  function number_format(number, decimals, dec_point, thousands_sep) {
-    number = (number + '').replace(',', '').replace(' ', '');
-    var n = !isFinite(+number) ? 0 : +number,
-        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-        s = '',
-        toFixedFix = function(n, prec) {
-            var k = Math.pow(10, prec);
-            return '' + Math.round(n * k) / k;
-        };
-    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-    if (s[0].length > 3) s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-    if ((s[1] || '').length < prec) {
-        s[1] = s[1] || '';
-        s[1] += new Array(prec - s[1].length + 1).join('0');
+</div>
+
+<script>
+    let recentEarningsChart;
+    let selectedCaseType = 'All';
+
+    const FIXED_COST_THRESHOLDS = {
+        '₽2500': 2500,
+        '₽15000': 15000,
+        '₽95000': 95000
+    };
+
+    function toProperCase(str) {
+        return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
     }
-    return s.join(dec);
-  }
-  
-  function updateSelectedLabel() {
-    document.getElementById('selected-case-type').textContent = toProperCase(selectedCaseType);
-  }
-  
-  function isDarkMode() {
-    return document.body.classList.contains("dark");
+
+    function number_format(number, decimals, dec_point, thousands_sep) {
+        number = (number + '').replace(',', '').replace(' ', '');
+        var n = !isFinite(+number) ? 0 : +number,
+            prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+            sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+            dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+            s = '',
+            toFixedFix = function (n, prec) {
+                var k = Math.pow(10, prec);
+                return '' + Math.round(n * k) / k;
+            };
+        s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+        if (s[0].length > 3) s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        if ((s[1] || '').length < prec) {
+            s[1] = s[1] || '';
+            s[1] += new Array(prec - s[1].length + 1).join('0');
+        }
+        return s.join(dec);
+    }
+
+    function updateSelectedLabel() {
+        document.getElementById('selected-case-type').textContent = toProperCase(selectedCaseType);
+    }
+
+    function isDarkMode() {
+        return document.body.classList.contains("dark");
     }
 
     function applyChartTheme(chart) {
-    if (!chart) return;
+        if (!chart) return;
 
-    const dark = isDarkMode();
+        const dark = isDarkMode();
 
-    chart.options.scales.x.ticks.color = dark ? "#e6e6e6" : undefined;
-    chart.options.scales.y.ticks.color = dark ? "#e6e6e6" : undefined;
+        chart.options.scales.x.ticks.color = dark ? "#e6e6e6" : undefined;
+        chart.options.scales.y.ticks.color = dark ? "#e6e6e6" : undefined;
 
-    chart.options.scales.y.grid.color = dark ? "rgba(255,255,255,0.12)" : "rgb(234, 236, 244)";
-    chart.options.scales.x.grid.color = dark ? "rgba(255,255,255,0.08)" : undefined;
+        chart.options.scales.y.grid.color = dark ? "rgba(255,255,255,0.12)" : "rgb(234, 236, 244)";
+        chart.options.scales.x.grid.color = dark ? "rgba(255,255,255,0.08)" : undefined;
 
-    chart.options.plugins.tooltip.backgroundColor = dark ? "#151924" : "rgb(255,255,255)";
-    chart.options.plugins.tooltip.titleColor = dark ? "#e6e6e6" : "#6e707e";
-    chart.options.plugins.tooltip.bodyColor = dark ? "#e6e6e6" : "#858796";
-    chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
+        chart.options.plugins.tooltip.backgroundColor = dark ? "#151924" : "rgb(255,255,255)";
+        chart.options.plugins.tooltip.titleColor = dark ? "#e6e6e6" : "#6e707e";
+        chart.options.plugins.tooltip.bodyColor = dark ? "#e6e6e6" : "#858796";
+        chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
 
-    chart.update();
+        chart.update();
     }
 
-  async function fetchChartData() {
-    const resp = await fetch(`/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`);
-    const json = await resp.json();
-    return json.data;
-  }
-  
-  function setWarningVisible(isVisible) {
-    document.getElementById('warning-message').classList.toggle('d-none', !isVisible);
-  }
-  
-  function setEmptyChart() {
-    recentEarningsChart.data.labels = [];
-    recentEarningsChart.data.datasets[0].data = [];
-    recentEarningsChart.data.datasets[1].data = [];
-    recentEarningsChart.data.datasets[0].scav_cases = [];
-    recentEarningsChart.data.datasets[1].scav_cases = [];
-  }
-  
-  function applyChartData(data) {
-    const scavCases = data.scav_cases || [];
-    const isFixedCostType = Object.prototype.hasOwnProperty.call(FIXED_COST_THRESHOLDS, selectedCaseType);
-    const threshold = isFixedCostType ? FIXED_COST_THRESHOLDS[selectedCaseType] : null;
-  
-    if (scavCases.length < 3) {
-      setWarningVisible(true);
-      setEmptyChart();
-      recentEarningsChart.options.plugins.horizontalLine.y = null;
-      recentEarningsChart.update();
-      return;
+    async function fetchChartData() {
+        const resp = await fetch(`/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`);
+        const json = await resp.json();
+        return json.data;
     }
-  
-    setWarningVisible(false);
-  
-    recentEarningsChart.data.labels = data.labels || [];
-  
-    // Return / earnings dataset
-    recentEarningsChart.data.datasets[0].data = scavCases.map(e => e.return);
-    recentEarningsChart.data.datasets[0].scav_cases = scavCases;
-  
-    if (isFixedCostType) {
-      recentEarningsChart.data.datasets[1].hidden = true;
-      recentEarningsChart.options.plugins.horizontalLine.y = threshold;
-    } else {
-      recentEarningsChart.data.datasets[1].hidden = false;
-      recentEarningsChart.data.datasets[1].data = scavCases.map(e => e.cost);
-      recentEarningsChart.data.datasets[1].scav_cases = scavCases;
-      recentEarningsChart.options.plugins.horizontalLine.y = null;
+
+    function setWarningVisible(isVisible) {
+        document.getElementById('warning-message').classList.toggle('d-none', !isVisible);
     }
-  
-    recentEarningsChart.update();
-  }
-  
-  async function updateChart(caseType) {
-    selectedCaseType = caseType;
-    updateSelectedLabel();
-  
-    try {
-      const data = await fetchChartData();
-      applyChartData(data);
-    } catch (e) {
-      console.error('Error fetching chart data:', e);
+
+    function setEmptyChart() {
+        recentEarningsChart.data.labels = [];
+        recentEarningsChart.data.datasets[0].data = [];
+        recentEarningsChart.data.datasets[1].data = [];
+        recentEarningsChart.data.datasets[0].scav_cases = [];
+        recentEarningsChart.data.datasets[1].scav_cases = [];
     }
-  }
-  
-  document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll('.dropdown-item[data-case-type]').forEach(item => {
-      item.addEventListener('click', () => updateChart(item.dataset.caseType));
-    });
-  
-    const ctx = document.getElementById("recentEarningsChart").getContext("2d");
-  
-    recentEarningsChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: "Earnings",
-            lineTension: 0.3,
-            backgroundColor: "rgba(78, 115, 223, 0.05)",
-            borderColor: "rgb(231, 74, 59)",
-            pointRadius: 3,
-            pointBackgroundColor: "rgb(231, 74, 59)",
-            pointBorderColor: "rgb(231, 74, 59)",
-            pointHoverRadius: 7,
-            pointHoverBackgroundColor: "rgb(231, 74, 59)",
-            pointHoverBorderColor: "rgb(231, 74, 59)",
-            pointHitRadius: 10,
-            pointBorderWidth: 2,
-            data: [],
-            scav_cases: []
-          },
-          {
-            label: "Cost",
-            pointRadius: 3,
-            pointBackgroundColor: "rgb(40, 167, 69)",
-            pointBorderColor: "rgb(40, 167, 69)",
-            pointHoverRadius: 7,
-            pointHoverBackgroundColor: "rgb(40, 167, 69)",
-            pointHoverBorderColor: "rgb(40, 167, 69)",
-            borderColor: "rgb(40, 167, 69)",
-            lineTension: 0.3,
-            fill: false,
-            borderDash: [5,5],
-            showLine: true,
-            data: [],
-            scav_cases: [],
-            hidden: false
-          }
-        ]
-      },
-      options: {
-        onClick: function(event, elements) {
-          if (!elements.length) return;
-  
-          const datasetIndex = elements[0].datasetIndex;
-          const dataIndex = elements[0].index;
-          const entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases?.[dataIndex];
-  
-          if (entry?.id) window.location.href = `/cases/${entry.id}`;
-        },
-        maintainAspectRatio: false,
-        layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
-        scales: {
-          x: {
-            grid: { display: false, drawBorder: false },
-            ticks: { maxTicksLimit: 7 }
-          },
-          y: {
-            min: 0,
-            ticks: {
-              maxTicksLimit: 5,
-              padding: 10,
-              callback: value => '₽' + number_format(value)
+
+    function applyChartData(data) {
+        const scavCases = data.scav_cases || [];
+        const isFixedCostType = Object.prototype.hasOwnProperty.call(FIXED_COST_THRESHOLDS, selectedCaseType);
+        const threshold = isFixedCostType ? FIXED_COST_THRESHOLDS[selectedCaseType] : null;
+
+        if (scavCases.length < 3) {
+            setWarningVisible(true);
+            setEmptyChart();
+            recentEarningsChart.options.plugins.horizontalLine.y = null;
+            recentEarningsChart.update();
+            return;
+        }
+
+        setWarningVisible(false);
+
+        recentEarningsChart.data.labels = data.labels || [];
+
+        recentEarningsChart.data.datasets[0].data = scavCases.map(e => e.return);
+        recentEarningsChart.data.datasets[0].scav_cases = scavCases;
+
+        if (isFixedCostType) {
+            recentEarningsChart.data.datasets[1].hidden = true;
+            recentEarningsChart.options.plugins.horizontalLine.y = threshold;
+        } else {
+            recentEarningsChart.data.datasets[1].hidden = false;
+            recentEarningsChart.data.datasets[1].data = scavCases.map(e => e.cost);
+            recentEarningsChart.data.datasets[1].scav_cases = scavCases;
+            recentEarningsChart.options.plugins.horizontalLine.y = null;
+        }
+
+        recentEarningsChart.update();
+    }
+
+    async function updateChart(caseType) {
+        selectedCaseType = caseType;
+        updateSelectedLabel();
+
+        try {
+            const data = await fetchChartData();
+            applyChartData(data);
+        } catch (e) {
+            console.error('Error fetching chart data:', e);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.dropdown-item[data-case-type]').forEach(item => {
+            item.addEventListener('click', () => updateChart(item.dataset.caseType));
+        });
+
+        const ctx = document.getElementById("recentEarningsChart").getContext("2d");
+
+        recentEarningsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: "Earnings",
+                        lineTension: 0.3,
+                        backgroundColor: "rgba(78, 115, 223, 0.05)",
+                        borderColor: "rgb(231, 74, 59)",
+                        pointRadius: 3,
+                        pointBackgroundColor: "rgb(231, 74, 59)",
+                        pointBorderColor: "rgb(231, 74, 59)",
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: "rgb(231, 74, 59)",
+                        pointHoverBorderColor: "rgb(231, 74, 59)",
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        data: [],
+                        scav_cases: []
+                    },
+                    {
+                        label: "Cost",
+                        pointRadius: 3,
+                        pointBackgroundColor: "rgb(40, 167, 69)",
+                        pointBorderColor: "rgb(40, 167, 69)",
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: "rgb(40, 167, 69)",
+                        pointHoverBorderColor: "rgb(40, 167, 69)",
+                        borderColor: "rgb(40, 167, 69)",
+                        lineTension: 0.3,
+                        fill: false,
+                        borderDash: [5, 5],
+                        showLine: true,
+                        data: [],
+                        scav_cases: [],
+                        hidden: false
+                    }
+                ]
             },
-            grid: {
-              color: "rgb(234, 236, 244)",
-              zeroLineColor: "rgb(234, 236, 244)",
-              drawBorder: false,
-              borderDash: [2],
-              zeroLineBorderDash: [2]
-            }
-          }
-        },
-        plugins: {
-          tooltip: {
-            backgroundColor: "rgb(255,255,255)",
-            bodyColor: "#858796",
-            titleMarginBottom: 10,
-            titleColor: '#6e707e',
-            titleFont: { size: 14 },
-            borderColor: '#dddfeb',
-            borderWidth: 1,
-            padding: 15,
-            displayColors: false,
-            intersect: true,
-            mode: 'nearest',
-            position: 'nearest',
-            caretPadding: 10,
-            callbacks: {
-              title: function(tooltipItems) {
-                const idx = tooltipItems?.[0]?.dataIndex;
-                const entry = recentEarningsChart.data.datasets[0].scav_cases?.[idx];
-                return entry ? ('Case Type: ' + entry.type) : '';
-              },
-              label: function(tooltipItem) {
-                const dsIdx = tooltipItem.datasetIndex;
-                const ptIdx = tooltipItem.dataIndex;
-                const entry = recentEarningsChart.data.datasets[dsIdx].scav_cases?.[ptIdx];
-                if (!entry) return [];
-  
-                return [
-                  'Profit: ₽' + number_format(entry.profit),
-                  'Cost: ₽' + number_format(entry.cost),
-                  'Submitted: ' + entry.created_at_humanized
-                ];
-              }
-            }
-          },
-          horizontalLine: { y: null },
-          legend: { display: false }
-        }
-      },
-      plugins: [{
-        id: 'horizontalLine',
-        beforeDraw: function(chart) {
-          const yVal = chart.config.options.plugins.horizontalLine.y;
-          if (yVal === null || yVal === undefined) return;
-  
-          const yScale = chart.scales['y'];
-          const yPixel = yScale.getPixelForValue(yVal);
-          const ctx = chart.ctx;
-  
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(chart.chartArea.left, yPixel);
-          ctx.lineTo(chart.chartArea.right, yPixel);
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = 'rgb(40, 167, 69)';
-          ctx.stroke();
-          ctx.restore();
-  
-          ctx.save();
-          ctx.fillStyle = 'rgb(40, 167, 69)';
-          ctx.fillText("Cost", chart.chartArea.right - 70, yPixel - 5);
-          ctx.restore();
-        }
-      }]
-    });
-    applyChartTheme(recentEarningsChart);
-    document.addEventListener("theme:changed", function() {
+            options: {
+                onClick: function (event, elements) {
+                    if (!elements.length) return;
+
+                    const datasetIndex = elements[0].datasetIndex;
+                    const dataIndex = elements[0].index;
+                    const entry = recentEarningsChart.data.datasets[datasetIndex].scav_cases?.[dataIndex];
+
+                    if (entry?.id) window.location.href = `/cases/${entry.id}`;
+                },
+                maintainAspectRatio: false,
+                layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
+                scales: {
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { maxTicksLimit: 7 }
+                    },
+                    y: {
+                        min: 0,
+                        ticks: {
+                            maxTicksLimit: 5,
+                            padding: 10,
+                            callback: value => '₽' + number_format(value)
+                        },
+                        grid: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: "rgb(255,255,255)",
+                        bodyColor: "#858796",
+                        titleMarginBottom: 10,
+                        titleColor: '#6e707e',
+                        titleFont: { size: 14 },
+                        borderColor: '#dddfeb',
+                        borderWidth: 1,
+                        padding: 15,
+                        displayColors: false,
+                        intersect: true,
+                        mode: 'nearest',
+                        position: 'nearest',
+                        caretPadding: 10,
+                        callbacks: {
+                            title: function (tooltipItems) {
+                                const idx = tooltipItems?.[0]?.dataIndex;
+                                const entry = recentEarningsChart.data.datasets[0].scav_cases?.[idx];
+                                return entry ? ('Case Type: ' + entry.type) : '';
+                            },
+                            label: function (tooltipItem) {
+                                const dsIdx = tooltipItem.datasetIndex;
+                                const ptIdx = tooltipItem.dataIndex;
+                                const entry = recentEarningsChart.data.datasets[dsIdx].scav_cases?.[ptIdx];
+                                if (!entry) return [];
+
+                                return [
+                                    'Profit: ₽' + number_format(entry.profit),
+                                    'Cost: ₽' + number_format(entry.cost),
+                                    'Submitted: ' + entry.created_at_humanized
+                                ];
+                            }
+                        }
+                    },
+                    horizontalLine: { y: null },
+                    legend: { display: false }
+                }
+            },
+            plugins: [{
+                id: 'horizontalLine',
+                beforeDraw: function (chart) {
+                    const yVal = chart.config.options.plugins.horizontalLine.y;
+                    if (yVal === null || yVal === undefined) return;
+
+                    const yScale = chart.scales['y'];
+                    const yPixel = yScale.getPixelForValue(yVal);
+                    const ctx = chart.ctx;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(chart.chartArea.left, yPixel);
+                    ctx.lineTo(chart.chartArea.right, yPixel);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'rgb(40, 167, 69)';
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.fillStyle = 'rgb(40, 167, 69)';
+                    ctx.fillText("Cost", chart.chartArea.right - 70, yPixel - 5);
+                    ctx.restore();
+                }
+            }]
+        });
         applyChartTheme(recentEarningsChart);
+        document.addEventListener("theme:changed", function () {
+            applyChartTheme(recentEarningsChart);
+        });
+
+        updateChart('All');
     });
 
-    updateChart('All');
-  });
-  
-  </script>
-  
+</script>

@@ -2,131 +2,129 @@
 {% block content %}
 
 <div class="row">
-  <div class="col-12 mx-auto">
-    <div class="card shadow mb-4">
-      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+    <div class="col-12 mx-auto">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex align-items-center justify-content-between">
 
-        <div class="dropdown">
-          <a class="dropdown-toggle m-0 font-weight-bold text-danger"
-             href="#"
-             id="lbMetricDropdown"
-             data-toggle="dropdown"
-             aria-haspopup="true"
-             aria-expanded="false"
-             style="text-decoration:none;">
-            <i class="fas fa-trophy mr-2"></i>
-            {{ metric_title or "Top profits" }}
-          </a>
+                <div class="dropdown">
+                    <a class="dropdown-toggle m-0 font-weight-bold text-danger" href="#" id="lbMetricDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="text-decoration:none;">
+                        <i class="fas fa-trophy mr-2"></i>
+                        {{ metric_title or "Top profits" }}
+                    </a>
 
-          <div class="dropdown-menu" aria-labelledby="lbMetricDropdown">
-            {% for key, title, desc in metrics %}
-              <a class="dropdown-item {% if metric == key %}active{% endif %}"
-                 href="{{ url_for('leaderboards.index', metric=key) }}">
-                <div class="font-weight-bold">{{ title }}</div>
-                <div class="small text-muted">{{ desc }}</div>
-              </a>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="input-group input-group-sm leaderboard-search" style="max-width: 280px;">
-          <div class="input-group-prepend">
-            <span class="input-group-text bg-white">
-              <i class="fas fa-search"></i>
-            </span>
-          </div>
-          <input id="lbSearch" type="text" class="form-control" placeholder="Search username...">
-        </div>
-
-      </div>
-
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0 leaderboard-table">
-
-            <thead>
-              <tr>
-                <th style="width:70px;">Rank</th>
-                <th>User</th>
-                <th>{{ metric_title }}</th>
-              </tr>
-            </thead>
-
-            <tbody id="lbBody">
-              {% for user in data %}
-              <tr class="lb-row">
-
-                <td>
-                  {% if loop.index == 1 %}
-                    <span class="badge badge-warning leaderboard-rank">
-                      <i class="fas fa-crown mr-1"></i>1
-                    </span>
-                  {% elif loop.index == 2 %}
-                    <span class="badge badge-secondary leaderboard-rank">2</span>
-                  {% elif loop.index == 3 %}
-                    <span class="badge badge-info leaderboard-rank">3</span>
-                  {% else %}
-                    <span class="text-muted font-weight-bold">#{{ loop.index }}</span>
-                  {% endif %}
-                </td>
-
-                <td>
-                  <div class="d-flex align-items-center">
-                    <div class="leaderboard-avatar mr-2">
-                        <img width=20 height=20 class="rounded-circle account-img" src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}">
-
+                    <div class="dropdown-menu" aria-labelledby="lbMetricDropdown">
+                        {% for key, title, desc in metrics %}
+                        <a class="dropdown-item {% if metric == key %}active{% endif %}"
+                            href="{{ url_for('leaderboards.index', metric=key) }}">
+                            <div class="font-weight-bold">{{ title }}</div>
+                            <div class="small text-muted">{{ desc }}</div>
+                        </a>
+                        {% endfor %}
                     </div>
-                    <div class="lb-username font-weight-semi-bold">
-                      {{ user.username }}
+                </div>
+
+                <div class="input-group input-group-sm leaderboard-search" style="max-width: 280px;">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
                     </div>
-                  </div>
-                </td>
+                    <input id="lbSearch" type="text" class="form-control" placeholder="Search username...">
+                </div>
 
-                <td class="font-weight-bold">
-                  {% if metric in ["total_profit", "avg_profit", "most_expensive_item"] %}
-                    {{ "{:,.0f}".format(user[metric] or 0) }} ₽
-                  {% else %}
-                    {{ user[metric] or 0 }}
-                  {% endif %}
-                </td>
+            </div>
 
-              </tr>
-              {% else %}
-              <tr>
-                <td colspan="4" class="text-center text-muted py-4">
-                  No leaderboard data available
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 leaderboard-table">
 
-          </table>
+                        <thead>
+                            <tr>
+                                <th style="width:70px;">Rank</th>
+                                <th>User</th>
+                                <th>{{ metric_title }}</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="lbBody">
+                            {% for user in data %}
+                            <tr class="lb-row">
+
+                                <td>
+                                    {% if loop.index == 1 %}
+                                    <span class="badge badge-warning leaderboard-rank">
+                                        <i class="fas fa-crown mr-1"></i>1
+                                    </span>
+                                    {% elif loop.index == 2 %}
+                                    <span class="badge badge-secondary leaderboard-rank">2</span>
+                                    {% elif loop.index == 3 %}
+                                    <span class="badge badge-info leaderboard-rank">3</span>
+                                    {% else %}
+                                    <span class="text-muted font-weight-bold">#{{ loop.index }}</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="leaderboard-avatar mr-2">
+                                            <img width=30 height=30 class="rounded-circle account-img"
+                                                src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}">
+
+                                        </div>
+                                        <div class="lb-username font-weight-semi-bold">
+                                            <a href="{{ url_for('cases.users_cases', user_id=user.user_id) }}"
+                                                class="text-reset text-decoration-none">
+                                                {{ user.username }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="font-weight-bold">
+                                    {% if metric in ["total_profit", "avg_profit", "most_expensive_item"] %}
+                                    {{ "{:,.0f}".format(user[metric] or 0) }} ₽
+                                    {% else %}
+                                    {{ user[metric] or 0 }}
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    No leaderboard data available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
-      </div>
+
+        <span class="badge">
+            <i class="fas fa-users mr-1"></i> {{ data | length }} users
+        </span>
 
     </div>
-
-    <span class="badge badge-light border">
-      <i class="fas fa-users mr-1"></i> {{ data | length }} users
-    </span>
-
-  </div>
 </div>
 
 <script>
-(function () {
-  const input = document.getElementById('lbSearch');
-  const rows = Array.from(document.querySelectorAll('#lbBody .lb-row'));
-  if (!input) return;
+    (function () {
+        const input = document.getElementById('lbSearch');
+        const rows = Array.from(document.querySelectorAll('#lbBody .lb-row'));
+        if (!input) return;
 
-  input.addEventListener('input', function () {
-    const q = this.value.toLowerCase().trim();
-    rows.forEach(r => {
-      const name = (r.querySelector('.lb-username')?.textContent || '').toLowerCase();
-      r.style.display = name.includes(q) ? '' : 'none';
-    });
-  });
-})();
+        input.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            rows.forEach(r => {
+                const name = (r.querySelector('.lb-username')?.textContent || '').toLowerCase();
+                r.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+    })();
 </script>
 
 {% endblock content %}

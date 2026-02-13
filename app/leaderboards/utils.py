@@ -29,6 +29,7 @@ def leaderboard_base_query():
 
     return (
         db.session.query(
+            User.id.label("user_id"),
             User.username.label("username"),
             User.image_file.label("image_file"),
             func.coalesce(profit_sq.c.total_profit, 0).label("total_profit"),
