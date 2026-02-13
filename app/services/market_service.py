@@ -34,30 +34,39 @@ class MarketService(BaseService):
         item = market_data["data"]["items"][0]
         
         # Extract values safely
+        low_price = item.get("low24hPrice")
         high_price = item.get("high24hPrice")
         avg_price_24h = item.get("avg24hPrice")
-        change_48h_percent = item.get("changeLast48hPercent")
+        highest_vendor = "Flea Market"
+        lowest_vendor = "Flea Market"
         
         # Fallback to highest trader price if market data is missing
-        if not all((high_price, avg_price_24h, change_48h_percent)):
+        if not all((low_price, high_price, avg_price_24h)):
             highest_trader = max(
                 item.get("sellFor", []), 
                 key=lambda x: x["priceRUB"], 
                 default=None
             )
-            
+            highest_vendor = highest_trader['vendor']['name']
+
+            lowest_trader = min(
+                item.get("sellFor", []),
+                key=lambda x: x["priceRUB"],
+                default=None
+            )
+            lowest_vendor = lowest_trader['vendor']['name']
+
+
+            low_price = lowest_trader["price"] if lowest_trader else 0
             high_price = highest_trader["price"] if highest_trader else 0
             avg_price_24h = high_price
-            change_48h_percent = 0
-        
-        change_48h_percent = float(change_48h_percent or 0)
-        change_48h_colour = "text-success" if change_48h_percent > 0 else "text-danger"
         
         return {
+            "low_price": low_price,
             "high_price": high_price,
             "avg_price_24h": avg_price_24h,
-            "change_48h_percent": change_48h_percent,
-            "change_48h_colour": change_48h_colour
+            "highest_vendor": highest_vendor,
+            "lowest_vendor": lowest_vendor
         }
     
     def track_item_for_user(self, user: User, tarkov_item_id: str) -> bool:

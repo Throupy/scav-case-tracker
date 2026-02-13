@@ -8,7 +8,7 @@ def generate_item_price_query(tarkov_item_id: int) -> str:
     return (
         """{
             items(ids: "%s")
-                { name high24hPrice changeLast48hPercent avg24hPrice sellFor { price currency priceRUB } }
+                { name low24hPrice high24hPrice avg24hPrice sellFor { price currency priceRUB vendor { name } } }
             }"""
         % tarkov_item_id
     )

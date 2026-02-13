@@ -7,31 +7,32 @@
         Track New Item
     </button>
 
-    <button type="button" class="btn btn-outline-danger mb-3"
-    hx-trigger="click"
-    hx-get="/market"
-    hx-target=".tracked-items"
-    hx-swap="innerHTML">
-Refresh
-</button>
+    <button type="button" class="btn btn-outline-danger mb-3" hx-trigger="click" hx-get="/market"
+        hx-target=".tracked-items" hx-swap="innerHTML">
+        Refresh
+    </button>
 
 
     <div class="row py-2 font-weight-bold border-bottom">
-        <div class="col-2">Item</div>
+        <div class="col-1">Item</div>
         <div class="col-3">Name</div>
-        <div class="col-2">Highest Price (24h)</div>
-        <div class="col-2">Change (48h)</div>
-        <div class="col-2">Live Price</div>
+        <div class="col-7">
+            <div class="row">
+                <div class="col-4">Average Price (24h)</div>
+                <div class="col-4">Lowest Price (24h)</div>
+                <div class="col-4">Highest Price (24h)</div>
+            </div>
+        </div>
         <div class="col-1">Actions</div>
     </div>
 
-    <!-- embedding a partial so refresh button can simply re-call the route and get the partial again -->
     <div class="tracked-items row">
         {% include "partials/market_tracked_items.html" %}
     </div>
 </div>
 
-<div class="modal fade" id="trackItemModal" tabindex="-1" role="dialog" aria-labelledby="trackItemModalLabel" aria-hidden="true">
+<div class="modal fade" id="trackItemModal" tabindex="-1" role="dialog" aria-labelledby="trackItemModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -42,9 +43,9 @@ Refresh
             </div>
             <div class="modal-body">
                 <input name="q" type="text" class="form-control" id="item-search" placeholder="Search items..."
-                       hx-get="/market/search-items" hx-trigger="keyup changed delay:250ms"
-                       hx-target="#item-results" autocomplete="off">
-                
+                    hx-get="/market/search-items" hx-trigger="keyup changed delay:250ms" hx-target="#item-results"
+                    autocomplete="off">
+
                 <div id="item-results" class="list-group mt-2"></div>
             </div>
         </div>

@@ -1,41 +1,28 @@
 {% for item in tracked_items %}
-<div class="col-12 mb-2"> 
+<div class="col-12 mb-2">
     <div class="card shadow-sm border-0">
         <div class="row g-0 align-items-center">
-            <div class="col-2 d-flex justify-content-center align-items-center p-2">
-                <img src="{{ item | get_item_cdn_image_url }}" 
-                        class="img-fluid rounded" alt="{{ item.name }}" style="max-height: 60px;">
+            <div class="col-1 d-flex justify-content-center align-items-center p-2">
+                <img src="{{ item | get_item_cdn_image_url }}" class="img-fluid rounded" alt="{{ item.name }}"
+                    style="max-height: 60px;">
             </div>
-            
+
             <div class="col-3">
-                <div class="card-body p-2"> 
-                    <h6 class="card-title mb-0">{{ item.name }}</h6> 
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-0">{{ item.name }}</h6>
                 </div>
             </div>
 
-            <div class="col-6" 
-                    hx-get="/market/get-price/{{ item.tarkov_id }}"
-                    hx-trigger="load"
-                    hx-swap="outerHTML"
-                    hx-headers='{"X-Requested-With": "XMLHttpRequest"}'
-                    hx-credentials="include">
+            <div class="col-7" hx-get="/market/get-price/{{ item.tarkov_id }}" hx-trigger="load" hx-swap="outerHTML"
+                hx-headers='{"X-Requested-With": "XMLHttpRequest"}' hx-credentials="include">
                 <div class="row g-0 align-items-center">
                     <div class="col-4">
-                        <div class="card-body p-2 text-center"> 
+                        <div class="card-body p-2 text-center">
                             <h6 class="font-weight-bold text-muted card-title mb-0">
                                 <div class="spinner-border spinner-border-sm text-danger" role="status">
                                     <span class="sr-only">Loading...</span>
                                 </div>
-                            </h6> 
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="card-body p-2 text-center"> 
-                            <h6 class="font-weight-bold text-muted card-title mb-0">
-                                <div class="spinner-border spinner-border-sm text-danger" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                            </h6>  
+                            </h6>
                         </div>
                     </div>
                     <div class="col-4">
@@ -44,21 +31,26 @@
                                 <div class="spinner-border spinner-border-sm text-danger" role="status">
                                     <span class="sr-only">Loading...</span>
                                 </div>
-                            </h6> 
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-body p-2 text-center">
+                            <h6 class="font-weight-bold text-muted card-title mb-0">
+                                <div class="spinner-border spinner-border-sm text-danger" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </h6>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-1 text-end">
-                <button class="text-danger btn"
-                        hx-delete="/market/untrack-item/{{ item.tarkov_id }}"
-                        hx-trigger="click"
-                        hx-swap="outerHTML"
-                        hx-headers='{"X-Requested-With": "XMLHttpRequest"}'
-                        hx-credentials="include"
-                        hx-on::after-request="location.reload();">
-                    <i class="fa-regular fa-trash-can"></i>    
+                <button class="text-danger btn" hx-delete="/market/untrack-item/{{ item.tarkov_id }}" hx-trigger="click"
+                    hx-swap="outerHTML" hx-headers='{"X-Requested-With": "XMLHttpRequest"}' hx-credentials="include"
+                    hx-on::after-request="location.reload();">
+                    <i class="fa-regular fa-trash-can"></i>
                 </button>
             </div>
 
