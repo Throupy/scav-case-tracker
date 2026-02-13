@@ -30,21 +30,71 @@ class ScavCaseService(BaseService):
         
     def get_all_cases_paginated(
         self, page: int, per_page: int = 10,
-        sort_by: str = "type", sort_order: str = "asc"
+        sort_by: str = "created_at", sort_order: str = "asc",
     ):
-        """Get a paginated list of scav cases, with sorting"""
-        # get the attribute 'sort_by' from ScavCase obj, fallback to ScavCase.id
-        sort_attr = getattr(ScavCase, sort_by, ScavCase.id)
+        """Return all ScavCases (paginated) with safe sorting, including profit sorting."""
+        query = (
+            self.db.session.query(ScavCase)
+            .options(joinedload(ScavCase.author))  # template uses scav_case.author.*
+        )
+
+        if sort_by == "profit":
+            sort_expr = ScavCase._return - ScavCase.cost
+        else:
+            allowed_sort_columns = {
+                "id": ScavCase.id,
+                "created_at": ScavCase.created_at,
+                "type": ScavCase.type,
+                "cost": ScavCase.cost,
+                "_return": ScavCase._return,
+                "number_of_items": ScavCase.number_of_items,
+            }
+            sort_expr = allowed_sort_columns.get(sort_by, ScavCase.type)
 
         if sort_order == "asc":
-            query = ScavCase.query.order_by(self.db.asc(sort_attr))
+            query = query.order_by(self.db.asc(sort_expr), self.db.asc(ScavCase.id))
         else:
-            query = ScavCase.query.order_by(self.db.desc(sort_attr))
+            query = query.order_by(self.db.desc(sort_expr), self.db.desc(ScavCase.id))
 
-        return query.paginate(page=page, per_page=per_page)
+        return query.paginate(page=page, per_page=per_page, error_out=False)
 
     def get_all_cases_by_user(self, user: User) -> list[ScavCase] | None:
         return ScavCase.query.filter_by(user_id=user.id).all()
+
+    def get_all_cases_by_user_paginated(
+        self, user: User, page: int, per_page: int = 10,
+        sort_by: str = "created_at", sort_order: str = "asc",
+        case_type: Optional[str] = None,
+    ):
+        """Return a user's ScavCases (paginated) with optional filtering and sorting."""
+        query = (
+            self.db.session.query(ScavCase)
+            .options(joinedload(ScavCase.author))
+            .filter(ScavCase.user_id == user.id)
+        )
+
+        if case_type and case_type != "all":
+            query = query.filter(ScavCase.type == case_type)
+
+        if sort_by == "profit":
+            sort_expr = ScavCase._return - ScavCase.cost
+        else:
+            allowed_sort_columns = {
+                "id": ScavCase.id,
+                "created_at": ScavCase.created_at,
+                "type": ScavCase.type,
+                "cost": ScavCase.cost,
+                "_return": ScavCase._return,
+                "number_of_items": ScavCase.number_of_items,
+            }
+            sort_expr = allowed_sort_columns.get(sort_by, ScavCase.created_at)
+
+        if sort_order == "asc":
+            query = query.order_by(self.db.asc(sort_expr), self.db.asc(ScavCase.id))
+        else:
+            query = query.order_by(self.db.desc(sort_expr), self.db.desc(ScavCase.id))
+
+        return query.paginate(page=page, per_page=per_page, error_out=False)
 
     def get_case_by_id(self, case_id: int) -> Optional[ScavCase]:
         """Get scav case by ID or return None"""
@@ -233,7 +283,7 @@ class ScavCaseService(BaseService):
             "most_valuable_item": self._get_most_valuable_item(),
         }
 
-    def generate_users_cases_data(self, user_id: int) -> dict:
+    def generate_users_cases_showcase_data(self, user_id: int) -> dict:
         """Generate data for the /users/XXXX/cases page"""
         return {
             **self._get_totals(user_id=user_id),

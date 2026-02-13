@@ -1,23 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 font-weight-bold">
+            Global Scav Case Insights
+        </h5>
 
-<div class="row mb-3">
-    <div class="col-md-3">
-        <label for="case-filter" class="form-label">Select Scav Case Type</label>
-        <select id="case-filter" class="form-control" hx-get="{{ url_for('cases.insights_data') }}" hx-trigger="change"
-            hx-target="#insights-content" hx-indicator="#loading-spinner" name="case_type">
-            <option value="all">All</option>
-            <option value="₽2500">₽2500</option>
-            <option value="₽15000">₽15000</option>
-            <option value="₽95000">₽95000</option>
-            <option value="Moonshine">Moonshine</option>
-            <option value="Intelligence">Intelligence</option>
-        </select>
-        <div id="loading-spinner" class="spinner-border text-danger" role="status" style="display: none;">
-            <span class="sr-only">Loading...</span>
+        <div class="d-flex align-items-center">
+            <span class="mr-2">Scav Case Type:</span>
+            <select id="case-filter"
+                    class="form-control form-control-sm me-3"
+                    style="width: 180px;"
+                    hx-get="{{ url_for('cases.insights_data') }}"
+                    hx-trigger="change"
+                    hx-target="#insights-content"
+                    hx-indicator="#loading-spinner"
+                    name="case_type">
+                <option value="all">All</option>
+                <option value="₽2500">₽2500</option>
+                <option value="₽15000">₽15000</option>
+                <option value="₽95000">₽95000</option>
+                <option value="Moonshine">Moonshine</option>
+                <option value="Intelligence">Intelligence</option>
+            </select>
+            <div id="loading-spinner"
+                 class="spinner-border spinner-border-sm text-danger"
+                 role="status"
+                 style="display: none;">
+                <span class="sr-only">Loading...</span>
+            </div>
         </div>
     </div>
 </div>
+
+
 
 <div id="insights-content">
     {% include 'partials/insights.html' %}

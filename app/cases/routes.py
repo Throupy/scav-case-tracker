@@ -11,14 +11,12 @@ from app.constants import SCAV_CASE_TYPES
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
 from app.cases.utils import is_discord_bot_request
 from app.services.scav_case_service import ScavCaseService
-from app.services.user_service import UserService
 from app.http.errors import AuthorizationError
 from app.http.responses import success_response
 
 
 cases_bp = Blueprint("cases", __name__)
 scav_case_service = ScavCaseService()
-user_service = UserService()
 
 # util / helpers
 @cases_bp.route("/cases/search-items")
@@ -44,7 +42,7 @@ def dashboard():
 @login_required
 def all_scav_cases():
     page = request.args.get("page", 1, type=int)
-    sort_by = request.args.get("sort_by", "type")
+    sort_by = request.args.get("sort_by", "created_at")
     sort_order = request.args.get("sort_order", "asc")
     
     pagination = scav_case_service.get_all_cases_paginated(
@@ -59,12 +57,6 @@ def all_scav_cases():
         sort_order=sort_order,
     )
 
-@cases_bp.route("/users/<int:user_id>/cases")
-def users_cases(user_id: int):
-    user = user_service.get_user_by_id_or_404(user_id)
-    users_cases_data = scav_case_service.generate_users_cases_data(user_id)
-    print(users_cases_data)
-    return render_template("users_cases.html", username=user.username, **users_cases_data)
 
 @cases_bp.route("/cases/insights-data")
 def insights_data():
@@ -127,12 +119,6 @@ def submit_scav_case():
     
     # render HTML with CreateScavCase form
     return render_template("create_scav_case.html", form=form)
-
-@cases_bp.route("/cases/items")
-@login_required
-def items():
-    items = ScavCaseItem.query.all()
-    return render_template("items.html", items=items)
 
 
 @cases_bp.route("/cases/<int:scav_case_id>")

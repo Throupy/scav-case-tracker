@@ -5,10 +5,13 @@ from app.users.utils import save_profile_picture
 from app.models import User
 from app.extensions import db, bcrypt
 from app.users.forms import LoginForm, RegistrationForm, UpdateAccountForm
-
+from app.services.scav_case_service import ScavCaseService
+from app.services.user_service import UserService
 
 users_bp = Blueprint("users", __name__)
 
+scav_case_service = ScavCaseService()
+user_service = UserService()
 
 @users_bp.route("/users/login", methods=["GET", "POST"])
 def login():
@@ -65,3 +68,36 @@ def account():
     elif request.method == "GET":
         form.username.data = current_user.username
     return render_template("account.html", form=form)
+
+@users_bp.route("/users/<int:user_id>/cases", methods=["GET"])
+def cases(user_id: int):
+    user = user_service.get_user_by_id_or_404(user_id)
+
+    page = request.args.get("page", 1, type=int)
+    sort_by = request.args.get("sort_by", "created_at")
+    sort_order = request.args.get("sort_order", "desc")
+    case_type = request.args.get("case_type", "all")
+
+    pagination = scav_case_service.get_all_cases_by_user_paginated(
+        user=user,
+        page=page,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        case_type=case_type,
+    )
+
+    return render_template(
+        "user_cases.html",
+        user=user,
+        scav_cases=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        case_type=case_type,
+    )
+
+@users_bp.route("/users/<int:user_id>/cases-showcase")
+def cases_showcase(user_id: int):
+    user = user_service.get_user_by_id_or_404(user_id)
+    users_cases_showcase_data = scav_case_service.generate_users_cases_showcase_data(user_id)
+    return render_template("user_cases_showcase.html", user=user, **users_cases_showcase_data)

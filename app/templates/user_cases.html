@@ -1,0 +1,217 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body py-3 d-flex justify-content-between align-items-center">
+
+        <h5 class="mb-0 font-weight-bold">
+            {{ user.username }}'s Scav Case Returns
+            <span class="small text-muted ml-2">
+                ({{ scav_cases | length }})
+            </span>
+        </h5>
+
+        <a href="{{ url_for('users.cases_showcase', user_id=user.id) }}" class="btn btn-outline-danger btn-sm px-3">
+            <i class="fas fa-star mr-1"></i>
+            View Showcase
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="">
+            <div class="table-responsive">
+                <table class="table project-list-table table-nowrap align-middle table-borderless">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none"
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Type
+                                    {% if sort_by == 'type' %}
+                                    {% if sort_order == 'asc' %}
+                                    <i class="fa fa-chevron-up"></i>
+                                    {% else %}
+                                    <i class="fa fa-chevron-down"></i>
+                                    {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none"
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Return
+                                    {% if sort_by == '_return' %}
+                                    {% if sort_order == 'asc' %}
+                                    <i class="fa fa-chevron-up"></i>
+                                    {% else %}
+                                    <i class="fa fa-chevron-down"></i>
+                                    {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none"
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Profit
+                                    {% if sort_by == 'profit' %}
+                                    {% if sort_order == 'asc' %}
+                                    <i class="fa fa-chevron-up"></i>
+                                    {% else %}
+                                    <i class="fa fa-chevron-down"></i>
+                                    {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none"
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Number of Items
+                                    {% if sort_by == 'number_of_items' %}
+                                    {% if sort_order == 'asc' %}
+                                    <i class="fa fa-chevron-up"></i>
+                                    {% else %}
+                                    <i class="fa fa-chevron-down"></i>
+                                    {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th scope="col">
+                                <a class="text-reset text-decoration-none"
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='created_at', sort_order='asc' if sort_by != 'created_at' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    Submitted
+                                    {% if sort_by == 'created_at' %}
+                                    {% if sort_order == 'asc' %}
+                                    <i class="fa fa-chevron-up"></i>
+                                    {% else %}
+                                    <i class="fa fa-chevron-down"></i>
+                                    {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for scav_case in scav_cases %}
+                        <tr>
+                            <td>
+                                <span class="badge mb-0
+                                    {% if scav_case.type == '₽2500' %}
+                                        badge-soft-warning
+                                    {% elif scav_case.type == '₽15000' %}
+                                        badge-soft-danger
+                                    {% elif scav_case.type == '₽95000' %}
+                                        badge-soft-success
+                                    {% elif scav_case.type == 'Moonshine' %}
+                                        badge-soft-primary
+                                    {% elif scav_case.type == 'Intelligence' %}
+                                        badge-soft-info
+                                    {% else %}
+                                        badge-soft-secondary
+                                    {% endif %}">
+                                    {{ scav_case.type }}
+                                </span>
+                            </td>
+
+                            <td>₽{{ "{:,}".format(scav_case._return | int) }}</td>
+
+                            <td>
+                                {% if scav_case._return - scav_case.cost < 0 %} <span
+                                    class="badge mb-0 badge-soft-danger">
+                                    ₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge mb-0 badge-soft-success">
+                                        ₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}
+                                    </span>
+                                    {% endif %}
+                            </td>
+
+                            <td>{{ scav_case.number_of_items }}</td>
+
+                            <td>{{ scav_case.created_at | timeago }}</td>
+
+                            <td>
+                                <ul class="list-inline mb-0">
+                                    <li class="list-inline-item">
+                                        <a href="{{ url_for('cases.scav_case_detail', scav_case_id=scav_case.id) }}"
+                                            data-bs-toggle="tooltip" data-bs-placement="top" title="View"
+                                            class="px-2 text-danger"><i class="fa-regular fa-eye"></i></a>
+                                    </li>
+
+                                    {% if current_user.is_authenticated and current_user.id == scav_case.user_id %}
+                                    <li class="list-inline-item">
+                                        <form
+                                            action="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}"
+                                            method="POST" style="display:inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                            <button type="submit" class="btn btn-link px-2 text-danger p-0"
+                                                data-toggle="tooltip" data-placement="top" title="Delete">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-0 align-items-center pb-4">
+    <div class="col-sm-6">
+        <div>
+            <p class="mb-sm-0">
+                Showing Page {{ pagination.page }} of {{ pagination.pages }}
+            </p>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="float-sm-end">
+            <ul class="pagination mb-sm-0">
+                <!-- Previous Page -->
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a href="{{ url_for('users.cases', user_id=user.id, page=pagination.prev_num, sort_by=sort_by, sort_order=sort_order) }}"
+                        class="page-link">
+                        <i class="text-danger fa fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                <!-- Page Numbers -->
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                <li class="text-danger page-item {% if pagination.page == page_num %}active{% endif %}">
+                    <a href="{{ url_for('users.cases', user_id=user.id, page=page_num, sort_by=sort_by, sort_order=sort_order) }}"
+                        class="text-danger page-link">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><a href="#" class="text-danger page-link">…</a></li>
+                {% endif %}
+                {% endfor %}
+
+                <!-- Next Page -->
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a href="{{ url_for('users.cases', user_id=user.id, page=pagination.next_num, sort_by=sort_by, sort_order=sort_order) }}"
+                        class="page-link">
+                        <i class="text-danger fa fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
