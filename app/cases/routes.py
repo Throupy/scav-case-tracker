@@ -3,7 +3,7 @@ import json
 import requests
 from collections import defaultdict
 
-from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, jsonify
+from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, jsonify, abort
 from flask_login import login_required, current_user
 
 from app.models import ScavCase, ScavCaseItem, TarkovItem
