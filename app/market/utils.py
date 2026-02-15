@@ -14,16 +14,48 @@ def generate_item_price_query(tarkov_item_id: int) -> str:
         % tarkov_item_id
     )
 
-def generate_prices_query(item_ids: list[str]) -> str:
+# "build" the query. in reality probs wn't matter because graphql is pretty quick
+# but i did this maybe thinking that the API would respond faster if there's less being queried..
+# either way, it's ok so leave it.
+def generate_prices_query(
+    item_ids: list[str],
+    *,
+    include_historical: bool = False,
+    include_vendor: bool = False,
+) -> str:
     ids_literal = json.dumps(item_ids)
+
+    sell_for_block = """
+      sellFor {
+        price
+        source
+    """
+
+    if include_vendor:
+        sell_for_block += """
+        vendor {
+          name
+        }
+        """
+
+    sell_for_block += "}"
+
+    base_fields = f"""
+      id
+      {sell_for_block}
+    """
+
+    extra_24h = """
+      avg24hPrice
+      low24hPrice
+      high24hPrice
+    """ if include_historical else ""
+
     return f"""
     {{
       items(ids: {ids_literal}) {{
-        id
-        sellFor {{
-          price
-          source
-        }}
+        {base_fields}
+        {extra_24h}
       }}
     }}
     """
@@ -49,7 +81,10 @@ def _mask_tarkov_item_id(item_id: str) -> str:
     """Mask tarkov item ID, e.g. <LONG_ID> -> 4823f...j3f39"""
     return f"{item_id[:5]}...{item_id[-5:]}"
 
-def get_prices(tarkov_item_ids: Iterable[str]) -> dict[str, Optional[int]]:
+def get_prices(
+    tarkov_item_ids: Iterable[str], include_historical: bool = False,
+    include_vendor: bool = False,
+    ) -> dict[str, Optional[int]]:
     """
     Bulk lookup of tarkov item prices, by ID
     - prefer flea market price if available
@@ -76,7 +111,7 @@ def get_prices(tarkov_item_ids: Iterable[str]) -> dict[str, Optional[int]]:
     )
 
     # generate and execute the bulk query
-    query = generate_prices_query(item_ids)
+    query = generate_prices_query(item_ids, include_historical=include_historical)
     response = run_query(query)
 
     # navigate response structure
@@ -85,34 +120,108 @@ def get_prices(tarkov_item_ids: Iterable[str]) -> dict[str, Optional[int]]:
     # init output dict with None (default if no price found)
     prices_by_id: dict[str, Optional[int]] = {item_id: None for item_id in item_ids}
 
+    if not include_historical:
+        prices_by_id: dict[str, Optional[int]] = {item_id: None for item_id in item_ids}
+
+        for item_data in response_items:
+            tarkov_id = item_data.get("id")
+            sell_options = item_data.get("sellFor") or []
+
+            # malformed for whatever reason, just skip it
+            if not tarkov_id or tarkov_id not in prices_by_id or not sell_options:
+                continue
+
+            # try flea market first
+            flea_entry = next(
+                (entry for entry in sell_options if entry.get("source") == "fleaMarket"),
+                None,
+            )
+
+            if flea_entry and flea_entry.get("price") is not None:
+                prices_by_id[tarkov_id] = int(flea_entry["price"])
+                continue
+
+            # Ooherwise use highest available vendor price
+            best_entry = max(
+                (entry for entry in sell_options if entry.get("price") is not None),
+                key=lambda entry: entry["price"],
+                default=None,
+            )
+
+            prices_by_id[tarkov_id] = int(best_entry["price"]) if best_entry else None
+
+        return prices_by_id
+
+    # include_historical output shaep
+    out: dict[str, dict] = {
+        item_id: {
+            "price": None,
+            "vendor": None,
+            "avg": None,
+            "low": None,
+            "high": None,
+        }
+        for item_id in item_ids
+    }
+
     for item_data in response_items:
         tarkov_id = item_data.get("id")
+        if not tarkov_id or tarkov_id not in out:
+            continue
+
         sell_options = item_data.get("sellFor") or []
 
-        # malformed for whatever reason, just skip it
-        if not tarkov_id or tarkov_id not in prices_by_id or not sell_options:
-            continue
+        best_price = None
+        best_vendor = None
 
-        # try flea market first
-        flea_entry = next(
-            (entry for entry in sell_options if entry.get("source") == "fleaMarket"),
-            None,
-        )
+        if sell_options:
+            # Prefer flea
+            flea_entry = next(
+                (e for e in sell_options if e.get("source") == "fleaMarket"),
+                None,
+            )
 
-        if flea_entry and flea_entry.get("price") is not None:
-            prices_by_id[tarkov_id] = int(flea_entry["price"])
-            continue
+            if flea_entry and flea_entry.get("price") is not None:
+                best_price = int(flea_entry["price"])
+                if include_vendor:
+                    best_vendor = "Flea Market"
+            else:
+                best_entry = max(
+                    (e for e in sell_options if e.get("price") is not None),
+                    key=lambda e: e["price"],
+                    default=None,
+                )
 
-        # Ooherwise use highest available vendor price
-        best_entry = max(
-            (entry for entry in sell_options if entry.get("price") is not None),
-            key=lambda entry: entry["price"],
-            default=None,
-        )
+                if best_entry:
+                    best_price = int(best_entry["price"])
+                    if include_vendor:
+                        best_vendor = best_entry.get("source").title()
 
-        prices_by_id[tarkov_id] = int(best_entry["price"]) if best_entry else None
+        avg = item_data.get("avg24hPrice") if include_historical else None
+        low = item_data.get("low24hPrice") if include_historical else None
+        high = item_data.get("high24hPrice") if include_historical else None
 
-    return prices_by_id
+        # afllback logic
+        if include_historical and best_price is not None:
+            if avg is None:
+                avg = best_price
+            if low is None:
+                low = best_price
+            if high is None:
+                high = best_price
+
+        if not include_historical:
+            out[tarkov_id] = best_price
+        else:
+            out[tarkov_id] = {
+                "price": best_price,
+                "vendor": best_vendor if include_vendor else None,
+                "avg": avg,
+                "low": low,
+                "high": high,
+            }
+
+    return out
 
 def get_price(tarkov_item_id: str) -> int:
     # TODO: Hell of a chunk of work, but this (and get_prices) should / could be moved to celery tasks?

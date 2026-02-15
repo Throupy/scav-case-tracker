@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 
 from app.models import TarkovItem, User
 from app.services import BaseService
-from app.market.utils import get_market_information
+from app.market.utils import get_market_information, get_price, get_prices
 
 
 class MarketService(BaseService):
@@ -21,6 +21,15 @@ class MarketService(BaseService):
         """Get item by Tarkov ID"""
         return TarkovItem.query.filter_by(tarkov_id=tarkov_id).first()
     
+    def get_tarkov_item_prices_by_ids(
+        self, tarkov_item_ids: list[str], include_historical: bool = False,
+        include_vendor: bool = False,
+    ):
+        return get_prices(
+            tarkov_item_ids, include_historical=include_historical,
+            include_vendor=include_vendor
+        )
+
     def get_item_price_data(self, tarkov_item_id: str) -> Dict[str, Any]:
         """Get formatted price data for an item"""
         # TODO: Think about using the flask caching decoration here

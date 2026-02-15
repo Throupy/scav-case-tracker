@@ -1,35 +1,41 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container">
-    <h2 class="mb-3">Market Section - Track Live Prices</h2>
-
-    <button type="button" class="btn btn-outline-danger mb-3" data-toggle="modal" data-target="#trackItemModal">
-        Track New Item
-    </button>
-
-    <button type="button" class="btn btn-outline-danger mb-3" hx-trigger="click" hx-get="/market"
-        hx-target=".tracked-items" hx-swap="innerHTML">
-        Refresh
-    </button>
 
 
-    <div class="row py-2 font-weight-bold border-bottom">
-        <div class="col-1">Item</div>
-        <div class="col-3">Name</div>
-        <div class="col-7">
-            <div class="row">
-                <div class="col-4">Average Price (24h)</div>
-                <div class="col-4">Lowest Price (24h)</div>
-                <div class="col-4">Highest Price (24h)</div>
-            </div>
-        </div>
-        <div class="col-1">Actions</div>
-    </div>
+<div class="card shadow-sm mb-4">
+    <div class="card-body py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 font-weight-bold">
+            Market - Track Live Prices
+        </h5>
 
-    <div class="tracked-items row">
-        {% include "partials/_market_tracked_items.html" %}
+        <a href="#" class="btn btn-outline-danger btn-sm px-3" data-toggle="modal" data-target="#trackItemModal">
+            <i class="fas fa-plus mr-1"></i>
+            Track New Item
+        </a>
     </div>
 </div>
+
+<div class="row py-2 font-weight-bold border-bottom">
+    <div class="col-1">Item</div>
+    <div class="col-3">Name</div>
+    <div class="col-7">
+        <div class="row">
+            <div class="col-4">Average Price (24h)</div>
+            <div class="col-4">Lowest Price (24h)</div>
+            <div class="col-4">Highest Price (24h)</div>
+        </div>
+    </div>
+    <div class="col-1">Actions</div>
+</div>
+
+<div class="tracked-items row" id="tracked-items">
+    {% include "partials/_market_tracked_items.html" %}
+</div>
+
+<div hx-get="/market/get-tracked-item-prices" hx-trigger="load" hx-target="#tracked-items" hx-swap="innerHTML"
+    hx-headers='{"X-Requested-With": "XMLHttpRequest"}' hx-credentials="include">
+</div>
+
 
 <div class="modal fade" id="trackItemModal" tabindex="-1" role="dialog" aria-labelledby="trackItemModalLabel"
     aria-hidden="true">

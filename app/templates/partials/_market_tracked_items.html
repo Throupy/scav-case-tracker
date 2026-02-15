@@ -1,60 +1,100 @@
 {% for item in tracked_items %}
+{% set p = prices_by_id.get(item.tarkov_id) if prices_by_id is defined else None %}
+{% set avg = p.get("avg") if p else None %}
+{% set low = p.get("low") if p else None %}
+{% set high = p.get("high") if p else None %}
+{% set vendor = p.get("vendor") if p else None %}
+
 <div class="col-12 mb-2">
-    <div class="card shadow-sm border-0">
-        <div class="row g-0 align-items-center">
-            <div class="col-1 d-flex justify-content-center align-items-center p-2">
-                <img src="{{ item | get_item_cdn_image_url }}" class="img-fluid rounded" alt="{{ item.name }}"
-                    style="max-height: 60px;">
+  <div class="card shadow-sm border-0">
+    <div class="row g-0 align-items-center">
+
+      <div class="col-1 d-flex justify-content-center align-items-center p-2">
+        <img src="{{ item | get_item_cdn_image_url }}"
+             class="img-fluid rounded"
+             alt="{{ item.name }}"
+             style="max-height: 60px;">
+      </div>
+
+      <div class="col-3">
+        <div class="card-body p-2">
+          <h6 class="card-title mb-0">{{ item.name }}</h6>
+        </div>
+      </div>
+
+      <div class="col-7">
+        <div class="row align-items-center">
+
+          {% if prices_by_id is not defined %}
+            {% for _ in range(3) %}
+            <div class="col-4 text-center">
+              <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+            </div>
+            {% endfor %}
+          {% else %}
+
+            <div class="col-4">
+              <h6 class="font-weight-bold mb-0">
+                {% if avg is none %}
+                  <span class="text-muted">N/A</span>
+                {% else %}
+                  ₽{{ "{:,}".format(avg) }}
+                  {% if vendor %}
+                    <span class="badge badge-pill badge-primary ml-2">
+                      {{ vendor }}
+                    </span>
+                  {% endif %}
+                {% endif %}
+              </h6>
             </div>
 
-            <div class="col-3">
-                <div class="card-body p-2">
-                    <h6 class="card-title mb-0">{{ item.name }}</h6>
-                </div>
+            <div class="col-4">
+              <h6 class="font-weight-bold mb-0">
+                {% if low is none %}
+                  <span class="text-muted">N/A</span>
+                {% else %}
+                  ₽{{ "{:,}".format(low) }}
+                  {% if vendor %}
+                    <span class="badge badge-pill badge-danger ml-2">
+                      {{ vendor }}
+                    </span>
+                  {% endif %}
+                {% endif %}
+              </h6>
             </div>
 
-            <div class="col-7" hx-get="/market/get-price/{{ item.tarkov_id }}" hx-trigger="load" hx-swap="outerHTML"
-                hx-headers='{"X-Requested-With": "XMLHttpRequest"}' hx-credentials="include">
-                <div class="row g-0 align-items-center">
-                    <div class="col-4">
-                        <div class="card-body p-2 text-center">
-                            <h6 class="font-weight-bold text-muted card-title mb-0">
-                                <div class="spinner-border spinner-border-sm text-danger" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                            </h6>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="card-body p-2 text-center">
-                            <h6 class="font-weight-bold text-muted card-title mb-0">
-                                <div class="spinner-border spinner-border-sm text-danger" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                            </h6>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="card-body p-2 text-center">
-                            <h6 class="font-weight-bold text-muted card-title mb-0">
-                                <div class="spinner-border spinner-border-sm text-danger" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                            </h6>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-4">
+              <h6 class="font-weight-bold mb-0">
+                {% if high is none %}
+                  <span class="text-muted">N/A</span>
+                {% else %}
+                  ₽{{ "{:,}".format(high) }}
+                  {% if vendor %}
+                    <span class="badge badge-pill badge-success ml-2">
+                      {{ vendor }}
+                    </span>
+                  {% endif %}
+                {% endif %}
+              </h6>
             </div>
 
-            <div class="col-1 text-end">
-                <button class="text-danger btn" hx-delete="/market/untrack-item/{{ item.tarkov_id }}" hx-trigger="click"
-                    hx-swap="outerHTML" hx-headers='{"X-Requested-With": "XMLHttpRequest"}' hx-credentials="include"
-                    hx-on::after-request="location.reload();">
-                    <i class="fa-regular fa-trash-can"></i>
-                </button>
-            </div>
+          {% endif %}
 
         </div>
+      </div>
+
+      <div class="col-1 text-end">
+        <form method="POST"
+            action="/market/untrack-item/{{ item.tarkov_id }}"
+            class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="text-danger btn">
+                <i class="fa-regular fa-trash-can"></i>
+            </button>
+        </form>
+      </div>
+
     </div>
+  </div>
 </div>
 {% endfor %}

@@ -202,3 +202,7 @@ def get_dashboard_data():
     }
 
     return {key: func() for key, func in dashboard_functions.items()}
+
+def get_tarkov_item_name_by_id(tarkov_id):
+    """Small helper function, used in the market service as I am passing IDs in URLs, not names"""
+    return TarkovItem.query.filter_by(tarkov_id=tarkov_id).first().name
