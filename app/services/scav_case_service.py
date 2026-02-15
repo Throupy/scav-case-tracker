@@ -10,8 +10,6 @@ from app.constants import DISCORD_BOT_USER_USERNAME
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.services import BaseService
 from app.cases.utils import (
-    get_price,
-    get_prices,
     calculate_most_popular_categories,
     find_most_common_items,
     calculate_avg_items_per_case_type,
@@ -21,6 +19,10 @@ from app.cases.utils import (
     check_achievements,
     save_uploaded_image,
     process_scav_case_image,
+)
+from app.market.utils import (
+    get_price,
+    get_prices,
 )
 
 class ScavCaseService(BaseService):
@@ -160,7 +162,6 @@ class ScavCaseService(BaseService):
             else:
                 raise ValueError("Either image or items_data must be provided")
             
-            # TODO: Perhaps the functionality from the below method should be moved into here (service)
             scav_case = self._create_scav_case_entry(scav_case_type, items, user.id)
 
             check_achievements(user)

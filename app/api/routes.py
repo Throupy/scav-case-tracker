@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request, abort
 
 from app.models import ScavCase, ScavCaseItem
 from app.extensions import db
-from app.cases.utils import get_price
+from app.market.utils import get_price
 from app.http.responses import success_response, error_response
 from app.http.errors import ValidationError, NotFoundError
 

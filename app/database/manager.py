@@ -7,7 +7,7 @@ import os
 from app.extensions import db, bcrypt
 from app.models import User, TarkovItem, WeaponAttachment, ScavCase
 from app.constants import CATEGORY_MAPPING, DISCORD_BOT_USER_USERNAME
-from app.cases.utils import get_price
+from app.market.utils import get_price
 
 class DatabaseManager:
     """Handles database initialisation and seeding operations, if enabled"""
