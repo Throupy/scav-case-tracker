@@ -14,6 +14,8 @@ from app.services.scav_case_service import ScavCaseService
 from app.http.errors import AuthorizationError
 from app.http.responses import success_response
 
+# TODO: Db ops not directly in here
+from app.extensions import db
 
 cases_bp = Blueprint("cases", __name__)
 scav_case_service = ScavCaseService()
@@ -28,6 +30,17 @@ def search_items():
 
     items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
     return render_template("partials/_scav_case_search_item_list.html", items=items)
+
+@cases_bp.route("/cases/global-dashboard/layout")
+@login_required
+def get_global_dashboard_layout():
+    return jsonify(current_user.scav_case_global_dashboard_layout or None)
+
+@cases_bp.route("/cases/global-dashboard/layout", methods=["PUT"])
+@login_required
+def put_global_dashboard_layout():
+    layout = (request.get_json(silent=True) or {}).get("layout")
+    scav_case_service.save_user_global_dashboard_layout(current_user.id, layout)
 
 @cases_bp.route("/cases/global-dashboard")
 def dashboard():

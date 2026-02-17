@@ -9,6 +9,7 @@ from sqlalchemy.orm import joinedload
 from app.constants import DISCORD_BOT_USER_USERNAME
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.services import BaseService
+from app.services.user_service import UserService
 from app.cases.utils import (
     calculate_most_popular_categories,
     find_most_common_items,
@@ -24,6 +25,8 @@ from app.market.utils import (
     get_price,
     get_prices,
 )
+
+user_service = UserService()
 
 class ScavCaseService(BaseService):
     """Service class for handling biz logic for ScavCase functionality"""
@@ -283,6 +286,15 @@ class ScavCaseService(BaseService):
             "most_profitable_case_type": self._get_most_profitable_case_type_name(),
             "most_valuable_item": self._get_most_valuable_item(),
         }
+
+    def save_user_global_dashboard_layout(self, user_id, layout):
+        if not isinstance(layout, list):
+            return jsonify({"error": "layout must be a list"}), 400
+
+        user = user_service.get_user_by_id_or_404(user_id)
+        user.scav_case_global_dashboard_layout = layout
+        self.db.session.commit()
+        return jsonify({"ok": True})
 
     def generate_users_cases_showcase_data(self, user_id: int) -> dict:
         """Generate data for the /users/XXXX/cases page"""

@@ -2,89 +2,91 @@
 
 {% block content %}
 <div class="card shadow-sm border-0 mb-4">
-  <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
-    <div>
-      <h4 class="mb-0">Global Dashboard</h4>
-    </div>
+    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-0">Global Dashboard</h4>
+        </div>
+        <div class="d-flex align-items-center">
+            {% if current_user.is_authenticated %}
+            <button id="toggle-layout-btn" type="button" class="btn btn-outline-danger btn-sm px-3 shadow-sm mr-2">
+                Unlock layout
+            </button>
+            {% endif %}
 
-    <div class="d-flex align-items-center">
-      <button id="toggle-layout-btn"
-              type="button"
-              class="btn btn-outline-danger btn-sm px-3 shadow-sm mr-2">
-        Unlock layout
-      </button>
-
-      <a href="{{ url_for('main.not_implemented') }}"
-         class="btn btn-outline-danger btn-sm px-4 shadow-sm d-flex align-items-center">
-        <i class="fas fa-download mr-2"></i>
-        Export
-      </a>
+            <a href="{{ url_for('main.not_implemented') }}"
+                class="btn btn-outline-danger btn-sm px-4 shadow-sm d-flex align-items-center">
+                <i class="fas fa-download mr-2"></i>
+                Export
+            </a>
+        </div>
     </div>
-  </div>
 </div>
 
 <div class="grid-stack">
-  <div class="grid-stack-item" gs-id="kpi_total_cases" gs-x="0" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_total_cases.html" %}
+    <div class="grid-stack-item" gs-id="kpi_total_cases" gs-x="0" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_total_cases.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_total_profit" gs-x="3" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_total_profit.html" %}
+    <div class="grid-stack-item" gs-id="kpi_total_profit" gs-x="3" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_total_profit.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_total_spent" gs-x="6" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_total_spent.html" %}
+    <div class="grid-stack-item" gs-id="kpi_total_spent" gs-x="6" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_total_spent.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_total_return" gs-x="9" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_total_return.html" %}
+    <div class="grid-stack-item" gs-id="kpi_total_return" gs-x="9" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_total_return.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_most_common_item_type" gs-x="0" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_most_common_item_type.html" %}
+    <div class="grid-stack-item" gs-id="kpi_most_common_item_type" gs-x="0" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_most_common_item_type.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_top_contributor" gs-x="3" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_top_contributor.html" %}
+    <div class="grid-stack-item" gs-id="kpi_top_contributor" gs-x="3" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_top_contributor.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_most_profitable_case_type" gs-x="6" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_most_profitable_case_type.html" %}
+    <div class="grid-stack-item" gs-id="kpi_most_profitable_case_type" gs-x="6" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_most_profitable_case_type.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="kpi_most_valuable_item" gs-x="9" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
-    <div class="grid-stack-item-content">
-      {% include "partials/kpis/_most_valuable_item.html" %}
+    <div class="grid-stack-item" gs-id="kpi_most_valuable_item" gs-x="9" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_most_valuable_item.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="chart_earnings_overview" gs-x="0" gs-y="2" gs-w="8" gs-h="4" gs-min-w="6">
-    <div class="grid-stack-item-content">
-      {% include "partials/graphs/_earnings_overview_chart.html" %}
+    <div class="grid-stack-item" gs-id="chart_earnings_overview" gs-x="0" gs-y="2" gs-w="8" gs-h="4" gs-min-w="6">
+        <div class="grid-stack-item-content">
+            {% include "partials/graphs/_earnings_overview_chart.html" %}
+        </div>
     </div>
-  </div>
 
-  <div class="grid-stack-item" gs-id="chart_case_distribution" gs-x="8" gs-y="2" gs-w="4" gs-h="4" gs-min-w="3">
-    <div class="grid-stack-item-content">
-      {% include "partials/graphs/_case_distribution_chart.html" %}
+    <div class="grid-stack-item" gs-id="chart_case_distribution" gs-x="8" gs-y="2" gs-w="4" gs-h="4" gs-min-w="3">
+        <div class="grid-stack-item-content">
+            {% include "partials/graphs/_case_distribution_chart.html" %}
+        </div>
     </div>
-  </div>
 
 </div>
+<script>
+    window.IS_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};
+</script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@11.3.0/dist/gridstack-all.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard-gridstack.js') }}"></script>
 {% endblock content %}

@@ -22,11 +22,12 @@ from app.cases.routes import cases_bp
 from app.leaderboards.routes import leaderboards_bp
 from app.achievements.routes import achievements_bp
 
+def _is_flask_cli():
+    return os.environ.get("FLASK_RUN_FROM_CLI") == "true"
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
-
 
 def create_app(config_class=ConfigClass):
     """App factory for creating flask app instance"""
@@ -151,6 +152,10 @@ def _init_database(app: Flask) -> None:
     """Initialise and optionally, seed, the database"""
     with app.app_context():
         app.logger.info("Initialising database...")
+        if _is_flask_cli():
+            app.logger.info("Skipping DB seeding for Flask CLI commands")
+            return
+
         db_manager.create_tables()
 
         db_manager.seed_discord_bot_user()
