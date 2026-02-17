@@ -24,8 +24,8 @@ scav_case_service = ScavCaseService()
 @cases_bp.route("/cases/search-items")
 def search_items():
     """HTMX search route"""
-    query = request.args.get("q")
-    if len(query) < 2:
+    query = request.args.get("q", "")
+    if not query or len(query) < 2:
         return render_template("partials/_scav_case_search_item_list.html", items=[])
 
     items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
@@ -40,7 +40,7 @@ def get_global_dashboard_layout():
 @login_required
 def put_global_dashboard_layout():
     layout = (request.get_json(silent=True) or {}).get("layout")
-    scav_case_service.save_user_global_dashboard_layout(current_user.id, layout)
+    return scav_case_service.save_user_global_dashboard_layout(current_user.id, layout)
 
 @cases_bp.route("/cases/global-dashboard")
 def dashboard():
@@ -135,8 +135,11 @@ def submit_scav_case():
 
 
 @cases_bp.route("/cases/<int:scav_case_id>")
+@login_required
 def scav_case_detail(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
+    if scav_case.user_id != current_user.id:
+        abort(403)
     return render_template("scav_case_detail.html", scav_case=scav_case)
 
 

@@ -10,10 +10,11 @@ import pytesseract
 from PIL import Image, ImageFilter
 from flask import flash, current_app
 from rapidfuzz import process, fuzz
+from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
 
 from app.constants import ACHIEVEMENT_CHECKS, ACHIEVEMENT_METADATA
-from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem, UserAchievement
+from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem, UserAchievement, User
 from app.extensions import db
 
 
@@ -338,13 +339,20 @@ def calculate_avg_return_by_case_type(scav_cases):
 
 def check_achievements(user):
     """Check which achievements a user qualifies for and unlock them"""
-    unlocked_achievements = {a.achievement_name for a in user.achievements}
+    # Eagerly load scav_cases + items in 2 queries to avoid N+1 inside the lambda checks
+    user_loaded = (
+        db.session.query(User)
+        .options(selectinload(User.scav_cases).selectinload(ScavCase.items))
+        .filter(User.id == user.id)
+        .one()
+    )
+    unlocked_achievements = {a.achievement_name for a in user_loaded.achievements}
     # TODO: What if a scav case is deleted, or the items changed. Achievements should be removed
     # TODO: Create new lock_achievement (or similar) function
-    # TODO: Will need to add checks in the scav_case_service.py 
+    # TODO: Will need to add checks in the scav_case_service.py
     for achievement_name, check_func in ACHIEVEMENT_CHECKS.items():
-        if achievement_name not in unlocked_achievements and check_func(user):
-            unlock_achievement(user, achievement_name)
+        if achievement_name not in unlocked_achievements and check_func(user_loaded):
+            unlock_achievement(user_loaded, achievement_name)
 
 def unlock_achievement(user, achievement_name):
     """Unlock an achievement and store it in the database."""

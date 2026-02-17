@@ -1,3 +1,6 @@
+from flask import jsonify
+
+from app.extensions import db
 from app.services import BaseService
 from app.models import User
 

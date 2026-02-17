@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, FileField, HiddenField, SubmitField
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import SelectField, HiddenField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 
 
@@ -17,7 +18,10 @@ class CreateScavCaseForm(FlaskForm):
     )
 
     items_data = HiddenField("Items Data")
-    scav_case_image = FileField("Upload an Image")
+    scav_case_image = FileField(
+        "Upload an Image",
+        validators=[FileAllowed(["jpg", "jpeg", "png"], "Images only (jpg, png)")]
+    )
     submit = SubmitField("Submit Scav Case")
 
     def validate_items_data(form, field):

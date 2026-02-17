@@ -28,4 +28,10 @@ def session(app):
     with app.app_context():
         db.session.begin_nested()  # Start a nested transaction
         yield db.session
-        db.session.rollback()  # Rollback the transaction after each test
+        try:
+            db.session.rollback()  # Rollback the transaction after each test
+        except Exception:
+            # HTTP requests via the test client commit to the DB and release
+            # the savepoint, making rollback impossible. Clean up the session
+            # instead so the next test starts with a fresh connection.
+            db.session.remove()

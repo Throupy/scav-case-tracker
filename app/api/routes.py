@@ -9,6 +9,7 @@ from app.extensions import db
 from app.market.utils import get_price
 from app.http.responses import success_response, error_response
 from app.http.errors import ValidationError, NotFoundError
+from app.constants import SCAV_CASE_TYPES
 
 
 api_bp = Blueprint("api", __name__)
@@ -29,6 +30,9 @@ def fetch_scav_case_type_distribution():
 @api_bp.route("/api/get-chart-data")
 def get_chart_data_route():
     case_type = request.args.get("type", "all")
+
+    if case_type.lower() != "all" and case_type not in SCAV_CASE_TYPES:
+        return error_response(message="Invalid case type", error_code="VALIDATION_ERROR", status_code=422)
 
     if case_type.lower() == "all":
         scav_cases = ScavCase.query.order_by(ScavCase.created_at.desc()).limit(15).all()

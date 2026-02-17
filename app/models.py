@@ -26,7 +26,7 @@ class ScavCase(db.Model):
     _return = db.Column(db.Float, nullable=False, default=0)
     type = db.Column(db.String(50), nullable=False)
     number_of_items = db.Column(db.Integer, nullable=False, default=0)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     items = db.relationship("ScavCaseItem", backref="scav_case", cascade="all, delete")
 
     @hybrid_property
@@ -42,6 +42,7 @@ class ScavCaseItem(db.Model):
         db.String(50),
         db.ForeignKey("tarkov_item.tarkov_id", name="fk_scav_case_item_tarkov"),
         nullable=False,
+        index=True,
     )
     name = db.Column(db.String(100), nullable=False)  # item name
     amount = db.Column(db.Integer, nullable=False)  # number of that item
@@ -50,6 +51,7 @@ class ScavCaseItem(db.Model):
         db.Integer,
         db.ForeignKey("scav_case.id", name="fk_scav_case_item_scavcase"),
         nullable=False,
+        index=True,
     )  # reference to case
 
     tarkov_item = db.relationship(
@@ -62,7 +64,7 @@ class ScavCaseItem(db.Model):
 class TarkovItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)  # item name
-    tarkov_id = db.Column(db.String(50), nullable=False)
+    tarkov_id = db.Column(db.String(50), nullable=False, unique=True, index=True)
     category = db.Column(db.String(64), nullable=True)
 
 
@@ -87,7 +89,7 @@ class User(db.Model, UserMixin):
     image_file = db.Column(db.String(20), nullable=False, default="default.jpg")
     password = db.Column(db.String(60), nullable=False)
     scav_case_global_dashboard_layout = db.Column(db.JSON, nullable=True)
-    scav_cases = db.relationship("ScavCase", backref="author", lazy=True)
+    scav_cases = db.relationship("ScavCase", backref="author", lazy=True, cascade="all, delete-orphan")
     # many-to-many with TarkovItem (for market section tracking)
     tracked_items = db.relationship(
         "TarkovItem",

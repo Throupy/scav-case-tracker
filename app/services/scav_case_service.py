@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import requests
 from flask import url_for, current_app, jsonify
 from sqlalchemy.sql import func, case
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.constants import DISCORD_BOT_USER_USERNAME
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
@@ -111,9 +111,10 @@ class ScavCaseService(BaseService):
 
     def get_cases_by_type(self, case_type: str) -> List[ScavCase]:
         """Get all cases of specific type e.g. moonshine"""
+        q = self.db.session.query(ScavCase).options(selectinload(ScavCase.items))
         if case_type == "all":
-            return ScavCase.query.all()
-        return ScavCase.query.filter_by(type=case_type).all()
+            return q.all()
+        return q.filter(ScavCase.type == case_type).all()
 
     def calculate_insights_data(self, case_type: str = "all") -> Dict[str, Any]:
         """Calculate values and form structure for insights page, for a given case type"""
