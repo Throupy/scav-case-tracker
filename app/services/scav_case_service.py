@@ -36,12 +36,16 @@ class ScavCaseService(BaseService):
     def get_all_cases_paginated(
         self, page: int, per_page: int = 10,
         sort_by: str = "created_at", sort_order: str = "asc",
+        case_type: Optional[str] = None,
     ):
         """Return all ScavCases (paginated) with safe sorting, including profit sorting."""
         query = (
             self.db.session.query(ScavCase)
             .options(joinedload(ScavCase.author))  # template uses scav_case.author.*
         )
+
+        if case_type and case_type != "all":
+            query = query.filter(ScavCase.type == case_type)
 
         if sort_by == "profit":
             sort_expr = ScavCase._return - ScavCase.cost

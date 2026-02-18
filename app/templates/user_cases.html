@@ -2,19 +2,65 @@
 
 {% block content %}
 <div class="card shadow-sm mb-4">
-    <div class="card-body py-3 d-flex justify-content-between align-items-center">
+    <div class="card-body py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
 
         <h5 class="mb-0 font-weight-bold">
             {{ user.username }}'s Scav Case Returns
             <span class="small text-muted ml-2">
-                ({{ scav_cases | length }})
+                ({{ pagination.total }})
             </span>
         </h5>
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-1 px-4 d-flex justify-content-between align-items-center flex-wrap">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
+                        type="button" id="caseFilterDropdown" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
 
-        <a href="{{ url_for('users.cases_showcase', user_id=user.id) }}" class="btn btn-outline-danger btn-sm px-3">
-            <i class="fas fa-star mr-1"></i>
-            View Showcase
-        </a>
+                        {% if case_type == "all" %}
+                        <i class="fas fa-layer-group mr-2"></i> All Cases
+                        {% elif case_type == "₽2500" %}
+                        <i class="fas fa-coins mr-2"></i> ₽2,500
+                        {% elif case_type == "₽15000" %}
+                        <i class="fas fa-coins mr-2"></i> ₽15,000
+                        {% elif case_type == "₽95000" %}
+                        <i class="fas fa-coins mr-2"></i> ₽95,000
+                        {% elif case_type == "Moonshine" %}
+                        <i class="fas fa-wine-bottle mr-2"></i> Moonshine
+                        {% elif case_type == "Intelligence" %}
+                        <i class="fas fa-brain mr-2"></i> Intelligence
+                        {% endif %}
+
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                        aria-labelledby="caseFilterDropdown">
+
+                        {% set filter_types = [
+                        ("all", "All", "fa-layer-group"),
+                        ("₽2500", "₽2,500", "fa-coins"),
+                        ("₽15000", "₽15,000", "fa-coins"),
+                        ("₽95000", "₽95,000", "fa-coins"),
+                        ("Moonshine", "Moonshine", "fa-wine-bottle"),
+                        ("Intelligence", "Intelligence", "fa-brain")
+                        ] %}
+
+                        {% for value, label, icon in filter_types %}
+                        <a class="dropdown-item d-flex align-items-center {% if case_type == value %}active{% endif %}"
+                            href="{{ url_for('users.cases',
+                            user_id=user.id,
+                            case_type=value,
+                            sort_by=sort_by,
+                            sort_order=sort_order,
+                            page=1) }}">
+                            <i class="fas {{ icon }} mr-2 "></i>
+                            {{ label }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -27,7 +73,7 @@
                         <tr>
                             <th scope="col">
                                 <a class="text-reset text-decoration-none"
-                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='type', sort_order='asc' if sort_by != 'type' or sort_order == 'desc' else 'desc', page=1, case_type=case_type) }}">
                                     Type
                                     {% if sort_by == 'type' %}
                                     {% if sort_order == 'asc' %}
@@ -41,7 +87,7 @@
 
                             <th scope="col">
                                 <a class="text-reset text-decoration-none"
-                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='_return', sort_order='asc' if sort_by != '_return' or sort_order == 'desc' else 'desc', page=1, case_type=case_type) }}">
                                     Return
                                     {% if sort_by == '_return' %}
                                     {% if sort_order == 'asc' %}
@@ -55,7 +101,7 @@
 
                             <th scope="col">
                                 <a class="text-reset text-decoration-none"
-                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='profit', sort_order='asc' if sort_by != 'profit' or sort_order == 'desc' else 'desc', page=1, case_type=case_type) }}">
                                     Profit
                                     {% if sort_by == 'profit' %}
                                     {% if sort_order == 'asc' %}
@@ -69,7 +115,7 @@
 
                             <th scope="col">
                                 <a class="text-reset text-decoration-none"
-                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='number_of_items', sort_order='asc' if sort_by != 'number_of_items' or sort_order == 'desc' else 'desc', page=1, case_type=case_type) }}">
                                     Number of Items
                                     {% if sort_by == 'number_of_items' %}
                                     {% if sort_order == 'asc' %}
@@ -83,7 +129,7 @@
 
                             <th scope="col">
                                 <a class="text-reset text-decoration-none"
-                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='created_at', sort_order='asc' if sort_by != 'created_at' or sort_order == 'desc' else 'desc', page=1) }}">
+                                    href="{{ url_for('users.cases', user_id=user.id, sort_by='created_at', sort_order='asc' if sort_by != 'created_at' or sort_order == 'desc' else 'desc', page=1, case_type=case_type) }}">
                                     Submitted
                                     {% if sort_by == 'created_at' %}
                                     {% if sort_order == 'asc' %}
@@ -185,7 +231,7 @@
             <ul class="pagination mb-sm-0">
                 <!-- Previous Page -->
                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                    <a href="{{ url_for('users.cases', user_id=user.id, page=pagination.prev_num, sort_by=sort_by, sort_order=sort_order) }}"
+                    <a href="{{ url_for('users.cases', user_id=user.id, page=pagination.prev_num, sort_by=sort_by, sort_order=sort_order, case_type=case_type) }}"
                         class="page-link">
                         <i class="text-danger fa fa-chevron-left"></i>
                     </a>
@@ -195,7 +241,7 @@
                 {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if page_num %}
                 <li class="text-danger page-item {% if pagination.page == page_num %}active{% endif %}">
-                    <a href="{{ url_for('users.cases', user_id=user.id, page=page_num, sort_by=sort_by, sort_order=sort_order) }}"
+                    <a href="{{ url_for('users.cases', user_id=user.id, page=page_num, sort_by=sort_by, sort_order=sort_order, case_type=case_type) }}"
                         class="text-danger page-link">{{ page_num }}</a>
                 </li>
                 {% else %}
@@ -205,7 +251,7 @@
 
                 <!-- Next Page -->
                 <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                    <a href="{{ url_for('users.cases', user_id=user.id, page=pagination.next_num, sort_by=sort_by, sort_order=sort_order) }}"
+                    <a href="{{ url_for('users.cases', user_id=user.id, page=pagination.next_num, sort_by=sort_by, sort_order=sort_order, case_type=case_type) }}"
                         class="page-link">
                         <i class="text-danger fa fa-chevron-right"></i>
                     </a>

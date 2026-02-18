@@ -57,17 +57,19 @@ def all_scav_cases():
     page = request.args.get("page", 1, type=int)
     sort_by = request.args.get("sort_by", "created_at")
     sort_order = request.args.get("sort_order", "desc")
-    
+    case_type = request.args.get("case_type", "all")
+
     pagination = scav_case_service.get_all_cases_paginated(
-        page=page, sort_by=sort_by, sort_order=sort_order
+        page=page, sort_by=sort_by, sort_order=sort_order, case_type=case_type
     )
-    
+
     return render_template(
         "all_scav_cases.html",
         scav_cases=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
         sort_order=sort_order,
+        case_type=case_type,
     )
 
 
