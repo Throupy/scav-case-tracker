@@ -66,7 +66,7 @@ def run_query(query):
             "https://api.tarkov.dev/graphql", 
             headers={"Content-Type": "application/json"}, 
             json={"query": query},
-            timeout=(3, 10), # connect, read
+            timeout=(3, 18), # connect, read
         )
         response.raise_for_status()
         return response.json()
