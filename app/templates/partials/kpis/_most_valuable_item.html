@@ -6,21 +6,24 @@
 
                 {% if most_valuable_item %}
                 <div class="h5 mb-0 font-weight-bold text-gray-800 text-truncate" style="max-width: 200px;"
-                    data-toggle="tooltip" data-placement="top" title="{{ most_valuable_item.name }}">
+                    data-toggle="tooltip" data-placement="top"
+                    title="{{ most_valuable_item.name }}"
+                    data-kpi="most-valuable-item-name">
                     {{ most_valuable_item.name }}
                 </div>
                 {% else %}
-                <div class="h5 mb-0 font-weight-bold text-gray-800">N/A</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800" data-kpi="most-valuable-item-name">N/A</div>
                 {% endif %}
             </div>
 
             <div class="col-auto">
-                {% if most_valuable_item %}
-                <a href="{{ url_for('cases.scav_case_detail', scav_case_id=most_valuable_item.scav_case.id) }}">
+                <a href="{{ url_for('cases.scav_case_detail', scav_case_id=most_valuable_item.scav_case.id) if most_valuable_item else '#' }}"
+                   data-kpi="most-valuable-item-link">
                     <img width="40" height="40" class="mr-1 img-profile rounded-circle"
-                        src="{{ most_valuable_item | get_item_cdn_image_url }}">
+                        src="{{ (most_valuable_item | get_item_cdn_image_url) if most_valuable_item else '' }}"
+                        data-kpi="most-valuable-item-img"
+                        {% if not most_valuable_item %}style="display:none;"{% endif %}>
                 </a>
-                {% endif %}
             </div>
         </div>
     </div>

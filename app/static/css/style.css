@@ -232,3 +232,55 @@ input[type="number"] {
 .grid-stack-item[gs-id^="chart_"] .card-body {
     overflow: visible;
 }
+
+.time-range {
+  width: 180px;
+  line-height: 1;
+}
+
+.time-range-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding: 0 2px;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+
+#time-range-slider {
+  width: 100%;
+  cursor: pointer;
+}
+
+
+#time-range-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(231, 74, 59, 0.25);
+}
+#time-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #e74a3b;
+  border: 2px solid rgba(255,255,255,0.75);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+}
+
+#time-range-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(231, 74, 59, 0.25);
+}
+#time-range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #e74a3b;
+  border: 2px solid rgba(255,255,255,0.75);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+}

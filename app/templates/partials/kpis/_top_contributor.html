@@ -7,20 +7,32 @@
                 {% if top_contributor %}
                 <div class="h5 mb-0 font-weight-bold">
                     <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}"
-                        class="text-reset text-decoration-none">
-                        {{ top_contributor.username }}
+                        class="text-reset text-decoration-none"
+                        data-kpi="top-contributor-link">
+                        <span data-kpi="top-contributor-name">{{ top_contributor.username }}</span>
                     </a>
                 </div>
                 {% else %}
-                <div class="h5 mb-0 font-weight-bold text-gray-800">N/A</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    <a class="text-reset text-decoration-none" data-kpi="top-contributor-link">
+                        <span data-kpi="top-contributor-name">N/A</span>
+                    </a>
+                </div>
                 {% endif %}
             </div>
 
             <div class="col-auto">
                 {% if top_contributor %}
-                <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}">
+                <a href="{{ url_for('users.cases', user_id=top_contributor.id) }}" data-kpi="top-contributor-link">
                     <img width="36" height="36" class="mr-1 img-profile rounded-circle"
-                        src="{{ url_for('static', filename='profile_pics/' + top_contributor.image_file) }}">
+                        src="{{ url_for('static', filename='profile_pics/' + top_contributor.image_file) }}"
+                        data-kpi="top-contributor-img">
+                </a>
+                {% else %}
+                <a data-kpi="top-contributor-link">
+                    <img width="36" height="36" class="mr-1 img-profile rounded-circle"
+                        src="{{ url_for('static', filename='profile_pics/default.jpg') }}"
+                        data-kpi="top-contributor-img" style="display:none;">
                 </a>
                 {% endif %}
             </div>

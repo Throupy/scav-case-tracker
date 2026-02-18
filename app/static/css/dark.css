@@ -270,44 +270,53 @@ html.dark .modal-content {
     background-color: #151924 !important;
     border-color: #2a3142 !important;
     color: #e6e6e6 !important;
-  }
-  
-  html.dark .modal-header,
-  html.dark .modal-footer {
+}
+
+html.dark .modal-header,
+html.dark .modal-footer {
     border-color: #2a3142 !important;
-  }
-  
-  html.dark .modal-title {
+}
+
+html.dark .modal-title {
     color: #e6e6e6 !important;
-  }
-  
-  html.dark .modal .close,
-  html.dark .modal .close span {
+}
+
+html.dark .modal .close,
+html.dark .modal .close span {
     color: #e6e6e6 !important;
     text-shadow: none !important;
     opacity: 0.8;
-  }
-  
-  html.dark .modal .close:hover {
+}
+
+html.dark .modal .close:hover {
     opacity: 1;
-  }
-  
-  html.dark .modal-backdrop.show {
+}
+
+html.dark .modal-backdrop.show {
     opacity: 0.7;
-  }
-  
-  html.dark .modal .form-control {
+}
+
+html.dark .modal .form-control {
     background-color: #0f1115 !important;
     border-color: #2a3142 !important;
     color: #e6e6e6 !important;
-  }
-  
-  html.dark .modal .form-control::placeholder {
+}
+
+html.dark .modal .form-control::placeholder {
     color: rgba(230, 230, 230, 0.55) !important;
-  }
-  
-  html.dark .modal .list-group-item {
+}
+
+html.dark .modal .list-group-item {
     background-color: #151924 !important;
     border-color: #2a3142 !important;
-    color:
-  
+}
+
+html.dark #time-range-slider::-webkit-slider-runnable-track,
+html.dark #time-range-slider::-moz-range-track {
+    background: rgba(231, 74, 59, 0.35);
+}
+
+html.dark #time-range-slider::-webkit-slider-thumb,
+html.dark #time-range-slider::-moz-range-thumb {
+    border-color: rgba(18, 22, 34, 0.9);
+}

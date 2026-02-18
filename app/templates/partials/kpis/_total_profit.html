@@ -3,13 +3,14 @@
         <div class="row no-gutters align-items-center">
             <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Profit</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(total_profit | int) }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800" data-kpi="total-profit">₽{{ "{:,}".format(total_profit | int) }}</div>
             </div>
             <div class="col-auto">
-                {% if total_profit | int < 0 %} <i class="fas text-danger fa-dollar-sign fa-2x"></i>
-                    {% else %}
-                    <i class="fas text-success fa-dollar-sign fa-2x"></i>
-                    {% endif %}
+                {% if total_profit | int < 0 %}
+                <i class="fas fa-dollar-sign fa-2x text-danger" data-kpi="profit-icon"></i>
+                {% else %}
+                <i class="fas fa-dollar-sign fa-2x text-success" data-kpi="profit-icon"></i>
+                {% endif %}
             </div>
         </div>
     </div>

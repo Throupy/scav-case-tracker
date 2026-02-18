@@ -2,23 +2,56 @@
 
 {% block content %}
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
-        <div>
-            <h4 class="mb-0">Global Dashboard</h4>
-        </div>
-        <div class="d-flex align-items-center">
-            {% if current_user.is_authenticated %}
-            <button id="toggle-layout-btn" type="button" class="btn btn-outline-danger btn-sm px-3 shadow-sm mr-2">
-                Unlock layout
-            </button>
-            {% endif %}
+    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="mb-0">Global Dashboard</h4>
 
-            <a href="{{ url_for('main.not_implemented') }}"
-                class="btn btn-outline-danger btn-sm px-4 shadow-sm d-flex align-items-center">
-                <i class="fas fa-download mr-2"></i>
-                Export
-            </a>
-        </div>
+
+        <div class="d-flex align-items-center flex-wrap">
+
+  <div class="d-flex align-items-center mr-3 mb-2 mb-md-0">
+
+    <div class="d-flex align-items-center text-muted mr-2">
+      <span class="small font-weight-bold" style="min-width: 72px; text-align: right;">
+        <span id="time-range-label">All Time</span>
+      </span>
+    </div>
+
+    <div class="time-range">
+      <input
+        type="range"
+        id="time-range-slider"
+        class="custom-range"
+        min="0" max="4" step="1" value="4"
+        aria-label="Time range"
+      />
+
+      <div class="time-range-ticks small text-muted">
+        <span>7d</span>
+        <span>30d</span>
+        <span>90d</span>
+        <span>1Y</span>
+        <span>All</span>
+      </div>
+    </div>
+
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <button id="toggle-layout-btn" type="button"
+          class="btn btn-outline-danger btn-sm px-3 shadow-sm mr-2 mb-2 mb-md-0">
+    Unlock layout
+  </button>
+  {% endif %}
+
+  <a href="{{ url_for('main.not_implemented') }}"
+     class="btn btn-outline-danger btn-sm px-4 shadow-sm d-flex align-items-center mb-2 mb-md-0">
+    <i class="fas fa-download mr-2"></i>
+    Export
+  </a>
+
+</div>
+
+
     </div>
 </div>
 
@@ -86,6 +119,102 @@
 </div>
 <script>
     window.IS_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};
+
+    // Set before chart DOMContentLoaded handlers run so they read the correct initial value.
+    window.dashboardDays = 0; // 0 = all-time (default)
+
+    (function () {
+        const STEPS  = [7, 30, 90, 365, 0];
+        const LABELS = ['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'Last 1 Year', 'All Time'];
+
+        const slider = document.getElementById('time-range-slider');
+        const label  = document.getElementById('time-range-label');
+        if (!slider) return;
+
+        let debounceTimer;
+        slider.addEventListener('input', function () {
+            const idx = parseInt(this.value, 10);
+            window.dashboardDays = STEPS[idx];
+            label.textContent    = LABELS[idx];
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () {
+                document.dispatchEvent(
+                    new CustomEvent('dashboard:time-changed', { detail: { days: STEPS[idx] } })
+                );
+            }, 350);
+        });
+    })();
+
+    // --- KPI refresh ---
+    (function () {
+        function fmt(n) {
+            return '₽' + Math.round(n).toLocaleString('en-US');
+        }
+        function setText(selector, value) {
+            var el = document.querySelector(selector);
+            if (el) el.textContent = value;
+        }
+
+        async function refreshKpis(days) {
+            var url = '/api/dashboard-kpis' + (days > 0 ? '?days=' + days : '');
+            try {
+                var resp = await fetch(url);
+                var json = await resp.json();
+                var d    = json.data;
+
+                setText('[data-kpi="total-cases"]',               d.total_cases + ' Cases');
+                setText('[data-kpi="total-profit"]',              fmt(d.total_profit));
+                setText('[data-kpi="total-spent"]',               fmt(d.total_cost));
+                setText('[data-kpi="total-return"]',              fmt(d.total_return));
+                setText('[data-kpi="most-popular-category"]',     d.most_popular_category     || 'N/A');
+                setText('[data-kpi="most-profitable-case-type"]', d.most_profitable_case_type || 'N/A');
+
+                // Profit icon colour
+                var profitIcon = document.querySelector('[data-kpi="profit-icon"]');
+                if (profitIcon) {
+                    profitIcon.classList.toggle('text-danger', d.total_profit < 0);
+                    profitIcon.classList.toggle('text-success', d.total_profit >= 0);
+                }
+
+                // Top contributor
+                var tc = d.top_contributor;
+                var tcName  = document.querySelector('[data-kpi="top-contributor-name"]');
+                var tcImg   = document.querySelector('[data-kpi="top-contributor-img"]');
+                var tcLinks = document.querySelectorAll('[data-kpi="top-contributor-link"]');
+                if (tc) {
+                    if (tcName) tcName.textContent = tc.username;
+                    var tcHref = '/users/' + tc.id + '/cases';
+                    tcLinks.forEach(function (a) { a.href = tcHref; });
+                    if (tcImg) { tcImg.src = '/static/profile_pics/' + tc.image_file; tcImg.style.display = ''; }
+                } else {
+                    if (tcName) tcName.textContent = 'N/A';
+                    if (tcImg)  tcImg.style.display = 'none';
+                    tcLinks.forEach(function (a) { a.removeAttribute('href'); });
+                }
+
+                // Most valuable item
+                var mvi     = d.most_valuable_item;
+                var mviName = document.querySelector('[data-kpi="most-valuable-item-name"]');
+                var mviImg  = document.querySelector('[data-kpi="most-valuable-item-img"]');
+                var mviLink = document.querySelector('[data-kpi="most-valuable-item-link"]');
+                if (mvi) {
+                    if (mviName) { mviName.textContent = mvi.name; mviName.title = mvi.name; }
+                    if (mviImg)  { mviImg.src = mvi.image_url; mviImg.style.display = ''; }
+                    if (mviLink)   mviLink.href = '/cases/' + mvi.scav_case_id;
+                } else {
+                    if (mviName) mviName.textContent = 'N/A';
+                    if (mviImg)  mviImg.style.display = 'none';
+                    if (mviLink) mviLink.removeAttribute('href');
+                }
+            } catch (e) {
+                console.error('Error refreshing KPIs:', e);
+            }
+        }
+
+        document.addEventListener('dashboard:time-changed', function (e) {
+            refreshKpis(e.detail.days);
+        });
+    })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@11.3.0/dist/gridstack-all.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard-gridstack.js') }}"></script>

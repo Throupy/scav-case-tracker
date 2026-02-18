@@ -95,7 +95,10 @@
     }
 
     async function fetchChartData() {
-        const resp = await fetch(`/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`);
+        const days = window.dashboardDays || 0;
+        let url = `/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`;
+        if (days > 0) url += `&days=${days}`;
+        const resp = await fetch(url);
         const json = await resp.json();
         return json.data;
     }
@@ -305,6 +308,10 @@
         applyChartTheme(recentEarningsChart);
         document.addEventListener("theme:changed", function () {
             applyChartTheme(recentEarningsChart);
+        });
+
+        document.addEventListener("dashboard:time-changed", function () {
+            updateChart(selectedCaseType);
         });
 
         updateChart('All');
