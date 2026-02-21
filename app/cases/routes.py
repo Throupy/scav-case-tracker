@@ -140,8 +140,6 @@ def submit_scav_case():
 @login_required
 def scav_case_detail(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
-    if scav_case.user_id != current_user.id:
-        abort(403)
     return render_template("scav_case_detail.html", scav_case=scav_case)
 
 
