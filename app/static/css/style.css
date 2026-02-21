@@ -210,7 +210,10 @@ input[type="number"] {
     color: #f56e6e !important;
 }
 
-.btn-outline-danger:hover {
+.btn-outline-danger:hover,
+.btn-outline-danger:not(:disabled):not(.disabled):active,
+.btn-outline-danger:not(:disabled):not(.disabled).active,
+.show > .btn-outline-danger.dropdown-toggle {
     color: #ffffff !important;
 }
 
@@ -233,8 +236,26 @@ input[type="number"] {
     overflow: visible;
 }
 
+.dashboard-controls-panel {
+    min-width: 264px;
+    padding: 1rem;
+}
+
+.dashboard-panel-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #adb5bd;
+    margin: 0 0 0.4rem 0;
+}
+
+.dashboard-controls-panel .time-range {
+    width: 100%;
+}
+
 .time-range {
-  width: 180px;
+  width: 200px;
   line-height: 1;
 }
 

@@ -184,7 +184,6 @@ html.dark .project-list-table thead th {
     border-bottom: 1px solid #2a3142 !important;
 }
 
-/* Links in header (you use text-reset) */
 html.dark .project-list-table thead a.text-reset {
     color: #b7bfd1 !important;
 }
@@ -319,4 +318,12 @@ html.dark #time-range-slider::-moz-range-track {
 html.dark #time-range-slider::-webkit-slider-thumb,
 html.dark #time-range-slider::-moz-range-thumb {
     border-color: rgba(18, 22, 34, 0.9);
+}
+
+html.dark .dashboard-panel-label {
+    color: rgba(183, 191, 209, 0.55);
+}
+
+html.dark .dropdown-divider {
+    border-top-color: #2a3142 !important;
 }

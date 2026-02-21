@@ -1,25 +1,6 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-danger">Earnings Overview - 15 Most Recent Cases</h6>
-
-        <div class="dropdown no-arrow">
-            <a class="text-reset dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
-                <span id="selected-case-type">All</span>
-                <i class="fas fa-caret-down fa-sm fa-fw text-gray-400 ml-2"></i>
-            </a>
-
-            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                <div class="dropdown-header">Case Type:</div>
-
-                <a class="dropdown-item" href="javascript:void(0);" data-case-type="All">All</a>
-                <div class="dropdown-divider"></div>
-
-                {% for type in scav_case_types %}
-                <a class="dropdown-item" href="javascript:void(0);" data-case-type="{{ type }}">{{ type }}</a>
-                {% endfor %}
-            </div>
-        </div>
     </div>
 
     <div id="warning-message" class="alert alert-warning d-none" role="alert">
@@ -35,17 +16,12 @@
 
 <script>
     let recentEarningsChart;
-    let selectedCaseType = 'All';
 
     const FIXED_COST_THRESHOLDS = {
         '₽2500': 2500,
         '₽15000': 15000,
         '₽95000': 95000
     };
-
-    function toProperCase(str) {
-        return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-    }
 
     function number_format(number, decimals, dec_point, thousands_sep) {
         number = (number + '').replace(',', '').replace(' ', '');
@@ -65,10 +41,6 @@
             s[1] += new Array(prec - s[1].length + 1).join('0');
         }
         return s.join(dec);
-    }
-
-    function updateSelectedLabel() {
-        document.getElementById('selected-case-type').textContent = toProperCase(selectedCaseType);
     }
 
     function isDarkMode() {
@@ -96,7 +68,8 @@
 
     async function fetchChartData() {
         const days = window.dashboardDays || 0;
-        let url = `/api/get-chart-data?type=${encodeURIComponent(selectedCaseType)}`;
+        const caseType = window.dashboardCaseType || 'all';
+        let url = `/api/get-chart-data?type=${encodeURIComponent(caseType)}`;
         if (days > 0) url += `&days=${days}`;
         const resp = await fetch(url);
         const json = await resp.json();
@@ -117,8 +90,9 @@
 
     function applyChartData(data) {
         const scavCases = data.scav_cases || [];
-        const isFixedCostType = Object.prototype.hasOwnProperty.call(FIXED_COST_THRESHOLDS, selectedCaseType);
-        const threshold = isFixedCostType ? FIXED_COST_THRESHOLDS[selectedCaseType] : null;
+        const caseType = window.dashboardCaseType || 'all';
+        const isFixedCostType = Object.prototype.hasOwnProperty.call(FIXED_COST_THRESHOLDS, caseType);
+        const threshold = isFixedCostType ? FIXED_COST_THRESHOLDS[caseType] : null;
 
         if (scavCases.length < 3) {
             setWarningVisible(true);
@@ -148,10 +122,7 @@
         recentEarningsChart.update();
     }
 
-    async function updateChart(caseType) {
-        selectedCaseType = caseType;
-        updateSelectedLabel();
-
+    async function updateChart() {
         try {
             const data = await fetchChartData();
             applyChartData(data);
@@ -161,10 +132,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll('.dropdown-item[data-case-type]').forEach(item => {
-            item.addEventListener('click', () => updateChart(item.dataset.caseType));
-        });
-
         const ctx = document.getElementById("recentEarningsChart").getContext("2d");
 
         recentEarningsChart = new Chart(ctx, {
@@ -310,11 +277,10 @@
             applyChartTheme(recentEarningsChart);
         });
 
-        document.addEventListener("dashboard:time-changed", function () {
-            updateChart(selectedCaseType);
-        });
+        document.addEventListener("dashboard:time-changed", updateChart);
+        document.addEventListener("dashboard:case-type-changed", updateChart);
 
-        updateChart('All');
+        updateChart();
     });
 
 </script>

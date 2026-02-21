@@ -52,7 +52,6 @@
     function removeOrphans() {
         document.querySelectorAll(".grid-stack-item").forEach(el => {
             const id = el.getAttribute("gs-id");
-            // remove any placeholder/empty nodes with no id
             if (!id) grid.removeWidget(el);
         });
     }
@@ -89,7 +88,10 @@
             grid.enableMove(!locked);
             grid.enableResize(!locked);
             if (btn) {
-                btn.textContent = locked ? "Unlock layout" : "Lock layout";
+                const icon  = document.getElementById("toggle-layout-icon");
+                const label = document.getElementById("toggle-layout-label");
+                if (icon)  icon.className  = "fas " + (locked ? "fa-lock-open" : "fa-lock") + " fa-sm mr-2";
+                if (label) label.textContent = locked ? "Unlock layout" : "Lock layout";
             }
         }
 

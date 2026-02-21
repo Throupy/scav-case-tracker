@@ -71,12 +71,17 @@ def get_chart_data_route():
         message="Chart data fetched",
     )
 
-# queried by dashboard KPI cards when the time-range slider changes
+# queried by dashboard KPI cards when the time-range slider or case-type dropdown changes
 @api_bp.route("/api/dashboard-kpis")
 def dashboard_kpis():
     days = request.args.get("days", 0, type=int)
+    case_type = request.args.get("case_type", "all")
     since = _since_date(days)
-    data = _scav_case_service.generate_dashboard_data(since_date=since)
+
+    if case_type.lower() != "all" and case_type not in SCAV_CASE_TYPES:
+        return error_response(message="Invalid case type", error_code="VALIDATION_ERROR", status_code=422)
+
+    data = _scav_case_service.generate_dashboard_data(since_date=since, case_type=case_type)
 
     tc = data["top_contributor"]
     mvi = data["most_valuable_item"]

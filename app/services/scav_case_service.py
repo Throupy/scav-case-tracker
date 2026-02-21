@@ -282,14 +282,14 @@ class ScavCaseService(BaseService):
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
     # TODO: Maybe split this into a DashboardService
-    def generate_dashboard_data(self, since_date=None):
+    def generate_dashboard_data(self, since_date=None, case_type: str = None):
         """Compute all dashboard metrics dynamically."""
         return {
-            **self._get_totals(since_date=since_date), # total spent, total return, number of cases, and profit
-            "most_popular_category": self._get_most_popular_category_name(since_date=since_date),
-            "top_contributor": self._get_top_contributor(since_date=since_date),
-            "most_profitable_case_type": self._get_most_profitable_case_type_name(since_date=since_date),
-            "most_valuable_item": self._get_most_valuable_item(since_date=since_date),
+            **self._get_totals(since_date=since_date, case_type=case_type), # total spent, total return, number of cases, and profit
+            "most_popular_category": self._get_most_popular_category_name(since_date=since_date, case_type=case_type),
+            "top_contributor": self._get_top_contributor(since_date=since_date, case_type=case_type),
+            "most_profitable_case_type": self._get_most_profitable_case_type_name(since_date=since_date, case_type=case_type),
+            "most_valuable_item": self._get_most_valuable_item(since_date=since_date, case_type=case_type),
         }
 
     def save_user_global_dashboard_layout(self, user_id, layout):
@@ -404,7 +404,7 @@ class ScavCaseService(BaseService):
             .all()
         )
 
-    def _get_totals(self, user_id: int = None, since_date=None) -> dict:
+    def _get_totals(self, user_id: int = None, since_date=None, case_type: str = None) -> dict:
         q = self.db.session.query(
             func.count(ScavCase.id),
             func.coalesce(func.sum(ScavCase.cost), 0),
@@ -416,6 +416,8 @@ class ScavCaseService(BaseService):
             q = q.filter(ScavCase.user_id == user_id)
         if since_date is not None:
             q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
 
         total_cases, total_cost, total_return, total_profit = q.one()
 
@@ -426,7 +428,7 @@ class ScavCaseService(BaseService):
             "total_profit": float(total_profit),
         }
 
-    def _get_most_popular_category_name(self, user_id: int = None, since_date=None) -> str | None:
+    def _get_most_popular_category_name(self, user_id: int = None, since_date=None, case_type: str = None) -> str | None:
         """Most popular item category by count of items (not quantity), optionally per-user."""
         q = (
             self.db.session.query(TarkovItem.category)
@@ -434,12 +436,15 @@ class ScavCaseService(BaseService):
             .filter(TarkovItem.category.isnot(None))
         )
 
-        if user_id is not None or since_date is not None:
+        needs_case_join = user_id is not None or since_date is not None or (case_type and case_type.lower() != 'all')
+        if needs_case_join:
             q = q.join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
             if user_id is not None:
                 q = q.filter(ScavCase.user_id == user_id)
             if since_date is not None:
                 q = q.filter(ScavCase.created_at >= since_date)
+            if case_type and case_type.lower() != 'all':
+                q = q.filter(ScavCase.type == case_type)
 
         return (
             q.group_by(TarkovItem.category)
@@ -448,7 +453,7 @@ class ScavCaseService(BaseService):
             .scalar()
         )
 
-    def _get_most_profitable_case_type_name(self, user_id: int = None, since_date=None) -> str | None:
+    def _get_most_profitable_case_type_name(self, user_id: int = None, since_date=None, case_type: str = None) -> str | None:
         """Most profitable case type by average profit per run (optionally per-user)."""
         q = self.db.session.query(ScavCase.type)
 
@@ -456,6 +461,8 @@ class ScavCaseService(BaseService):
             q = q.filter(ScavCase.user_id == user_id)
         if since_date is not None:
             q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
 
         return (
             q.group_by(ScavCase.type)
@@ -468,27 +475,32 @@ class ScavCaseService(BaseService):
         )
 
 
-    def _get_most_valuable_item(self, user_id: int = None, since_date=None) -> ScavCaseItem | None:
+    def _get_most_valuable_item(self, user_id: int = None, since_date=None, case_type: str = None) -> ScavCaseItem | None:
         """Most valuable single item (optionally per-user)."""
         q = (
             self.db.session.query(ScavCaseItem)
             .options(joinedload(ScavCaseItem.scav_case))
         )
 
-        if user_id is not None or since_date is not None:
+        needs_case_join = user_id is not None or since_date is not None or (case_type and case_type.lower() != 'all')
+        if needs_case_join:
             q = q.join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
             if user_id is not None:
                 q = q.filter(ScavCase.user_id == user_id)
             if since_date is not None:
                 q = q.filter(ScavCase.created_at >= since_date)
+            if case_type and case_type.lower() != 'all':
+                q = q.filter(ScavCase.type == case_type)
 
         return q.order_by(ScavCaseItem.price.desc(), ScavCaseItem.id.desc()).first()
 
-    def _get_top_contributor(self, since_date=None) -> User | None:
+    def _get_top_contributor(self, since_date=None, case_type: str = None) -> User | None:
         """Find the user who submitted the most scav cases globally."""
         q = self.db.session.query(ScavCase.user_id).group_by(ScavCase.user_id)
         if since_date is not None:
             q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
         top_user_id = (
             q.order_by(func.count(ScavCase.id).desc(), ScavCase.user_id.asc())
             .limit(1)
