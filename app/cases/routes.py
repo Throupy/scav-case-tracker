@@ -7,7 +7,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from flask_login import login_required, current_user
 
 from app.models import ScavCase, ScavCaseItem, TarkovItem
-from app.constants import SCAV_CASE_TYPES
+from app.constants import SCAV_CASE_TYPES, CLOUDINARY_BASE_URL
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
 from app.cases.utils import is_discord_bot_request
 from app.services.scav_case_service import ScavCaseService
@@ -50,6 +50,49 @@ def dashboard():
     return render_template(
         "dashboard.html", **dashboard_data
     )
+
+@cases_bp.route("/cases/items")
+@login_required
+def cases_items():
+    page = request.args.get("page", 1, type=int)
+    case_type = request.args.get("case_type", "all")
+    search = request.args.get("search", "").strip()
+    sort_order = request.args.get("sort_order", "desc")
+
+    if case_type.lower() != "all" and case_type not in SCAV_CASE_TYPES:
+        abort(422)
+    if sort_order not in ("asc", "desc"):
+        sort_order = "desc"
+
+    pagination = scav_case_service.get_item_frequency_paginated(
+        case_type=case_type, page=page, per_page=10, search=search, sort_order=sort_order
+    )
+
+    items = [
+        {
+            "tarkov_id": row.tarkov_id,
+            "name": row.name,
+            "category": row.category,
+            "times_found": int(row.times_found),
+            "last_case_id": int(row.last_case_id),
+            "image_url": f"{CLOUDINARY_BASE_URL}{row.tarkov_id}.webp",
+        }
+        for row in pagination.items
+    ]
+
+    ctx = dict(
+        items=items,
+        pagination=pagination,
+        case_type=case_type,
+        search=search,
+        sort_order=sort_order,
+    )
+
+    if request.headers.get("HX-Request"):
+        return render_template("partials/_cases_items_list.html", **ctx)
+
+    return render_template("cases_items.html", **ctx)
+
 
 @cases_bp.route("/cases/all", methods=["GET"])
 @login_required

@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="mb-0">Found Items</h4>
+
+        <div class="d-flex align-items-center" style="gap: 0.5rem;">
+
+            <div class="input-group input-group-sm shadow-sm" style="width: 220px;">
+                <div class="input-group-prepend">
+                    <span class="input-group-text border-right-0">
+                        <i class="fas fa-search fa-sm text-muted"></i>
+                    </span>
+                </div>
+                <input type="text"
+                       id="search-input"
+                       name="search"
+                       class="form-control border-left-0"
+                       placeholder="Search items..."
+                       value="{{ search }}"
+                       autocomplete="off"
+                       hx-get="{{ url_for('cases.cases_items') }}"
+                       hx-trigger="input changed delay:300ms"
+                       hx-target="#items-card"
+                       hx-swap="innerHTML"
+                       hx-include="#case-type-hidden, #sort-order-hidden"
+                       hx-push-url="true">
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
+                        type="button" id="caseFilterDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% if case_type == "all" %}
+                        <i class="fas fa-layer-group mr-2"></i> All Cases
+                    {% elif case_type == "₽2500" %}
+                        <i class="fas fa-coins mr-2"></i> ₽2,500
+                    {% elif case_type == "₽15000" %}
+                        <i class="fas fa-coins mr-2"></i> ₽15,000
+                    {% elif case_type == "₽95000" %}
+                        <i class="fas fa-coins mr-2"></i> ₽95,000
+                    {% elif case_type == "Moonshine" %}
+                        <i class="fas fa-wine-bottle mr-2"></i> Moonshine
+                    {% elif case_type == "Intelligence" %}
+                        <i class="fas fa-folder mr-2"></i> Intelligence
+                    {% endif %}
+                </button>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                     aria-labelledby="caseFilterDropdown">
+                    {% set filter_types = [
+                        ("all",          "All Cases",    "fa-layer-group"),
+                        ("₽2500",        "₽2,500",       "fa-coins"),
+                        ("₽15000",       "₽15,000",      "fa-coins"),
+                        ("₽95000",       "₽95,000",      "fa-coins"),
+                        ("Moonshine",    "Moonshine",    "fa-wine-bottle"),
+                        ("Intelligence", "Intelligence", "fa-folder"),
+                    ] %}
+                    {% for value, label, icon in filter_types %}
+                    <a class="dropdown-item d-flex align-items-center {% if case_type == value %}active{% endif %}"
+                       href="#"
+                       hx-get="{{ url_for('cases.cases_items') }}?case_type={{ value }}"
+                       hx-include="#search-input, #sort-order-hidden"
+                       hx-target="#items-card"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">
+                        <i class="fas {{ icon }} mr-2"></i>{{ label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="items-card" class="card shadow mb-4">
+    {% include 'partials/_cases_items_list.html' %}
+</div>
+
+{% endblock content %}

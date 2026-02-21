@@ -86,9 +86,20 @@ html.dark .table th {
     border-top-color: #2a3142;
 }
 
+html.dark .market-item-row.border-bottom,
+html.dark .market-col-header {
+    border-bottom-color: #2a3142 !important;
+}
+
 html.dark .form-control,
 html.dark #selected-item-list .form-control {
     background-color: #0f1115 !important;
+    border-color: #2a3142 !important;
+    color: #e6e6e6 !important;
+}
+
+html.dark .input-group-text {
+    background-color: #151924 !important;
     border-color: #2a3142 !important;
     color: #e6e6e6 !important;
 }

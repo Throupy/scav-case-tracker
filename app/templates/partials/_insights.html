@@ -1,6 +1,6 @@
 <div class="row mb-4">
     <div class="col-md-6">
-        <div class="card shadow mb-4">
+        <div class="card shadow mb-4 h-100">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-danger">
                     {% if case_type == "all" %}
@@ -10,8 +10,8 @@
                     {% endif %}
                 </h6>
             </div>
-            <div class="card-body">
-                <div class="chart-area">
+            <div class="card-body d-flex flex-column">
+                <div class="chart-area flex-grow-1">
                     {% if case_type == "all" %}
                     <canvas id="avgReturnChart"></canvas>
                     {% else %}
@@ -100,14 +100,14 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row mb-4">
     <div class="col-md-6">
-        <div class="card shadow mb-4">
+        <div class="card shadow mb-4 h-100">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution ({{ case_type.title() }} Cases)</h6>
             </div>
-            <div class="card-body">
-                <div class="chart-area">
+            <div class="card-body d-flex flex-column">
+                <div class="chart-area flex-grow-1">
                     <canvas id="itemCategoryChart"></canvas>
                 </div>
             </div>

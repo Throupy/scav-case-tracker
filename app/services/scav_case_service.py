@@ -120,6 +120,49 @@ class ScavCaseService(BaseService):
             return q.all()
         return q.filter(ScavCase.type == case_type).all()
 
+    def get_item_frequency_paginated(
+        self,
+        case_type: str = "all",
+        page: int = 1,
+        per_page: int = 10,
+        search: str = "",
+        sort_order: str = "desc",
+    ):
+        """
+        Return paginated item occurrence-counts aggregated across all scav cases.
+        'Occurrences' = number of scav case rows the item appeared in (not total quantity).
+        Each row: tarkov_id, name, category, times_found, last_case_id.
+        Single query — no N+1.
+        """
+        q = (
+            self.db.session.query(
+                ScavCaseItem.tarkov_id,
+                ScavCaseItem.name,
+                TarkovItem.category,
+                func.count(ScavCaseItem.id).label("times_found"),
+                func.max(ScavCaseItem.scav_case_id).label("last_case_id"),
+            )
+            .join(TarkovItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id, isouter=True)
+        )
+
+        if case_type and case_type.lower() != "all":
+            q = q.join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
+            q = q.filter(ScavCase.type == case_type)
+
+        if search:
+            q = q.filter(ScavCaseItem.name.ilike(f"%{search}%"))
+
+        sort_expr = func.count(ScavCaseItem.id)
+        q = (
+            q.group_by(ScavCaseItem.tarkov_id, ScavCaseItem.name, TarkovItem.category)
+            .order_by(
+                sort_expr.asc() if sort_order == "asc" else sort_expr.desc(),
+                ScavCaseItem.name.asc(),
+            )
+        )
+
+        return q.paginate(page=page, per_page=per_page, error_out=False)
+
     def calculate_insights_data(self, case_type: str = "all") -> Dict[str, Any]:
         """Calculate values and form structure for insights page, for a given case type"""
 

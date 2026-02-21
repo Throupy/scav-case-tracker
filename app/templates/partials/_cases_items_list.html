@@ -1,0 +1,110 @@
+{#
+  sort_order hidden input lives in this partial so it always reflects the current
+  sort after every HTMX swap. #search-input and #case-filter (in the full page)
+  reference it via hx-include="#sort-order-hidden".
+#}
+<input type="hidden" id="sort-order-hidden" name="sort_order" value="{{ sort_order }}">
+<input type="hidden" id="case-type-hidden" name="case_type" value="{{ case_type }}">
+
+{% set new_sort = 'asc' if sort_order == 'desc' else 'desc' %}
+{% set case_label = 'All Cases' if case_type == 'all' else (case_type + ' Cases') %}
+
+<div class="card-header py-3 d-flex align-items-center justify-content-between">
+    <h6 class="m-0 font-weight-bold text-danger">
+        Items Found &mdash; {{ case_label }}
+    </h6>
+    <small class="text-muted">
+        {{ pagination.total }} unique item{% if pagination.total != 1 %}s{% endif %}
+        &nbsp;&middot;&nbsp;
+        occurrences = per case, not total quantity
+    </small>
+</div>
+
+{% if items %}
+<table class="table table-hover mb-0">
+    <thead>
+        <tr>
+            <th style="width: 56px;"></th>
+            <th>Item</th>
+            <th class="text-right">
+                <a href="#"
+                   hx-get="{{ url_for('cases.cases_items') }}?sort_order={{ new_sort }}"
+                   hx-include="#case-type-hidden, #search-input"
+                   hx-target="#items-card"
+                   hx-swap="innerHTML"
+                   hx-push-url="true"
+                   style="text-decoration: none; color: inherit;"
+                   title="Sort {{ 'ascending' if sort_order == 'desc' else 'descending' }}">
+                    Occurrences
+                    <i class="fas fa-sort-{{ 'down' if sort_order == 'desc' else 'up' }} ml-1"></i>
+                </a>
+            </th>
+            <th>Last Seen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td class="align-middle py-2 pl-3">
+                <img src="{{ item.image_url }}"
+                     alt="{{ item.name }}"
+                     width="40" height="40"
+                     style="object-fit: contain;"
+                     onerror="this.style.visibility='hidden'">
+            </td>
+            <td class="align-middle">{{ item.name }}</td>
+            <td class="text-right align-middle font-weight-bold">{{ item.times_found }}</td>
+            <td class="align-middle">
+                <a href="{{ url_for('cases.scav_case_detail', scav_case_id=item.last_case_id) }}"
+                   class="badge badge-soft-danger"
+                   style="font-size: 0.8em; font-weight: 500; padding: 0.3em 0.6em;">Case #{{ item.last_case_id }}</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if pagination.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center px-3 py-2 border-top small">
+    <span class="text-muted">
+        {{ (pagination.page - 1) * 10 + 1 }}–{{ [pagination.page * 10, pagination.total] | min }}
+        of {{ pagination.total }}
+    </span>
+    <nav aria-label="Item list pagination">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link"
+                   {% if pagination.has_prev %}
+                   hx-get="{{ url_for('cases.cases_items') }}?page={{ pagination.prev_num }}"
+                   hx-include="#case-type-hidden, #search-input, #sort-order-hidden"
+                   hx-target="#items-card"
+                   hx-swap="innerHTML"
+                   hx-push-url="true"
+                   href="{{ url_for('cases.cases_items') }}?page={{ pagination.prev_num }}&case_type={{ case_type }}&sort_order={{ sort_order }}"
+                   {% endif %}>Previous</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">{{ pagination.page }} / {{ pagination.pages }}</span>
+            </li>
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link"
+                   {% if pagination.has_next %}
+                   hx-get="{{ url_for('cases.cases_items') }}?page={{ pagination.next_num }}"
+                   hx-include="#case-type-hidden, #search-input, #sort-order-hidden"
+                   hx-target="#items-card"
+                   hx-swap="innerHTML"
+                   hx-push-url="true"
+                   href="{{ url_for('cases.cases_items') }}?page={{ pagination.next_num }}&case_type={{ case_type }}&sort_order={{ sort_order }}"
+                   {% endif %}>Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="fas fa-search fa-2x mb-3 d-block" style="opacity: 0.3;"></i>
+    <p class="mb-0">No items found{% if search %} matching &ldquo;{{ search }}&rdquo;{% endif %}.</p>
+</div>
+{% endif %}

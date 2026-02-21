@@ -3,98 +3,58 @@
 {% set avg = p.get("avg") if p else None %}
 {% set low = p.get("low") if p else None %}
 {% set high = p.get("high") if p else None %}
+{% set best = p.get("price") if p else None %}
 {% set vendor = p.get("vendor") if p else None %}
 
-<div class="col-12 mb-2">
-  <div class="card shadow-sm border-0">
-    <div class="row g-0 align-items-center">
-
-      <div class="col-1 d-flex justify-content-center align-items-center p-2">
+<div class="d-flex align-items-center px-3 py-2 {% if not loop.last %}border-bottom{% endif %} market-item-row">
+    <div style="width: 56px; flex-shrink: 0;">
         <img src="{{ item | get_item_cdn_image_url }}"
-             class="img-fluid rounded"
              alt="{{ item.name }}"
-             style="max-height: 60px;">
-      </div>
+             width="40" height="40"
+             style="object-fit: contain;"
+             onerror="this.style.visibility='hidden'">
+    </div>
+    <div style="flex: 2;" class="font-weight-bold">{{ item.name }}</div>
 
-      <div class="col-3">
-        <div class="card-body p-2">
-          <h6 class="card-title mb-0">{{ item.name }}</h6>
+    {% if prices_by_id is not defined %}
+        {% for _ in range(3) %}
+        <div style="flex: 2;">
+            <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
         </div>
-      </div>
-
-      <div class="col-7">
-        <div class="row align-items-center">
-
-          {% if prices_by_id is not defined %}
-            {% for _ in range(3) %}
-            <div class="col-4 text-center">
-              <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
-            </div>
-            {% endfor %}
-          {% else %}
-
-            <div class="col-4">
-              <h6 class="font-weight-bold mb-0">
-                {% if avg is none %}
-                  <span class="text-muted">N/A</span>
-                {% else %}
-                  ₽{{ "{:,}".format(avg) }}
-                  {% if vendor %}
-                    <span class="badge badge-pill badge-primary ml-2">
-                      {{ vendor }}
-                    </span>
-                  {% endif %}
-                {% endif %}
-              </h6>
-            </div>
-
-            <div class="col-4">
-              <h6 class="font-weight-bold mb-0">
-                {% if low is none %}
-                  <span class="text-muted">N/A</span>
-                {% else %}
-                  ₽{{ "{:,}".format(low) }}
-                  {% if vendor %}
-                    <span class="badge badge-pill badge-danger ml-2">
-                      {{ vendor }}
-                    </span>
-                  {% endif %}
-                {% endif %}
-              </h6>
-            </div>
-
-            <div class="col-4">
-              <h6 class="font-weight-bold mb-0">
-                {% if high is none %}
-                  <span class="text-muted">N/A</span>
-                {% else %}
-                  ₽{{ "{:,}".format(high) }}
-                  {% if vendor %}
-                    <span class="badge badge-pill badge-success ml-2">
-                      {{ vendor }}
-                    </span>
-                  {% endif %}
-                {% endif %}
-              </h6>
-            </div>
-
-          {% endif %}
-
+        {% endfor %}
+    {% else %}
+        <div style="flex: 2;">
+            {% if avg is none %}<span class="text-muted">—</span>
+            {% else %}₽{{ "{:,}".format(avg) }}
+                {% if best is not none %}<span class="badge badge-pill badge-primary ml-1">{{ vendor }}</span>{% endif %}
+            {% endif %}
         </div>
-      </div>
+        <div style="flex: 2;">
+            {% if low is none %}<span class="text-muted">—</span>
+            {% else %}₽{{ "{:,}".format(low) }}
+                {% if vendor %}<span class="badge badge-pill badge-danger ml-1">{{ vendor }}</span>{% endif %}
+            {% endif %}
+        </div>
+        <div style="flex: 2;">
+            {% if high is none %}<span class="text-muted">—</span>
+            {% else %}₽{{ "{:,}".format(high) }}
+                {% if vendor %}<span class="badge badge-pill badge-success ml-1">{{ vendor }}</span>{% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
 
-      <div class="col-1 text-end">
-        <form method="POST"
-            action="/market/untrack-item/{{ item.tarkov_id }}"
-            class="d-inline">
+    <div style="width: 50px; flex-shrink: 0; text-align: center;">
+        <form method="POST" action="/market/untrack-item/{{ item.tarkov_id }}" class="d-inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="text-danger btn">
+            <button type="submit" class="btn btn-link p-0 text-danger">
                 <i class="fa-regular fa-trash-can"></i>
             </button>
         </form>
-      </div>
-
     </div>
-  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="fas fa-chart-line fa-2x mb-3 d-block" style="opacity: 0.3;"></i>
+    <p class="mb-0">No items tracked yet. Click <strong>Track New Item</strong> to get started.</p>
 </div>
 {% endfor %}
