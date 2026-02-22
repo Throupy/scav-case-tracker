@@ -181,13 +181,37 @@ class ImageDownloaderClient(commands.Bot):
                         response_data = await response.json()
                         
                         if response.status == 200:
-                            await status_message.edit(
-                                embed=discord.Embed(
-                                    title="✅ Success!",
-                                    description=response_data.get("message", "Scav case submitted successfully!"),
-                                    color=discord.Color.green()
+                            items = response_data.get("items", [])
+                            total_return = response_data.get("total_return") or 0
+                            cost = response_data.get("cost") or 0
+                            profit = total_return - cost
+
+                            item_lines = []
+                            for item in items:
+                                qty = item["quantity"]
+                                total = (item["price"] or 0) * qty
+                                item_lines.append(
+                                    f"• **{item['name']}** ×{qty} — ₽{total:,.0f}"
                                 )
+
+                            embed = discord.Embed(
+                                title="✅ Scav Case Added!",
+                                description="\n".join(item_lines) or "No items recorded.",
+                                color=discord.Color.green(),
                             )
+                            embed.add_field(
+                                name="💰 Return", value=f"₽{total_return:,.0f}", inline=True
+                            )
+                            embed.add_field(
+                                name="💸 Cost", value=f"₽{cost:,.0f}", inline=True
+                            )
+                            embed.add_field(
+                                name="📈 Profit" if profit >= 0 else "📉 Profit",
+                                value=f"₽{profit:,.0f}",
+                                inline=True,
+                            )
+                            embed.set_footer(text="Scav Case Tracker")
+                            await status_message.edit(embed=embed)
                         else:
                             error_msg = response_data.get("error", f"HTTP {response.status}")
                             await status_message.edit(

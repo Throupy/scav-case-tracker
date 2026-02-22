@@ -7,7 +7,7 @@ from typing import Iterable, Optional
 
 import requests
 import pytesseract
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 from flask import flash, current_app
 from rapidfuzz import process, fuzz
 from sqlalchemy.orm import selectinload
@@ -37,61 +37,74 @@ def generate_image_query(item_id):
     )
 
 
-def validate_scav_case_image(image_path: str) -> bool:
+def _preprocess_image(image_path: str) -> Image.Image:
     """
-    Validate whether an image is a scav case image by checking for specific text.
+    Preprocess an EFT screenshot for OCR.
 
-    This function performs the following steps:
-    1. Opens and processes the image (converts to grayscale and sharpens).
-    2. Extracts text from the image using OCR.
-    3. Checks for the presence of the phrase "scavs have brought you" in the extracted text.
-
-    Args:
-        image_path (str): The file path of the image to be validated.
-
-    Returns:
-        bool: True if the image is likely a scav case image (confidence >= 75%),
-              False otherwise.
-
-    Note:
-        The function uses fuzzy matching to allow for slight variations or OCR errors
-        in the target phrase "scavs have brought you".
+    EFT's UI has white text on a dark background. Tesseract performs best on
+    dark text on a white background at high resolution. Steps:
+    1. Upscale 3× (Tesseract accuracy improves significantly on larger images)
+    2. Convert to grayscale
+    3. Invert (white-on-dark → dark-on-white)
+    4. Hard binarize at threshold 128 (no blur — it destroys small quantity text)
     """
     img = Image.open(image_path)
+    w, h = img.size
+    # 3× upscale — Tesseract needs resolution for small text like the (1) quantity indicator
+    img = img.resize((w * 3, h * 3), Image.LANCZOS)
     img = img.convert("L")
-    img = img.filter(ImageFilter.SHARPEN)
-    text_data = pytesseract.image_to_string(img)
+    img = ImageOps.invert(img)
+    # No blur — even a small kernel smears the narrow (1) parentheses into unrecognisable glyphs
+    img = img.point(lambda x: 255 if x > 128 else 0)
+    return img
+
+
+def _normalize_for_matching(text: str) -> str:
+    """Lowercase and normalize characters that OCR commonly mangles."""
+    text = text.lower()
+    text = text.replace("×", "x")  # Unicode multiplication sign → ASCII x
+    text = text.replace("\u2013", "-").replace("\u2014", "-")  # em/en-dash → hyphen
+    text = " ".join(text.split())  # collapse whitespace
+    return text
+
+
+def validate_scav_case_image(image_path: str) -> bool:
+    img = _preprocess_image(image_path)
+    text_data = pytesseract.image_to_string(img, config="--psm 6 --oem 3")
     confidence = fuzz.partial_ratio("scavs have brought you", text_data.lower())
     if confidence >= 75:
         return True
     return False
 
 
-def fuzzy_match_ocr_to_database(ocr_text: str, item_names: list[str]) -> str | None:
+def fuzzy_match_ocr_to_database(
+    ocr_text: str, item_names: list[str], score_cutoff: int = 70
+) -> "TarkovItem | None":
     """
-    Perform a fuzzy match of OCR text to item names in the database.
+    Fuzzy-match an OCR'd item name against the database.
 
-    Args:
-        ocr_text (str): The text extracted from OCR.
-        item_names (list[str]): the item names to search through
-
-    Returns:
-        TarkovItem or None: The best matching TarkovItem if found, None otherwise.
+    Uses WRatio (handles word reordering, partial matches) with normalised text
+    on both sides. score_cutoff is 70 for confirmed item lines, 85 for fallback lines.
     """
-    best_match = process.extractOne(ocr_text, item_names, scorer=fuzz.ratio)
+    normalized_ocr = _normalize_for_matching(ocr_text)
+    normalized_map = {_normalize_for_matching(n): n for n in item_names}
 
-    if best_match and best_match[1] > 50:
-        matched_item = TarkovItem.query.filter_by(name=best_match[0]).first()
-        return matched_item
-    else:
-        return None
+    best_match = process.extractOne(
+        normalized_ocr,
+        list(normalized_map.keys()),
+        scorer=fuzz.WRatio,
+        score_cutoff=score_cutoff,
+    )
+
+    if best_match:
+        original_name = normalized_map[best_match[0]]
+        return TarkovItem.query.filter_by(name=original_name).first()
+    return None
 
 
 def process_image_for_items(image_path: str) -> str:
-    img = Image.open(image_path)
-    img = img.convert("L")
-    img = img.filter(ImageFilter.SHARPEN)
-    text = pytesseract.image_to_string(img)
+    img = _preprocess_image(image_path)
+    text = pytesseract.image_to_string(img, config="--psm 6 --oem 3")
     return text
 
 
@@ -105,43 +118,94 @@ def allowed_file(filename):
 
 def extract_items_from_ocr(text: str):
     """
-    Extract item information from OCR text.
+    Extract item information from OCR text using line-by-line parsing.
 
-    Args:
-        text (str): The OCR text to process.
-
-    Returns:
-        list: A list of dictionaries containing item information.
+    EFT's scav case UI produces text in this repeating structure:
+        <Item name> (<quantity>)        ← what we want
+        × <durability>/<max>            ← optional, skip
+        <Category> > <Subcategory>      ← skip
 
     Raises:
-        ItemNotFoundException: If an item is not recognized in the database.
+        ItemNotFoundException: If any line that looks like an item cannot be
+            matched in the database. The user is directed to add it manually.
     """
-    current_app.logger.info(f"[DEBUG] Extracting Items from OCR Text : {text}")
-    item_pattern = r"([A-Za-z0-9\s\.\'\-\(\)x]+)\s+\(([\d\/]+)\)"
-    matches = re.findall(item_pattern, text)
-    current_app.logger.info(f"[DEBUG] Found {len(matches)} items within the text")
-    
+    current_app.logger.info(f"[DEBUG] Raw OCR text:\n{text}")
+
     all_items = TarkovItem.query.with_entities(TarkovItem.tarkov_id, TarkovItem.name).all()
     item_names = [name for _, name in all_items]
-    name_to_item = {name: tid for tid, name in all_items}
+
+    # Matches <anything> (<integer>) — non-greedy
+    item_line_pattern = re.compile(r"^(.+?)\s+\((\d+)\)")
+    # Trailing OCR artefacts
+    trailing_garbage = re.compile(r"[\s~©*«»°§|]+$")
+    # Durability lines after normalisation: "100/100"
+    # Also catches garbled digits like "x 10¢/108" where OCR read 0 as ¢.
+    garbled_durability = re.compile(r"^x\s+[\w¢©@%°]+/")
+    # Known EFT UI text that is never an item name
+    ui_phrases = frozenset({"receive", "loot from scavs"})
 
     items = []
-    for match in matches:
-        item_name = match[0].strip()
-        quantity = match[1].strip()
-        matched_item = fuzzy_match_ocr_to_database(item_name, item_names)
-        if matched_item:
-            items.append(
-                {
-                    "id": matched_item.tarkov_id,
-                    "name": matched_item.name,
-                    "quantity": int(quantity),
-                }
-            )
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        # Pre-normalize
+        if len(line) < 4:
+            continue
+        # Skip category, e.g. Weapons > Assault rifles
+        if ">" in line:
+            continue
+        # Skip header lines, i.e. "Scavs have brought you:"
+        if line.endswith(":"):
+            continue
+
+        line = _normalize_for_matching(line)
+
+        # Post-normalize filters (× → x has been applied by now)
+        if any(phrase in line for phrase in ui_phrases):
+            continue
+        # Durability lines e.g. "x 100/100" or garbled variation of it
+        if garbled_durability.match(line):
+            continue
+
+        strict_match = item_line_pattern.match(line)
+        if strict_match:
+            # (N) was OCR'd cleanly — this is definitely an item line
+            item_name = strict_match.group(1).strip()
+            quantity = int(strict_match.group(2))
+            is_definite_item = True
         else:
+            # (1) was garbled into ~, ©, *, etc. — strip trailing garbage and default qty to 1
+            item_name = trailing_garbage.sub("", line).strip()
+            quantity = 1
+            is_definite_item = False
+
+        if len(item_name) < 4:
+            continue
+
+        # Fallback (non-definite) lines get a stricter threshold to reduce noise matches
+        score_cutoff = 70 if is_definite_item else 85
+
+        current_app.logger.info(
+            f"[DEBUG] Trying to match: '{item_name}' qty={quantity} definite={is_definite_item}"
+        )
+        matched_item = fuzzy_match_ocr_to_database(item_name, item_names, score_cutoff)
+
+        if matched_item:
+            current_app.logger.info(f"[DEBUG] Matched '{item_name}' → '{matched_item.name}'")
+            items.append({
+                "id": matched_item.tarkov_id,
+                "name": matched_item.name,
+                "quantity": quantity,
+            })
+        elif is_definite_item:
+            current_app.logger.warning(f"[DEBUG] No match for confirmed item '{item_name}'")
             raise ItemNotFoundException(
                 "One of the items wasn't recognised. Please add the case manually."
             )
+        else:
+            # Likely OCR noise
+            current_app.logger.info(f"[DEBUG] Skipping unmatched line '{item_name}' (likely noise)")
+
+    current_app.logger.info(f"[DEBUG] Extracted {len(items)} items")
     return items
 
 

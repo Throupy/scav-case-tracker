@@ -316,7 +316,21 @@ class ScavCaseService(BaseService):
             current_app.logger.info(f"Service result: {result}")
             
             if result["success"]:
-                return jsonify({"message": result["message"]}), 200
+                scav_case = self.get_case_by_id(result["scav_case_id"])
+                return jsonify({
+                    "message": result["message"],
+                    "scav_case_id": scav_case.id,
+                    "cost": scav_case.cost,
+                    "total_return": scav_case._return,
+                    "items": [
+                        {
+                            "name": item.name,
+                            "quantity": item.amount,
+                            "price": item.price,
+                        }
+                        for item in scav_case.items
+                    ],
+                }), 200
             else:
                 return jsonify({"error": result["message"]}), 400
                 

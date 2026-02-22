@@ -10,6 +10,7 @@ from app.models import ScavCase, ScavCaseItem, TarkovItem
 from app.constants import SCAV_CASE_TYPES, CLOUDINARY_BASE_URL
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
 from app.cases.utils import is_discord_bot_request
+from app.extensions import csrf
 from app.services.scav_case_service import ScavCaseService
 from app.http.errors import AuthorizationError
 from app.http.responses import success_response
@@ -148,7 +149,7 @@ def create_scav_case():
     return render_template("create_scav_case.html")
 
 @cases_bp.route("/cases/submit", methods=["GET", "POST"])
-# no login_required - integrations will hit this (with key-based auth), check for integration first, then check login if webapp
+@csrf.exempt  # bot requests have no CSRF token; web form submissions are validated by WTForms' own form.validate_on_submit()
 def submit_scav_case():
     # special handling for the discord bot integration
     if request.method == "POST" and is_discord_bot_request(request):
