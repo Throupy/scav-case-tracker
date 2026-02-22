@@ -221,10 +221,6 @@ def update_scav_case(scav_case_id):
 @login_required
 def delete_scav_case(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
-    
-    # does the user own the case
-    if scav_case.user_id != current_user.id:
-        abort(403)
 
     if scav_case_service.delete_scav_case(scav_case):
         flash("Your ScavCase was successfully deleted", "success")
