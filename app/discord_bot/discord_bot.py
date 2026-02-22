@@ -36,7 +36,7 @@ async def case_types(ctx):
 
 @commands.command(name="stats")
 async def stats(ctx):
-    api_url = "http://localhost:5000/api/discord-stats"
+    api_url = f"{ctx.bot.base_url}/api/discord-stats"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(api_url) as response:
@@ -70,10 +70,11 @@ async def stats(ctx):
 
 
 class ImageDownloaderClient(commands.Bot):
-    def __init__(self, download_dir, channel_id, *args, **kwargs):
+    def __init__(self, download_dir, channel_id, base_url, *args, **kwargs):
         super().__init__(command_prefix="!", *args, **kwargs)
         self.download_dir = download_dir
         self.channel_id = channel_id
+        self.base_url = base_url
 
         self.add_command(case_types)
         self.add_command(stats)
@@ -163,7 +164,7 @@ class ImageDownloaderClient(commands.Bot):
         self, message, image_path, scav_case_type, status_embed, status_message
     ):
         """Submit scav case to Flask using the single unified route"""
-        url = "http://localhost:5000/cases/submit" 
+        url = f"{self.base_url}/cases/submit"
         headers = {
             "X-BOT-REQUEST": "true",
             "X-BOT-KEY": os.getenv('DISCORD_BOT_API_KEY', 'blank') # fallback to non-None, because None cannot be serialised

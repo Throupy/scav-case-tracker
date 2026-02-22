@@ -51,6 +51,7 @@ class ProductionConfig(Config):
     SEED_ENTRIES = False
     SEED_ENTRIES_COUNT = 1000
     REFRESH_TARKOV_ITEMS = False
+    FLASK_BASE_URL = "http://localhost:80"
 
 env = os.getenv(
     "FLASK_ENV", "development"

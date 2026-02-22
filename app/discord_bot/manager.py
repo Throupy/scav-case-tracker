@@ -53,6 +53,7 @@ class DiscordBotManager:
             discord_bot = ImageDownloaderClient(
                 download_dir=self.app.config["DISCORD_DOWNLOAD_DIR"],
                 channel_id=int(self.app.config["DISCORD_CHANNEL_ID"]),
+                base_url=self.app.config.get("FLASK_BASE_URL", "http://localhost:5000"),
                 intents=intents,
             )
             discord_bot.run(os.getenv("DISCORD_TOKEN"))
