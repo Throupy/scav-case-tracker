@@ -3,66 +3,65 @@
 {% block content %}
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h4 class="mb-0">Global Dashboard</h4>
+        <h4 class="mb-0">{{ welcome_message }}</h4>
 
 
         <div class="dropdown">
-  <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
-      type="button" id="dashboardControlsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    <i class="fas fa-sliders-h fa-sm mr-2"></i>
-    Dashboard Controls
-  </button>
+            <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
+                type="button" id="dashboardControlsDropdown" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false">
+                <i class="fas fa-sliders-h fa-sm mr-2"></i>
+                Dashboard Controls
+            </button>
 
-  <div class="dropdown-menu dropdown-menu-right shadow dashboard-controls-panel"
-      aria-labelledby="dashboardControlsDropdown">
+            <div class="dropdown-menu dropdown-menu-right shadow dashboard-controls-panel"
+                aria-labelledby="dashboardControlsDropdown">
 
-    <p class="dashboard-panel-label">Time Range</p>
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <span class="small font-weight-bold" id="time-range-label">All Time</span>
-    </div>
-    <div class="time-range" style="width:100%;">
-      <input type="range" id="time-range-slider" class="custom-range"
-             min="0" max="5" step="1" value="5" aria-label="Time range"/>
-      <div class="time-range-ticks small text-muted">
-        <span>1d</span><span>7d</span><span>30d</span><span>90d</span><span>1Y</span><span>All</span>
-      </div>
-    </div>
+                <p class="dashboard-panel-label">Time Range</p>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small font-weight-bold" id="time-range-label">All Time</span>
+                </div>
+                <div class="time-range" style="width:100%;">
+                    <input type="range" id="time-range-slider" class="custom-range" min="0" max="5" step="1" value="5"
+                        aria-label="Time range" />
+                    <div class="time-range-ticks small text-muted">
+                        <span>1d</span><span>7d</span><span>30d</span><span>90d</span><span>1Y</span><span>All</span>
+                    </div>
+                </div>
 
-    <div class="dropdown-divider"></div>
+                <div class="dropdown-divider"></div>
 
-    <p class="dashboard-panel-label">Case Type</p>
-    <select id="dashboard-case-type-select" class="custom-select custom-select-sm">
-      <option value="all">All Cases</option>
-      <option value="₽2500">₽2,500</option>
-      <option value="₽15000">₽15,000</option>
-      <option value="₽95000">₽95,000</option>
-      <option value="Moonshine">Moonshine</option>
-      <option value="Intelligence">Intelligence</option>
-    </select>
+                <p class="dashboard-panel-label">Case Type</p>
+                <select id="dashboard-case-type-select" class="custom-select custom-select-sm">
+                    <option value="all">All Cases</option>
+                    <option value="₽2500">₽2,500</option>
+                    <option value="₽15000">₽15,000</option>
+                    <option value="₽95000">₽95,000</option>
+                    <option value="Moonshine">Moonshine</option>
+                    <option value="Intelligence">Intelligence</option>
+                </select>
 
-    {% if current_user.is_authenticated %}
-    <div class="dropdown-divider"></div>
+                {% if current_user.is_authenticated %}
+                <div class="dropdown-divider"></div>
 
-    <p class="dashboard-panel-label">Layout</p>
-    <button id="toggle-layout-btn" type="button"
-            class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center">
-      <i id="toggle-layout-icon" class="fas fa-lock-open fa-sm mr-2"></i>
-      <span id="toggle-layout-label">Unlock layout</span>
-    </button>
-    {% endif %}
+                <p class="dashboard-panel-label">Layout</p>
+                <button id="toggle-layout-btn" type="button"
+                    class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center">
+                    <i id="toggle-layout-icon" class="fas fa-lock-open fa-sm mr-2"></i>
+                    <span id="toggle-layout-label">Unlock layout</span>
+                </button>
+                {% endif %}
 
-    <div class="dropdown-divider"></div>
+                <div class="dropdown-divider"></div>
 
-    <a href="{{ url_for('main.not_implemented') }}"
-       class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center">
-      <i class="fas fa-download fa-sm mr-2"></i>
-      Export
-    </a>
+                <a href="{{ url_for('main.not_implemented') }}"
+                    class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-download fa-sm mr-2"></i>
+                    Export
+                </a>
 
-  </div>
-</div>
-
-
+            </div>
+        </div>
     </div>
 </div>
 
@@ -136,18 +135,18 @@
     window.dashboardCaseType = 'all'; // 'all' = no case-type filter (default)
 
     (function () {
-        const STEPS  = [1, 7, 30, 90, 365, 0];
+        const STEPS = [1, 7, 30, 90, 365, 0];
         const LABELS = ['Last 1 Day', 'Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'Last 1 Year', 'All Time'];
 
         const slider = document.getElementById('time-range-slider');
-        const label  = document.getElementById('time-range-label');
+        const label = document.getElementById('time-range-label');
         if (!slider) return;
 
         let debounceTimer;
         slider.addEventListener('input', function () {
             const idx = parseInt(this.value, 10);
             window.dashboardDays = STEPS[idx];
-            label.textContent    = LABELS[idx];
+            label.textContent = LABELS[idx];
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function () {
                 document.dispatchEvent(
@@ -194,13 +193,13 @@
             try {
                 var resp = await fetch(url);
                 var json = await resp.json();
-                var d    = json.data;
+                var d = json.data;
 
-                setText('[data-kpi="total-cases"]',               d.total_cases + ' Cases');
-                setText('[data-kpi="total-profit"]',              fmt(d.total_profit));
-                setText('[data-kpi="total-spent"]',               fmt(d.total_cost));
-                setText('[data-kpi="total-return"]',              fmt(d.total_return));
-                setText('[data-kpi="most-popular-category"]',     d.most_popular_category     || 'N/A');
+                setText('[data-kpi="total-cases"]', d.total_cases + ' Cases');
+                setText('[data-kpi="total-profit"]', fmt(d.total_profit));
+                setText('[data-kpi="total-spent"]', fmt(d.total_cost));
+                setText('[data-kpi="total-return"]', fmt(d.total_return));
+                setText('[data-kpi="most-popular-category"]', d.most_popular_category || 'N/A');
                 setText('[data-kpi="most-profitable-case-type"]', d.most_profitable_case_type || 'N/A');
 
                 // Profit icon colour
@@ -212,8 +211,8 @@
 
                 // Top contributor
                 var tc = d.top_contributor;
-                var tcName  = document.querySelector('[data-kpi="top-contributor-name"]');
-                var tcImg   = document.querySelector('[data-kpi="top-contributor-img"]');
+                var tcName = document.querySelector('[data-kpi="top-contributor-name"]');
+                var tcImg = document.querySelector('[data-kpi="top-contributor-img"]');
                 var tcLinks = document.querySelectorAll('[data-kpi="top-contributor-link"]');
                 if (tc) {
                     if (tcName) tcName.textContent = tc.username;
@@ -222,22 +221,22 @@
                     if (tcImg) { tcImg.src = '/static/profile_pics/' + tc.image_file; tcImg.style.display = ''; }
                 } else {
                     if (tcName) tcName.textContent = 'N/A';
-                    if (tcImg)  tcImg.style.display = 'none';
+                    if (tcImg) tcImg.style.display = 'none';
                     tcLinks.forEach(function (a) { a.removeAttribute('href'); });
                 }
 
                 // Most valuable item
-                var mvi     = d.most_valuable_item;
+                var mvi = d.most_valuable_item;
                 var mviName = document.querySelector('[data-kpi="most-valuable-item-name"]');
-                var mviImg  = document.querySelector('[data-kpi="most-valuable-item-img"]');
+                var mviImg = document.querySelector('[data-kpi="most-valuable-item-img"]');
                 var mviLink = document.querySelector('[data-kpi="most-valuable-item-link"]');
                 if (mvi) {
                     if (mviName) { mviName.textContent = mvi.name; mviName.title = mvi.name; }
-                    if (mviImg)  { mviImg.src = mvi.image_url; mviImg.style.display = ''; }
-                    if (mviLink)   mviLink.href = '/cases/' + mvi.scav_case_id;
+                    if (mviImg) { mviImg.src = mvi.image_url; mviImg.style.display = ''; }
+                    if (mviLink) mviLink.href = '/cases/' + mvi.scav_case_id;
                 } else {
                     if (mviName) mviName.textContent = 'N/A';
-                    if (mviImg)  mviImg.style.display = 'none';
+                    if (mviImg) mviImg.style.display = 'none';
                     if (mviLink) mviLink.removeAttribute('href');
                 }
             } catch (e) {

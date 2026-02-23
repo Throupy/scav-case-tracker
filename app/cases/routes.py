@@ -23,6 +23,7 @@ scav_case_service = ScavCaseService()
 
 # util / helpers
 @cases_bp.route("/cases/search-items")
+@login_required
 def search_items():
     """HTMX search route"""
     query = request.args.get("q", "")
@@ -44,6 +45,7 @@ def put_global_dashboard_layout():
     return scav_case_service.save_user_global_dashboard_layout(current_user.id, layout)
 
 @cases_bp.route("/cases/global-dashboard")
+@login_required
 def dashboard():
     # for the 'kpis' on the dashboard, e.g. "total spent", "total profit", etc.
     dashboard_data = scav_case_service.generate_dashboard_data()
@@ -118,6 +120,7 @@ def all_scav_cases():
 
 
 @cases_bp.route("/cases/insights-data")
+@login_required
 def insights_data():
     case_type = request.args.get("case_type", "all")
     insights = scav_case_service.calculate_insights_data(case_type)

@@ -2,6 +2,7 @@ import os
 import re
 import json
 import secrets
+from datetime import datetime
 from collections import defaultdict
 from typing import Iterable, Optional
 
@@ -9,6 +10,7 @@ import requests
 import pytesseract
 from PIL import Image, ImageFilter, ImageOps
 from flask import flash, current_app
+from flask_login import current_user
 from rapidfuzz import process, fuzz
 from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
@@ -35,6 +37,28 @@ def generate_image_query(item_id):
     """
         % item_id
     )
+
+def generate_dashboard_welcome_message() -> str:
+    """
+    Returns a contextual dashboard greeting based on local server time.
+    Example: 'Good morning, Owen'
+    """
+
+    hour = datetime.now().hour
+
+    if 5 <= hour < 12:
+        greeting = "Good morning"
+    elif 12 <= hour < 18:
+        greeting = "Good afternoon"
+    else:
+        greeting = "Good evening"
+
+    username = getattr(current_user, "username", None)
+
+    if not username:
+        return "Hello"
+
+    return f"{greeting}, {username}"
 
 
 def _preprocess_image(image_path: str) -> Image.Image:

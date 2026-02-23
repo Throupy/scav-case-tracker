@@ -6,6 +6,7 @@ from flask import (
     request,
     url_for,
 )
+from flask_login import login_required
 from sqlalchemy import func
 
 from app.models import User, ScavCase, ScavCaseItem
@@ -17,6 +18,7 @@ from app.leaderboards.utils import leaderboard_base_query
 leaderboards_bp = Blueprint("leaderboards", __name__)
 
 @leaderboards_bp.route("/leaderboards")
+@login_required
 def index():
     metric = request.args.get("metric", "total_profit")
     if metric not in LEADERBOARD_METRICS:

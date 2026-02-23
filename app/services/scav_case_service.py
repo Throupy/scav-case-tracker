@@ -20,6 +20,7 @@ from app.cases.utils import (
     check_achievements,
     save_uploaded_image,
     process_scav_case_image,
+    generate_dashboard_welcome_message,
 )
 from app.market.utils import (
     get_price,
@@ -342,6 +343,7 @@ class ScavCaseService(BaseService):
     def generate_dashboard_data(self, since_date=None, case_type: str = None):
         """Compute all dashboard metrics dynamically."""
         return {
+            "welcome_message": generate_dashboard_welcome_message(),
             **self._get_totals(since_date=since_date, case_type=case_type), # total spent, total return, number of cases, and profit
             "most_popular_category": self._get_most_popular_category_name(since_date=since_date, case_type=case_type),
             "top_contributor": self._get_top_contributor(since_date=since_date, case_type=case_type),
