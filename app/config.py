@@ -30,6 +30,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     DISCORD_CHANNEL_ID = os.getenv("DISCORD_SCAV_CASE_CHANNEL_ID")
+    DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID")
     DISCORD_DOWNLOAD_DIR = "app/static/uploads/discord_bot"
 
 

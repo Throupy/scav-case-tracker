@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 
 import aiohttp
 import discord
@@ -40,27 +41,36 @@ async def stats(ctx):
 
     async with aiohttp.ClientSession() as session:
         async with session.get(api_url) as response:
-            if response.status == 200:
-                data = await response.json()
-                total_profit = data.get("total_profit", "N/A")
-                total_cases = data.get("total_cases", "N/A")
-                total_spend = data.get("total_spend", "N/A")
-            else:
-                total_profit, total_cases, total_spend = "Error", "Error", "Error"
+            if response.status != 200:
+                return await ctx.send(embed=create_basic_embed(f"Failed to fetch stats - HTTP code {response.status}"))
+            data = await response.json()
+            data = data.get("data", data)
+            total_profit = float(data.get("total_profit", 0))
+            total_cases = data.get("total_cases", "N/A")
+            total_spend = float(data.get("total_spend", 0))
+            total_return = float(data.get("total_return", 0))
+            avg_profit = float(data.get("avg_profit", 0))
+            best_type = data.get("most_profitable_case_type") or "N/A"
+            top_category = data.get("most_popular_category") or "N/A"
+            top_contributor = data.get("top_contributor") or "N/A"
+            priciest_item = data.get("most_valuable_item") or "N/A"
 
     embed = discord.Embed(
         title="Scav Case Tracker Stats",
-        description="Here are the latest statistics:",
         color=discord.Color.red(),
     )
 
-    embed.add_field(
-        name="📈 Total Profit", value=f"₽{round(total_profit):,}", inline=False
-    )
-    embed.add_field(name="📦 Total Cases", value=f"{total_cases}", inline=False)
-    embed.add_field(
-        name="💸 Total Spend", value=f"₽{round(total_spend):,}", inline=False
-    )
+    embed.add_field(name="📈 Profit",   value=f"₽{round(total_profit):,}", inline=True)
+    embed.add_field(name="💰 Return",   value=f"₽{round(total_return):,}", inline=True)
+    embed.add_field(name="💸 Spend",    value=f"₽{round(total_spend):,}", inline=True)
+
+    embed.add_field(name="📦 Cases",    value=f"{total_cases}", inline=True)
+    embed.add_field(name="📊 Avg Profit/Case", value=f"₽{round(avg_profit):,}", inline=True)
+    embed.add_field(name="🏆 Best Type", value=best_type, inline=True)
+
+    embed.add_field(name="👑 Top Contributor",   value=top_contributor, inline=True)
+    embed.add_field(name="💎 Most Expensive Find", value=priciest_item, inline=True)
+    embed.add_field(name="🎯 Top Category",  value=top_category, inline=True)
 
     embed.set_footer(text="Scav Case Tracker Bot")
     embed.set_thumbnail(
@@ -69,15 +79,108 @@ async def stats(ctx):
     await ctx.send(embed=embed)
 
 
+async def _case_embed(session, url, title, color):
+    """Fetch a case from url and return a built embed, or an error embed."""
+    async with session.get(url) as response:
+        data = await response.json()
+        if response.status == 404:
+            return create_basic_embed("No cases found.")
+        if response.status != 200:
+            return create_basic_embed(f"Error fetching case (HTTP {response.status}).")
+        data = data["data"]
+
+    items = data.get("items", [])
+    total_return = data.get("total_return") or 0
+    cost = data.get("cost") or 0
+    profit = data.get("profit") or 0
+    roi_pct = data.get("roi_pct") or 0
+    case_type = data.get("type", "Unknown")
+    case_id = data.get("id")
+    created_at_raw = data.get("created_at")
+    created_at = datetime.fromisoformat(created_at_raw).replace(tzinfo=timezone.utc) if created_at_raw else None
+
+    item_lines = [
+        f"• **{item['name']}** x{item['amount']} — ₽{item['total']:,.0f}"
+        for item in items
+    ]
+
+    embed = discord.Embed(
+        title=f"{title} — Case #{case_id} ({case_type})",
+        description="\n".join(item_lines) or "No items recorded.",
+        color=color,
+        timestamp=created_at,
+    )
+    embed.add_field(name="💰 Return", value=f"₽{total_return:,.0f}", inline=True)
+    embed.add_field(name="💸 Cost",   value=f"₽{cost:,.0f}",         inline=True)
+    embed.add_field(
+        name="📈 Profit" if profit >= 0 else "📉 Profit",
+        value=f"₽{profit:,.0f}",
+        inline=True,
+    )
+    embed.add_field(
+        name="📊 ROI",
+        value=f"{roi_pct:+.1f}%",
+        inline=True,
+    )
+    embed.set_footer(text="Scav Case Tracker")
+    return embed
+
+
+@commands.command(name="best")
+async def best_case(ctx):
+    async with aiohttp.ClientSession() as session:
+        embed = await _case_embed(
+            session,
+            f"{ctx.bot.base_url}/api/case/best",
+            "🏆 Best Case",
+            discord.Color.gold(),
+        )
+    await ctx.send(embed=embed)
+
+
+@commands.command(name="worst")
+async def worst_case(ctx):
+    async with aiohttp.ClientSession() as session:
+        embed = await _case_embed(
+            session,
+            f"{ctx.bot.base_url}/api/case/worst",
+            "💀 Worst Case",
+            discord.Color.dark_red(),
+        )
+    await ctx.send(embed=embed)
+
+
+@commands.command(name="case")
+async def case_lookup(ctx, case_id: int = None):
+    if ctx.bot.guild_id and ctx.guild.id != ctx.bot.guild_id:
+        return
+
+    if case_id is None:
+        return await ctx.send(embed=create_basic_embed("Usage: `!case <case_id>`"))
+
+    async with aiohttp.ClientSession() as session:
+        embed = await _case_embed(
+            session,
+            f"{ctx.bot.base_url}/api/case/{case_id}",
+            f"Case #{case_id}",
+            discord.Color.green(),
+        )
+    await ctx.send(embed=embed)
+
+
 class ImageDownloaderClient(commands.Bot):
-    def __init__(self, download_dir, channel_id, base_url, *args, **kwargs):
+    def __init__(self, download_dir, channel_id, base_url, guild_id=None, *args, **kwargs):
         super().__init__(command_prefix="!", *args, **kwargs)
         self.download_dir = download_dir
         self.channel_id = channel_id
         self.base_url = base_url
+        self.guild_id = guild_id
 
         self.add_command(case_types)
         self.add_command(stats)
+        self.add_command(case_lookup)
+        self.add_command(best_case)
+        self.add_command(worst_case)
 
     async def on_ready(self):
         print(f"Discord Bot Logged in as: {self.user}")
@@ -192,7 +295,7 @@ class ImageDownloaderClient(commands.Bot):
                                 qty = item["quantity"]
                                 total = (item["price"] or 0) * qty
                                 item_lines.append(
-                                    f"• **{item['name']}** ×{qty} — ₽{total:,.0f}"
+                                    f"• **{item['name']}** x{qty} — ₽{total:,.0f}"
                                 )
 
                             embed = discord.Embed(

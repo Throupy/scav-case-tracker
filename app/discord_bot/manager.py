@@ -50,9 +50,11 @@ class DiscordBotManager:
     def _run_discord_bot(self):
         """Internal method to run the Discord bot"""
         try:
+            raw_guild_id = self.app.config.get("DISCORD_GUILD_ID")
             discord_bot = ImageDownloaderClient(
                 download_dir=self.app.config["DISCORD_DOWNLOAD_DIR"],
                 channel_id=int(self.app.config["DISCORD_CHANNEL_ID"]),
+                guild_id=int(raw_guild_id) if raw_guild_id else None,
                 base_url=self.app.config.get("FLASK_BASE_URL", "http://localhost:5000"),
                 intents=intents,
             )

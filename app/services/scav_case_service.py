@@ -399,6 +399,19 @@ class ScavCaseService(BaseService):
 
         return round(percentage, 1)
 
+    def _get_worst_case(self, user_id: int = None) -> Optional[ScavCase]:
+        """Return the worst scav case by % loss of investment (lowest ROI)."""
+        q = self.db.session.query(ScavCase).filter(ScavCase.cost > 0)
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+        return (
+            q.order_by(
+                ((ScavCase._return - ScavCase.cost) / ScavCase.cost).asc(),
+                ScavCase.created_at.desc(),
+            )
+            .first()
+        )
+
     def _get_most_profitable_case(self, user_id: int = None) -> float:
         """
         Return the `_return` value of the most profitable case.

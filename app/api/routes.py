@@ -109,19 +109,70 @@ def dashboard_kpis():
     )
 
 
+def _serialize_case(case):
+    roi = ((case._return - case.cost) / case.cost * 100) if case.cost else 0
+    return {
+        "id": case.id,
+        "type": case.type,
+        "cost": case.cost,
+        "total_return": case._return,
+        "profit": case.profit,
+        "roi_pct": round(roi, 1),
+        "created_at": case.created_at.isoformat() if case.created_at else None,
+        "items": [
+            {
+                "name": item.name,
+                "amount": item.amount,
+                "price": item.price,
+                "total": (item.price or 0) * item.amount,
+            }
+            for item in case.items
+        ],
+    }
+
+
+# queried by discord bot !case command
+@api_bp.route("/api/case/<int:case_id>")
+def get_case(case_id):
+    case = _scav_case_service.get_case_by_id(case_id)
+    if not case:
+        return error_response(message=f"Case {case_id} not found", error_code="NOT_FOUND", status_code=404)
+    return success_response(data=_serialize_case(case), message="Case fetched")
+
+
+@api_bp.route("/api/case/best")
+def get_best_case():
+    case = _scav_case_service._get_most_profitable_case()
+    if not case:
+        return error_response(message="No cases found", error_code="NOT_FOUND", status_code=404)
+    return success_response(data=_serialize_case(case), message="Best case fetched")
+
+
+@api_bp.route("/api/case/worst")
+def get_worst_case():
+    case = _scav_case_service._get_worst_case()
+    if not case:
+        return error_response(message="No cases found", error_code="NOT_FOUND", status_code=404)
+    return success_response(data=_serialize_case(case), message="Worst case fetched")
+
+
 # queried by discord bot
 @api_bp.route("/api/discord-stats")
 def discord_stats():
-    """Stats results to be fetched by the discord bot"""
-    total_profit = ScavCase.query.with_entities(db.func.sum(ScavCase.profit)).scalar() or 0
-    total_cases = ScavCase.query.count()
-    total_spend = ScavCase.query.with_entities(db.func.sum(ScavCase.cost)).scalar() or 0
-
+    data = _scav_case_service.generate_dashboard_data()
+    tc = data["top_contributor"]
+    mvi = data["most_valuable_item"]
     return success_response(
-        data = {
-            "total_profit": total_profit,
-            "total_cases": total_cases,
-            "total_spend": total_spend
+        data={
+            "total_profit": data["total_profit"],
+            "total_cases": data["total_cases"],
+            "total_spend": data["total_cost"],
+            "total_return": data["total_return"],
+            "avg_profit": _scav_case_service._get_avg_profit_per_case(),
+            "most_profitable_case_type": data["most_profitable_case_type"],
+            "most_popular_category": data["most_popular_category"],
+            "top_contributor": tc.username if tc else None,
+            "most_valuable_item": mvi.name if mvi else None,
         },
-        message = "Discord stats fetched"
+        message="Discord stats fetched",
     )
