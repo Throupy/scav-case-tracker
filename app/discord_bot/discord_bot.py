@@ -169,12 +169,13 @@ async def case_lookup(ctx, case_id: int = None):
 
 
 class ImageDownloaderClient(commands.Bot):
-    def __init__(self, download_dir, channel_id, base_url, guild_id=None, *args, **kwargs):
+    def __init__(self, download_dir, channel_id, base_url, guild_id=None, manager=None, *args, **kwargs):
         super().__init__(command_prefix="!", *args, **kwargs)
         self.download_dir = download_dir
         self.channel_id = channel_id
         self.base_url = base_url
         self.guild_id = guild_id
+        self.manager = manager
 
         self.add_command(case_types)
         self.add_command(stats)
@@ -184,6 +185,9 @@ class ImageDownloaderClient(commands.Bot):
 
     async def on_ready(self):
         print(f"Discord Bot Logged in as: {self.user}")
+        if self.manager:
+            self.manager.bot = self
+            await self.manager.flush_pending()
 
     async def on_message(self, message):
         if message.author == self.user:
