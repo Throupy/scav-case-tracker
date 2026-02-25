@@ -167,7 +167,7 @@ async def case_lookup(ctx, case_id: int = None):
         embed = await _case_embed(
             session,
             f"{ctx.bot.base_url}/api/case/{case_id}",
-            f"Case #{case_id}",
+            f"🔍 Case Lookup",
             discord.Color.green(),
         )
     await ctx.send(embed=embed)
