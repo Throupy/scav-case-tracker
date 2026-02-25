@@ -69,8 +69,10 @@
     async function fetchChartData() {
         const days = window.dashboardDays || 0;
         const caseType = window.dashboardCaseType || 'all';
+        const scope = window.dashboardScope || 'global';
         let url = `/api/get-chart-data?type=${encodeURIComponent(caseType)}`;
         if (days > 0) url += `&days=${days}`;
+        if (scope !== 'global') url += `&scope=${encodeURIComponent(scope)}`;
         const resp = await fetch(url);
         const json = await resp.json();
         return json.data;

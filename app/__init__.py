@@ -1,7 +1,8 @@
 import os
 from logging.config import dictConfig
 
-from flask import Flask
+from flask import Flask, redirect, url_for, request
+from flask_login import current_user
 
 from app.config import ConfigClass
 from app.constants import SCAV_CASE_TYPES
@@ -11,6 +12,8 @@ from app.discord_bot.manager import discord_manager
 from app.models import User
 from app.filters import timeago, get_item_cdn_image_url, get_category_cdn_image_url
 
+from app.cli import register_commands
+from app.admin.routes import admin_bp
 from app.main.routes import main_bp
 from app.api.routes import api_bp
 from app.users.routes import users_bp
@@ -42,8 +45,10 @@ def create_app(config_class=ConfigClass):
     _register_template_filters(app)
     _register_template_context(app)
     _register_blueprints(app)
+    _register_before_request_hooks(app)
     _init_database(app)
     _init_discord_bot(app)
+    register_commands(app)
 
     return app
 
@@ -147,6 +152,19 @@ def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(circles_bp)
     app.register_blueprint(leaderboards_bp)
     app.register_blueprint(achievements_bp)
+    app.register_blueprint(admin_bp)
+
+def _register_before_request_hooks(app: Flask) -> None:
+    @app.before_request
+    def enforce_password_change():
+        allowed = {"users.change_password", "users.logout", "static"}
+        if (
+            current_user.is_authenticated
+            and getattr(current_user, "force_password_change", False)
+            and request.endpoint not in allowed
+        ):
+            return redirect(url_for("users.change_password"))
+
 
 def _init_database(app: Flask) -> None:
     """Initialise and optionally, seed, the database"""

@@ -47,12 +47,12 @@ def put_global_dashboard_layout():
 @cases_bp.route("/cases/global-dashboard")
 @login_required
 def dashboard():
-    # for the 'kpis' on the dashboard, e.g. "total spent", "total profit", etc.
-    dashboard_data = scav_case_service.generate_dashboard_data()
-
-    return render_template(
-        "dashboard.html", **dashboard_data
-    )
+    scope = request.args.get("scope", "global")
+    if scope not in ("global", "personal"):
+        scope = "global"
+    user_id = current_user.id if scope == "personal" else None
+    dashboard_data = scav_case_service.generate_dashboard_data(user_id=user_id)
+    return render_template("dashboard.html", scope=scope, **dashboard_data)
 
 @cases_bp.route("/cases/items")
 @login_required
@@ -194,8 +194,7 @@ def scav_case_detail(scav_case_id):
 @login_required
 def update_scav_case(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
-    # does the user own the case
-    if scav_case.user_id != current_user.id:
+    if scav_case.user_id != current_user.id and not current_user.is_superuser:
         abort(403)
 
     form = UpdateScavCaseForm(obj=scav_case)
@@ -224,6 +223,9 @@ def update_scav_case(scav_case_id):
 @login_required
 def delete_scav_case(scav_case_id):
     scav_case = scav_case_service.get_case_by_id_or_404(scav_case_id)
+
+    if scav_case.user_id != current_user.id and not current_user.is_superuser:
+        abort(403)
 
     if scav_case_service.delete_scav_case(scav_case):
         flash("Your ScavCase was successfully deleted", "success")

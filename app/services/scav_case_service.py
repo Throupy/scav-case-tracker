@@ -340,15 +340,20 @@ class ScavCaseService(BaseService):
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
     # TODO: Maybe split this into a DashboardService
-    def generate_dashboard_data(self, since_date=None, case_type: str = None):
-        """Compute all dashboard metrics dynamically."""
+    def generate_dashboard_data(self, since_date=None, case_type: str = None, user_id: int = None):
+        """Compute all dashboard metrics dynamically.
+
+        Pass user_id to scope metrics to a single user (personal view).
+        Omit user_id (or pass None) for the global community view.
+        """
         return {
             "welcome_message": generate_dashboard_welcome_message(),
-            **self._get_totals(since_date=since_date, case_type=case_type), # total spent, total return, number of cases, and profit
-            "most_popular_category": self._get_most_popular_category_name(since_date=since_date, case_type=case_type),
-            "top_contributor": self._get_top_contributor(since_date=since_date, case_type=case_type),
-            "most_profitable_case_type": self._get_most_profitable_case_type_name(since_date=since_date, case_type=case_type),
-            "most_valuable_item": self._get_most_valuable_item(since_date=since_date, case_type=case_type),
+            **self._get_totals(since_date=since_date, case_type=case_type, user_id=user_id),
+            "most_popular_category": self._get_most_popular_category_name(since_date=since_date, case_type=case_type, user_id=user_id),
+            # top_contributor is a global concept — not meaningful in personal view
+            "top_contributor": self._get_top_contributor(since_date=since_date, case_type=case_type) if not user_id else None,
+            "most_profitable_case_type": self._get_most_profitable_case_type_name(since_date=since_date, case_type=case_type, user_id=user_id),
+            "most_valuable_item": self._get_most_valuable_item(since_date=since_date, case_type=case_type, user_id=user_id),
         }
 
     def save_user_global_dashboard_layout(self, user_id, layout):

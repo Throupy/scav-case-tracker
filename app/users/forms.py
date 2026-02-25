@@ -32,6 +32,23 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Login")
 
 
+class ChangePasswordForm(FlaskForm):
+    new_password = PasswordField("New Password", validators=[DataRequired(), Length(min=8, max=128)])
+    confirm_password = PasswordField(
+        "Confirm New Password", validators=[DataRequired(), EqualTo("new_password")]
+    )
+    submit = SubmitField("Set Password")
+
+
+class AccountChangePasswordForm(FlaskForm):
+    current_password = PasswordField("Current Password", validators=[DataRequired()])
+    new_password = PasswordField("New Password", validators=[DataRequired(), Length(min=8, max=128)])
+    confirm_password = PasswordField(
+        "Confirm New Password", validators=[DataRequired(), EqualTo("new_password")]
+    )
+    submit = SubmitField("Change Password")
+
+
 class UpdateAccountForm(FlaskForm):
     username = StringField(
         "Username", validators=[DataRequired(), Length(min=2, max=20)]

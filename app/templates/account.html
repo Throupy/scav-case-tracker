@@ -1,58 +1,132 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="content-section">
-    <div class="media">
-        <img width=40 height=40 class="rounded-circle account-img"
-            src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
-        <div class="media-body">
-            <h2 class="ml-2 account-heading">{{ current_user.username }}</h2>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    <i class="fas fa-user-circle mr-2"></i>Profile
+                </h6>
+            </div>
+            <div class="card-body">
+
+                <div class="d-flex align-items-center mb-4" style="gap: 1rem;">
+                    <img class="rounded-circle shadow-sm"
+                         style="width: 64px; height: 64px; object-fit: cover; border: 3px solid #e74a3b;"
+                         src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+                    <div>
+                        <h5 class="font-weight-bold mb-0 text-gray-800">{{ current_user.username }}</h5>
+                        {% if current_user.is_superuser %}
+                        <span class="badge badge-danger mt-1">
+                            <i class="fas fa-shield-alt mr-1"></i>Superuser
+                        </span>
+                        {% else %}
+                        <span class="badge badge-secondary mt-1">User</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('users.account') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-group">
+                        {{ form.username.label(class="font-weight-bold small text-uppercase text-muted") }}
+                        {% if form.username.errors %}
+                            {{ form.username(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.username(class="form-control") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group mb-0">
+                        {{ form.picture.label(class="font-weight-bold small text-uppercase text-muted mb-2") }}
+                        <div class="custom-file">
+                            {{ form.picture(class="custom-file-input", id="picture") }}
+                            <label class="custom-file-label" for="picture">Choose file</label>
+                        </div>
+                        {% if form.picture.errors %}
+                        <div class="text-danger small mt-2">
+                            {% for error in form.picture.errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-3">
+                        {{ form.submit(class="btn btn-outline-danger") }}
+                    </div>
+                </form>
+
+            </div>
         </div>
     </div>
-    <form method="POST" action="" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">Account Info</legend>
-            <div class="form-group">
-                {{ form.username.label(class="form-control-label") }}
 
-                {% if form.username.errors %}
-                {{ form.username(class="form-control form-control-lg is-invalid") }}
-                <div class="invalid-feedback">
-                    {% for error in form.username.errors %}
-                    <span>{{ error }}</span>
-                    {% endfor %}
-                </div>
-                {% else %}
-                {{ form.username(class="form-control form-control-lg") }}
-                {% endif %}
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    <i class="fas fa-key mr-2"></i>Change Password
+                </h6>
             </div>
-            <div class="form-group">
-                {{ form.picture.label(class="small font-weight-bold text-uppercase text-muted mb-2") }}
+            <div class="card-body">
 
-                <div class="custom-file">
-                    {{ form.picture(class="custom-file-input", id="picture") }}
-                    <label class="custom-file-label" for="picture">Choose file</label>
-                </div>
+                <form method="POST" action="{{ url_for('users.account_change_password') }}">
+                    {{ pw_form.hidden_tag() }}
 
-                {% if form.picture.errors %}
-                <div class="text-danger small mt-2">
-                    {% for error in form.picture.errors %}
-                    <div>{{ error }}</div>
-                    {% endfor %}
-                </div>
-                {% endif %}
+                    <div class="form-group">
+                        {{ pw_form.current_password.label(class="font-weight-bold small text-uppercase text-muted") }}
+                        {% if pw_form.current_password.errors %}
+                            {{ pw_form.current_password(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in pw_form.current_password.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ pw_form.current_password(class="form-control") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ pw_form.new_password.label(class="font-weight-bold small text-uppercase text-muted") }}
+                        {% if pw_form.new_password.errors %}
+                            {{ pw_form.new_password(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in pw_form.new_password.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ pw_form.new_password(class="form-control") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group mb-0">
+                        {{ pw_form.confirm_password.label(class="font-weight-bold small text-uppercase text-muted") }}
+                        {% if pw_form.confirm_password.errors %}
+                            {{ pw_form.confirm_password(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in pw_form.confirm_password.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ pw_form.confirm_password(class="form-control") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-3">
+                        {{ pw_form.submit(class="btn btn-outline-danger") }}
+                    </div>
+                </form>
+
             </div>
-        </fieldset>
-        <div class="form-group">
-            {{ form.submit(class="btn btn-outline-danger") }}
         </div>
-    </form>
+    </div>
+
 </div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const input = document.getElementById("picture");
         if (!input) return;
-
         input.addEventListener("change", function () {
             const fileName = this.files && this.files.length ? this.files[0].name : "Choose file";
             const label = this.nextElementSibling;

@@ -33,7 +33,15 @@
         <p class="mb-0 fs-5"><strong>Cost:</strong> ₽{{ "{:,}".format(scav_case.cost | int) }}</p>
         <p class="mb-0 fs-5"><strong>Return:</strong> ₽{{ "{:,}".format(scav_case._return | int) }}</p>
         <p class="mb-0 fs-5"><strong>Submitted:</strong> {{ scav_case.created_at | timeago }}</p>
-        
+
+        <a href="{{ url_for('users.cases_showcase', user_id=scav_case.author.id) }}"
+           class="d-flex align-items-center text-reset text-decoration-none" title="View {{ scav_case.author.username }}'s cases">
+            <img class="img-profile rounded-circle mr-2"
+                 style="width:32px; height:32px; object-fit:cover;"
+                 src="{{ url_for('static', filename='profile_pics/' + scav_case.author.image_file) }}">
+            <span class="fs-5 font-weight-bold">{{ scav_case.author.username }}</span>
+        </a>
+
         <div class="d-flex align-items-center">
             {% if scav_case._return - scav_case.cost < 0 %}
                 <i class="fa-solid fa-chevron-down text-danger fs-3 me-2"></i>

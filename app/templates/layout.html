@@ -114,6 +114,15 @@
                     <span>Leaderboards</span></a>
             </li>
 
+            {% if current_user.is_authenticated and current_user.is_superuser %}
+            <hr class="sidebar-divider">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="fas fa-fw fa-shield-alt"></i>
+                    <span>Admin</span></a>
+            </li>
+            {% endif %}
+
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>
             </div>
@@ -166,13 +175,9 @@
                             </div>
                             {% else %}
 
-                            <a class="mr-2 text-reset" href="{{ url_for('users.login') }}">
+                            <a class="mr-5 text-reset" href="{{ url_for('users.login') }}">
                                 <i class="fas fa-user fa-sm fa-fw text-gray-400"></i>
                                 Log In
-                            </a>
-                            <a class="mr-5 text-reset" href="{{ url_for('users.register') }}">
-                                <i class="fas fa-user fa-sm fa-fw  text-gray-400"></i>
-                                Register
                             </a>
 
                             {% endif %}

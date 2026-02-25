@@ -3,7 +3,9 @@ from datetime import datetime, timedelta
 
 import humanize
 from flask import Blueprint, jsonify, request, abort
+from flask_login import login_required, current_user
 
+from app.auth.decorators import api_key_required
 from app.models import ScavCase, ScavCaseItem, User
 from app.extensions import db
 from app.filters import get_item_cdn_image_url
@@ -25,12 +27,16 @@ def _since_date(days: int):
 
 # queried by case_distribution_chart template (within dashboard)
 @api_bp.route("/api/scav-case-type-distribution")
+@login_required
 def fetch_scav_case_type_distribution():
     days = request.args.get("days", 0, type=int)
+    scope = request.args.get("scope", "global")
     q = db.session.query(ScavCase.type, db.func.count(ScavCase.id)).group_by(ScavCase.type)
     since = _since_date(days)
     if since:
         q = q.filter(ScavCase.created_at >= since)
+    if scope == "personal":
+        q = q.filter(ScavCase.user_id == current_user.id)
     rows = q.all()
 
     data = {case_type: count for case_type, count in rows}
@@ -38,9 +44,11 @@ def fetch_scav_case_type_distribution():
 
 # queried by earnings_overview_chart template (within dashboard)
 @api_bp.route("/api/get-chart-data")
+@login_required
 def get_chart_data_route():
     case_type = request.args.get("type", "all")
     days = request.args.get("days", 0, type=int)
+    scope = request.args.get("scope", "global")
 
     if case_type.lower() != "all" and case_type not in SCAV_CASE_TYPES:
         return error_response(message="Invalid case type", error_code="VALIDATION_ERROR", status_code=422)
@@ -51,6 +59,8 @@ def get_chart_data_route():
     since = _since_date(days)
     if since:
         q = q.filter(ScavCase.created_at >= since)
+    if scope == "personal":
+        q = q.filter(ScavCase.user_id == current_user.id)
     scav_cases = q.order_by(ScavCase.created_at.desc()).limit(15).all()
 
     labels = list(range(1, len(scav_cases) + 1))
@@ -73,15 +83,18 @@ def get_chart_data_route():
 
 # queried by dashboard KPI cards when the time-range slider or case-type dropdown changes
 @api_bp.route("/api/dashboard-kpis")
+@login_required
 def dashboard_kpis():
     days = request.args.get("days", 0, type=int)
     case_type = request.args.get("case_type", "all")
+    scope = request.args.get("scope", "global")
     since = _since_date(days)
 
     if case_type.lower() != "all" and case_type not in SCAV_CASE_TYPES:
         return error_response(message="Invalid case type", error_code="VALIDATION_ERROR", status_code=422)
 
-    data = _scav_case_service.generate_dashboard_data(since_date=since, case_type=case_type)
+    user_id = current_user.id if scope == "personal" else None
+    data = _scav_case_service.generate_dashboard_data(since_date=since, case_type=case_type, user_id=user_id)
 
     tc = data["top_contributor"]
     mvi = data["most_valuable_item"]
@@ -133,6 +146,7 @@ def _serialize_case(case):
 
 # queried by discord bot !case command
 @api_bp.route("/api/case/<int:case_id>")
+@api_key_required
 def get_case(case_id):
     case = _scav_case_service.get_case_by_id(case_id)
     if not case:
@@ -141,6 +155,7 @@ def get_case(case_id):
 
 
 @api_bp.route("/api/case/best")
+@api_key_required
 def get_best_case():
     case = _scav_case_service._get_most_profitable_case()
     if not case:
@@ -149,6 +164,7 @@ def get_best_case():
 
 
 @api_bp.route("/api/case/worst")
+@api_key_required
 def get_worst_case():
     case = _scav_case_service._get_worst_case()
     if not case:
@@ -158,6 +174,7 @@ def get_worst_case():
 
 # queried by discord bot
 @api_bp.route("/api/discord-stats")
+@api_key_required
 def discord_stats():
     data = _scav_case_service.generate_dashboard_data()
     tc = data["top_contributor"]

@@ -33,6 +33,9 @@ class Config:
     DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID")
     DISCORD_DOWNLOAD_DIR = "app/static/uploads/discord_bot"
 
+    # API key for external clients (Discord bot read endpoints).
+    API_KEY = os.getenv("API_KEY")
+
 
 class DevelopmentConfig(Config):
     """Config for development"""
@@ -65,6 +68,11 @@ if env == "production":
             "SECRET_KEY must be set in production.\n"
             "Generate one with: \n"
             "\n\tpython -c 'import secrets; print('SECRET_KEY=' + secrets.token_hex(32))' >> .env\n"
+        )
+    if not Config.API_KEY:
+        raise RuntimeError(
+            "API_KEY must be set in production.\n"
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"\n"
         )
 else:
     ConfigClass = DevelopmentConfig

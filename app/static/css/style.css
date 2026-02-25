@@ -138,6 +138,14 @@ a {
     text-decoration: none;
 }
 
+/* Prevent the global `a` colour from bleeding into <a> tags styled as buttons */
+a.btn-danger,
+a.btn-danger:hover,
+a.btn-danger:focus,
+a.btn-danger:active {
+    color: #fff !important;
+}
+
 .badge-soft-danger {
     color: #f56e6e !important;
     background-color: rgba(245, 110, 110, 0.1);

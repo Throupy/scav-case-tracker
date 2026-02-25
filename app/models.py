@@ -88,6 +88,8 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default="default.jpg")
     password = db.Column(db.String(60), nullable=False)
+    is_superuser = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
+    force_password_change = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     scav_case_global_dashboard_layout = db.Column(db.JSON, nullable=True)
     scav_cases = db.relationship("ScavCase", backref="author", lazy=True, cascade="all, delete-orphan")
     # many-to-many with TarkovItem (for market section tracking)

@@ -34,7 +34,12 @@
 
     async function fetchDistributionData() {
         const days = window.dashboardDays || 0;
-        const url = "/api/scav-case-type-distribution" + (days > 0 ? "?days=" + days : "");
+        const scope = window.dashboardScope || 'global';
+        const params = new URLSearchParams();
+        if (days > 0) params.set('days', days);
+        if (scope !== 'global') params.set('scope', scope);
+        const qs = params.toString();
+        const url = "/api/scav-case-type-distribution" + (qs ? "?" + qs : "");
         try {
             const r = await fetch(url);
             const resp = await r.json();
