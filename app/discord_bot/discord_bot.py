@@ -35,12 +35,16 @@ async def case_types(ctx):
     await ctx.send(embed=embed)
 
 
+def _api_headers():
+    return {"Authorization": f"Bearer {os.getenv('API_KEY', '')}"}
+
+
 @commands.command(name="stats")
 async def stats(ctx):
     api_url = f"{ctx.bot.base_url}/api/discord-stats"
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(api_url) as response:
+        async with session.get(api_url, headers=_api_headers()) as response:
             if response.status != 200:
                 return await ctx.send(embed=create_basic_embed(f"Failed to fetch stats - HTTP code {response.status}"))
             data = await response.json()
@@ -81,7 +85,7 @@ async def stats(ctx):
 
 async def _case_embed(session, url, title, color):
     """Fetch a case from url and return a built embed, or an error embed."""
-    async with session.get(url) as response:
+    async with session.get(url, headers=_api_headers()) as response:
         data = await response.json()
         if response.status == 404:
             return create_basic_embed("No cases found.")
