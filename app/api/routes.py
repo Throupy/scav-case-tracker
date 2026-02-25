@@ -132,6 +132,8 @@ def _serialize_case(case):
         "profit": case.profit,
         "roi_pct": round(roi, 1),
         "created_at": case.created_at.isoformat() if case.created_at else None,
+        "submitted_by": case.author.username,
+        "via_discord": case.via_discord,
         "items": [
             {
                 "name": item.name,

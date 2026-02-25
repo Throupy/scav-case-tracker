@@ -40,6 +40,9 @@
                  style="width:32px; height:32px; object-fit:cover;"
                  src="{{ url_for('static', filename='profile_pics/' + scav_case.author.image_file) }}">
             <span class="fs-5 font-weight-bold">{{ scav_case.author.username }}</span>
+            {% if scav_case.via_discord %}
+                <span class="ml-1 mr-1"> via</span> <i class="fab fa-discord ml-1" style="color: #5865F2;" title="Submitted via Discord"></i>
+            {% endif %}
         </a>
 
         <div class="d-flex align-items-center">

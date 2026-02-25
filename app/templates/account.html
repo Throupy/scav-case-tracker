@@ -123,6 +123,36 @@
 
 </div>
 
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    <i class="fab fa-discord mr-2"></i>Discord
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if current_user.discord_id %}
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge badge-success mr-2"><i class="fas fa-check mr-1"></i>Linked</span>
+                        <span class="text-gray-700">{{ current_user.discord_username }}</span>
+                    </div>
+                    <p class="text-muted small mb-3">Cases you submit via the Discord bot will automatically be attributed to your account.</p>
+                    <form method="POST" action="{{ url_for('users.discord_unlink') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Unlink Discord</button>
+                    </form>
+                {% else %}
+                    <p class="text-muted small mb-3">Link your Discord account so cases submitted via the bot are attributed to you.</p>
+                    <a href="{{ url_for('users.discord_link') }}" class="btn btn-outline-danger">
+                        <i class="fab fa-discord mr-1"></i>Link Discord Account
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const input = document.getElementById("picture");

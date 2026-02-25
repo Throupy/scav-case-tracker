@@ -20,6 +20,13 @@
         resizable: isAuthenticated ? { handles: "all" } : false
     }, ".grid-stack");
 
+    function revealGrid() {
+        const loadingEl = document.getElementById("dashboard-loading");
+        if (loadingEl) loadingEl.remove();
+        gridEl.style.transition = "opacity 0.15s ease";
+        gridEl.style.opacity = "1";
+    }
+
     function nudgeCharts() {
         if (Array.isArray(window._charts)) {
             window._charts.forEach(ch => {
@@ -100,17 +107,29 @@
         }
 
         (async function boot() {
-            removeOrphans()
+            removeOrphans();
 
             const stored = await loadLayout();
             if (Array.isArray(stored) && stored.length) {
                 const domIds = getDomIds();
                 const filtered = stored.filter(n => n && n.id && domIds.has(n.id));
+
+                // Disable animation so widgets snap to saved positions without tweening
+                gridEl.classList.remove("grid-stack-animate");
+
                 grid.engine.batchUpdate();
                 grid.load(filtered);
                 grid.engine.batchUpdate(false);
                 grid.compact();
-                removeOrphans()
+                removeOrphans();
+
+                // Re-enable animation and reveal grid after the browser has painted the final positions
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    gridEl.classList.add("grid-stack-animate");
+                    revealGrid();
+                }));
+            } else {
+                revealGrid();
             }
             setLocked(true);
             setTimeout(nudgeCharts, 50);
@@ -130,6 +149,7 @@
     else {
         grid.enableMove(false);
         grid.enableResize(false);
+        revealGrid();
         setTimeout(nudgeCharts, 50);
     }
 

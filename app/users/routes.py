@@ -1,4 +1,7 @@
-from flask import Blueprint, redirect, url_for, flash, request, render_template
+import urllib.parse
+
+import requests as http_requests
+from flask import Blueprint, redirect, url_for, flash, request, render_template, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app.users.utils import save_profile_picture
@@ -125,3 +128,83 @@ def cases_showcase(user_id: int):
     user = user_service.get_user_by_id_or_404(user_id)
     users_cases_showcase_data = scav_case_service.generate_users_cases_showcase_data(user_id)
     return render_template("user_cases_showcase.html", user=user, **users_cases_showcase_data)
+
+
+@users_bp.route("/users/discord/link")
+@login_required
+def discord_link():
+    client_id = current_app.config.get("DISCORD_CLIENT_ID")
+    redirect_uri = current_app.config.get("DISCORD_OAUTH_REDIRECT_URI")
+    if not client_id:
+        flash("Discord linking is not configured. Contact an administrator.", "danger")
+        return redirect(url_for("users.account"))
+    params = urllib.parse.urlencode({
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "identify",
+    })
+    return redirect(f"https://discord.com/api/oauth2/authorize?{params}")
+
+
+@users_bp.route("/users/discord/callback")
+@login_required
+def discord_callback():
+    code = request.args.get("code")
+    if not code:
+        flash("Discord authorization was cancelled.", "warning")
+        return redirect(url_for("users.account"))
+
+    client_id = current_app.config.get("DISCORD_CLIENT_ID")
+    client_secret = current_app.config.get("DISCORD_CLIENT_SECRET")
+    redirect_uri = current_app.config.get("DISCORD_OAUTH_REDIRECT_URI")
+
+    token_response = http_requests.post(
+        "https://discord.com/api/oauth2/token",
+        data={
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    if token_response.status_code != 200:
+        flash("Failed to authenticate with Discord. Please try again.", "danger")
+        return redirect(url_for("users.account"))
+
+    access_token = token_response.json().get("access_token")
+
+    user_response = http_requests.get(
+        "https://discord.com/api/users/@me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if user_response.status_code != 200:
+        flash("Failed to retrieve Discord user info. Please try again.", "danger")
+        return redirect(url_for("users.account"))
+
+    discord_user = user_response.json()
+    discord_id = int(discord_user["id"])
+    discord_username = discord_user.get("username")
+
+    existing = User.query.filter_by(discord_id=discord_id).first()
+    if existing and existing.id != current_user.id:
+        flash("This Discord account is already linked to another user.", "danger")
+        return redirect(url_for("users.account"))
+
+    current_user.discord_id = discord_id
+    current_user.discord_username = discord_username
+    db.session.commit()
+    flash(f"Discord account '{discord_username}' linked successfully!", "success")
+    return redirect(url_for("users.account"))
+
+
+@users_bp.route("/users/discord/unlink", methods=["POST"])
+@login_required
+def discord_unlink():
+    current_user.discord_id = None
+    current_user.discord_username = None
+    db.session.commit()
+    flash("Discord account unlinked.", "success")
+    return redirect(url_for("users.account"))

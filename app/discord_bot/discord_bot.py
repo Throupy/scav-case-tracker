@@ -5,7 +5,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from app.discord_bot.utils import get_matching_type, valid_types, create_basic_embed
+from app.discord_bot.utils import get_matching_type, valid_types, create_basic_embed, create_processing_embed, create_error_embed
 from app.constants import SCAV_CASE_TYPES
 from app.models import ScavCase
 
@@ -102,11 +102,15 @@ async def _case_embed(session, url, title, color):
     case_id = data.get("id")
     created_at_raw = data.get("created_at")
     created_at = datetime.fromisoformat(created_at_raw).replace(tzinfo=timezone.utc) if created_at_raw else None
+    submitted_by = data.get("submitted_by", "Unknown")
+    via_discord = data.get("via_discord", False)
 
     item_lines = [
         f"• **{item['name']}** x{item['amount']} — ₽{item['total']:,.0f}"
         for item in items
     ]
+
+    submitter_value = f"{submitted_by} via Discord" if via_discord else submitted_by
 
     embed = discord.Embed(
         title=f"{title} — Case #{case_id} ({case_type})",
@@ -121,11 +125,8 @@ async def _case_embed(session, url, title, color):
         value=f"₽{profit:,.0f}",
         inline=True,
     )
-    embed.add_field(
-        name="📊 ROI",
-        value=f"{roi_pct:+.1f}%",
-        inline=True,
-    )
+    embed.add_field(name="📊 ROI",          value=f"{roi_pct:+.1f}%",    inline=True)
+    embed.add_field(name="👤 Submitted by", value=submitter_value,        inline=True)
     embed.set_footer(text="Scav Case Tracker")
     return embed
 
@@ -198,27 +199,23 @@ class ImageDownloaderClient(commands.Bot):
             return
 
         if message.channel.id == self.channel_id:
-            tarkov_role = discord.utils.get(message.guild.roles, name="EFT")
-            if not tarkov_role or tarkov_role not in message.author.roles:
-                return await message.channel.send(
-                    embed=create_basic_embed(
-                        f"You do not have permission to submit scav cases"
-                    )
-                )
-
             if message.attachments and message.content:
                 scav_case_type = message.content.strip()
                 matched_type = get_matching_type(scav_case_type)
                 if not matched_type:
                     return await message.channel.send(
-                        embed=create_basic_embed(
-                            f"{scav_case_type} is not a valid scav case type, use **!case_types** to list valid case types"
+                        embed=create_error_embed(
+                            "❌ Invalid Case Type",
+                            f"**{scav_case_type}** is not a recognised case type.\n"
+                            f"Use `!case_types` to see all valid types and their aliases."
                         )
                     )
                 for attachment in message.attachments:
                     if attachment.url.split("?")[0].endswith(("jpg", "jpeg", "png")):
-                        status_embed = create_basic_embed(
-                            f"Received submission for type {matched_type}. Starting processing..."
+                        status_embed = create_processing_embed(
+                            "⏳ Processing",
+                            f"Received **{matched_type}** submission from {message.author.mention}.\n"
+                            f"Downloading image..."
                         )
                         status_message = await message.channel.send(embed=status_embed)
                         await self.download_image(
@@ -235,12 +232,6 @@ class ImageDownloaderClient(commands.Bot):
         self, message, attachment, scav_case_type, status_embed, status_message
     ):
         try:
-            # Update the message with current progress
-            status_embed.description = (
-                "Image downloaded. Performing OCR and retrieving prices..."
-            )
-            await status_message.edit(embed=status_embed)
-
             async with aiohttp.ClientSession() as session:
                 async with session.get(attachment.url) as response:
                     if response.status == 200:
@@ -249,11 +240,11 @@ class ImageDownloaderClient(commands.Bot):
                             f.write(await response.read())
 
                         status_embed.description = (
-                            "Image downloaded. Performing OCR and retrieving prices..."
+                            f"Received **{scav_case_type}** submission from {message.author.mention}.\n"
+                            f"🔍 Scanning image and fetching prices..."
                         )
                         await status_message.edit(embed=status_embed)
 
-                        # Submit the image to Flask asynchronously
                         await self.submit_image_to_flask(
                             message,
                             file_path,
@@ -262,14 +253,19 @@ class ImageDownloaderClient(commands.Bot):
                             status_message,
                         )
                     else:
-                        status_embed.description = (
-                            f"Failed to download image: {attachment.filename}"
+                        await status_message.edit(
+                            embed=create_error_embed(
+                                "❌ Download Failed",
+                                f"Could not download the image ({attachment.filename}).\nPlease try again."
+                            )
                         )
-                        await status_message.edit(embed=status_embed)
         except Exception as e:
-            raise e
-            status_embed.description = f"Error downloading image: {str(e)}"
-            await status_message.edit(embed=status_embed)
+            await status_message.edit(
+                embed=create_error_embed(
+                    "❌ Unexpected Error",
+                    f"Something went wrong while downloading the image.\n`{str(e)}`"
+                )
+            )
 
     async def submit_image_to_flask(
         self, message, image_path, scav_case_type, status_embed, status_message
@@ -285,61 +281,54 @@ class ImageDownloaderClient(commands.Bot):
             async with aiohttp.ClientSession() as session:
                 with open(image_path, "rb") as image_file:
                     form_data = aiohttp.FormData()
-                    form_data.add_field("image", image_file, 
+                    form_data.add_field("image", image_file,
                                     filename=os.path.basename(image_path))
                     form_data.add_field("scav_case_type", scav_case_type)
+                    form_data.add_field("discord_user_id", str(message.author.id))
 
                     async with session.post(url, headers=headers, data=form_data) as response:
                         response_data = await response.json()
-                        
+
                         if response.status == 200:
                             items = response_data.get("items", [])
                             total_return = response_data.get("total_return") or 0
                             cost = response_data.get("cost") or 0
                             profit = total_return - cost
+                            roi_pct = ((profit / cost) * 100) if cost else 0
+                            case_id = response_data.get("scav_case_id")
 
-                            item_lines = []
-                            for item in items:
-                                qty = item["quantity"]
-                                total = (item["price"] or 0) * qty
-                                item_lines.append(
-                                    f"• **{item['name']}** x{qty} — ₽{total:,.0f}"
-                                )
+                            item_lines = [
+                                f"• **{item['name']}** x{item['quantity']} — ₽{(item['price'] or 0) * item['quantity']:,.0f}"
+                                for item in items
+                            ]
 
+                            title = f"✅ Scav Case #{case_id} Recorded" if case_id else "✅ Scav Case Recorded"
                             embed = discord.Embed(
-                                title="✅ Scav Case Added!",
+                                title=title,
                                 description="\n".join(item_lines) or "No items recorded.",
                                 color=discord.Color.green(),
                             )
+                            embed.add_field(name="💰 Return", value=f"₽{total_return:,.0f}", inline=True)
+                            embed.add_field(name="💸 Cost",   value=f"₽{cost:,.0f}",         inline=True)
                             embed.add_field(
-                                name="💰 Return", value=f"₽{total_return:,.0f}", inline=True
-                            )
-                            embed.add_field(
-                                name="💸 Cost", value=f"₽{cost:,.0f}", inline=True
-                            )
-                            embed.add_field(
-                                name="📈 Profit" if profit >= 0 else "📉 Profit",
+                                name="📈 Profit" if profit >= 0 else "📉 Loss",
                                 value=f"₽{profit:,.0f}",
                                 inline=True,
                             )
-                            embed.set_footer(text="Scav Case Tracker")
+                            embed.add_field(name="📊 ROI", value=f"{roi_pct:+.1f}%", inline=True)
+                            embed.set_footer(text=f"Submitted by {message.author.display_name} • Scav Case Tracker")
                             await status_message.edit(embed=embed)
                         else:
                             error_msg = response_data.get("error", f"HTTP {response.status}")
                             await status_message.edit(
-                                embed=discord.Embed(
-                                    title="❌ Error",
-                                    description=f"Failed to submit: {error_msg}",
-                                    color=discord.Color.red()
-                                )
+                                embed=create_error_embed("❌ Submission Failed", error_msg)
                             )
-                            
+
         except Exception as e:
             await status_message.edit(
-                embed=discord.Embed(
-                    title="❌ Connection Error",
-                    description=f"Could not connect to Flask app: {str(e)}",
-                    color=discord.Color.red()
+                embed=create_error_embed(
+                    "❌ Connection Error",
+                    f"Could not reach the tracker. Please try again later.\n`{str(e)}`"
                 )
             )
 

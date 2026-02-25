@@ -200,7 +200,7 @@ class ScavCaseService(BaseService):
                 "avg_return_chart": None,
             }
     
-    def create_scav_case(self, scav_case_type: str, uploaded_image, items_data: str, user: User) -> Dict[str, Any]:
+    def create_scav_case(self, scav_case_type: str, uploaded_image, items_data: str, user: User, via_discord: bool = False) -> Dict[str, Any]:
         """Create a new scav case entry - centralised function for web and integrations (e.g. discord bot)"""
         try:
             # uploaded_image is for integrations such as discord bot
@@ -213,8 +213,8 @@ class ScavCaseService(BaseService):
                 items = json.loads(items_data)
             else:
                 raise ValueError("Either image or items_data must be provided")
-            
-            scav_case = self._create_scav_case_entry(scav_case_type, items, user.id)
+
+            scav_case = self._create_scav_case_entry(scav_case_type, items, user.id, via_discord=via_discord)
 
             check_achievements(user)
 
@@ -288,30 +288,46 @@ class ScavCaseService(BaseService):
         Returns: (response_dict, status_code)
         """
         try:
-            # Get the Discord bot user
-            discord_bot_user = User.query.filter_by(username='Discord Bot').first()
-            if not discord_bot_user:
-                current_app.logger.error("Discord bot user not found in database")
-                return jsonify({"error": "Discord bot user not found"}), 500
-            
-            current_app.logger.info(f"Found Discord bot user: {discord_bot_user.username}")
-            
+            # Resolve which user to attribute this submission to.
+            # The bot always sends discord_user_id. If it matches a linked account, use that.
+            # If there's no linked account, reject the submission — the user must link first.
+            discord_user_id = request.form.get("discord_user_id")
+            submitting_user = None
+            if discord_user_id:
+                try:
+                    submitting_user = User.query.filter_by(discord_id=int(discord_user_id)).first()
+                except (ValueError, TypeError):
+                    pass
+
+                if not submitting_user:
+                    return jsonify({
+                        "error": "Your Discord account is not linked to a Scav Case Tracker account. "
+                                 "Visit the website and link your account under Account Settings."
+                    }), 403
+
+            if not submitting_user:
+                current_app.logger.error("Discord submission received with no discord_user_id")
+                return jsonify({"error": "Could not identify submitting user"}), 400
+
+            current_app.logger.info(f"Discord submission attributed to: {submitting_user.username}")
+
             # Extract form data
             scav_case_type = request.form.get("scav_case_type")
             uploaded_image = request.files.get("image")
             items_data = request.form.get("items_data", "")
-            
+
             current_app.logger.info(f"Form data - Type: {scav_case_type}, Has Image: {bool(uploaded_image)}")
-            
+
             if not scav_case_type:
                 return jsonify({"error": "scav_case_type is required"}), 400
-            
+
             # Create the scav case
             result = self.create_scav_case(
                 scav_case_type=scav_case_type,
                 uploaded_image=uploaded_image,
                 items_data=items_data,
-                user=discord_bot_user
+                user=submitting_user,
+                via_discord=True,
             )
             
             current_app.logger.info(f"Service result: {result}")
@@ -612,7 +628,7 @@ class ScavCaseService(BaseService):
         }
 
     def _create_scav_case_entry(
-        self, scav_case_type: str, items: list[dict[str, Any]], user_id: int,
+        self, scav_case_type: str, items: list[dict[str, Any]], user_id: int, via_discord: bool = False,
     ) -> ScavCase:
         """Create ScavCase + ScavCaseItems."""
 
@@ -682,6 +698,7 @@ class ScavCaseService(BaseService):
                     cost=cost,
                     number_of_items=len(normalized),
                     _return=0.0,
+                    via_discord=via_discord,
                 )
                 session.add(scav_case)
                 # flush so scav_case.id is rdy for FK refs

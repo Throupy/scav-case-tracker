@@ -5,6 +5,7 @@ from flask.cli import with_appcontext
 def register_commands(app):
     app.cli.add_command(create_superuser)
     app.cli.add_command(promote_superuser)
+    app.cli.add_command(reassign_discord_cases)
 
 
 @click.command("create-superuser")
@@ -51,3 +52,31 @@ def promote_superuser(username):
     user.is_superuser = True
     db.session.commit()
     click.echo(f"'{username}' has been promoted to superuser.")
+
+
+@click.command("reassign-discord-cases")
+@click.argument("target_username")
+@with_appcontext
+def reassign_discord_cases(target_username):
+    """Reassign all 'Discord Bot' cases to TARGET_USERNAME."""
+    from app.extensions import db
+    from app.models import User, ScavCase
+
+    bot_user = User.query.filter_by(username="Discord Bot").first()
+    if not bot_user:
+        click.echo("Error: 'Discord Bot' user not found.", err=True)
+        return
+
+    target_user = User.query.filter_by(username=target_username).first()
+    if not target_user:
+        click.echo(f"Error: user '{target_username}' not found.", err=True)
+        return
+
+    count = ScavCase.query.filter_by(user_id=bot_user.id).count()
+    if count == 0:
+        click.echo("No cases found under 'Discord Bot'.")
+        return
+
+    ScavCase.query.filter_by(user_id=bot_user.id).update({"user_id": target_user.id})
+    db.session.commit()
+    click.echo(f"Reassigned {count} case(s) from 'Discord Bot' to '{target_username}'.")

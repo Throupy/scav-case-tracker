@@ -27,6 +27,7 @@ class ScavCase(db.Model):
     type = db.Column(db.String(50), nullable=False)
     number_of_items = db.Column(db.Integer, nullable=False, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    via_discord = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     items = db.relationship("ScavCaseItem", backref="scav_case", cascade="all, delete")
 
     @hybrid_property
@@ -91,6 +92,8 @@ class User(db.Model, UserMixin):
     is_superuser = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     force_password_change = db.Column(db.Boolean, nullable=False, default=False, server_default="0")
     scav_case_global_dashboard_layout = db.Column(db.JSON, nullable=True)
+    discord_id = db.Column(db.BigInteger, nullable=True, unique=True)
+    discord_username = db.Column(db.String(64), nullable=True)
     scav_cases = db.relationship("ScavCase", backref="author", lazy=True, cascade="all, delete-orphan")
     # many-to-many with TarkovItem (for market section tracking)
     tracked_items = db.relationship(

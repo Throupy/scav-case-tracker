@@ -56,20 +56,30 @@ def get_matching_type(user_input):
     return None
 
 
+_THUMBNAIL = "https://github.com/Throupy/scav-case-tracker/blob/00d1ebe13240f56f200b52b80214ff8fab69233b/app/static/icon.png?raw=true"
+
+
 def create_basic_embed(text: str) -> discord.Embed:
-    """
-    Generate a simple embed with a description, a red color
-    theme, a footer, and a thumbnail image.
-
-    Args:
-        text (str): The description text to be included in the embed.
-
-    Returns:
-        discord.Embed: The formatted embed object ready to be sent
-    """
+    """Simple red info/error embed with no title."""
     embed = discord.Embed(description=text, color=discord.Color.red())
     embed.set_footer(text="Scav Case Tracker Bot")
-    embed.set_thumbnail(
-        url="https://github.com/Throupy/scav-case-tracker/blob/00d1ebe13240f56f200b52b80214ff8fab69233b/app/static/icon.png?raw=true"
+    embed.set_thumbnail(url=_THUMBNAIL)
+    return embed
+
+
+def create_processing_embed(stage: str, detail: str = "") -> discord.Embed:
+    """Amber status embed used during case submission processing."""
+    embed = discord.Embed(
+        title=stage,
+        description=detail,
+        color=discord.Color.orange(),
     )
+    embed.set_footer(text="Scav Case Tracker Bot")
+    return embed
+
+
+def create_error_embed(title: str, detail: str) -> discord.Embed:
+    """Red error embed with a title."""
+    embed = discord.Embed(title=title, description=detail, color=discord.Color.red())
+    embed.set_footer(text="Scav Case Tracker Bot")
     return embed

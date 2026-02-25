@@ -80,7 +80,14 @@
     </div>
 </div>
 
-<div class="grid-stack">
+<div id="dashboard-grid-wrapper" style="position: relative;">
+<div id="dashboard-loading" style="position: absolute; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding-top: 80px; pointer-events: none;">
+    <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm text-danger mr-2" role="status" aria-hidden="true"></div>
+        <span class="text-muted small">Loading dashboard...</span>
+    </div>
+</div>
+<div class="grid-stack" style="opacity: 0;">
     <div class="grid-stack-item" gs-id="kpi_total_cases" gs-x="0" gs-y="0" gs-w="3" gs-h="1" gs-min-w="2">
         <div class="grid-stack-item-content">
             {% include "partials/kpis/_total_cases.html" %}
@@ -141,6 +148,7 @@
         </div>
     </div>
 
+</div>
 </div>
 <script>
     window.IS_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};

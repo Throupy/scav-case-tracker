@@ -36,6 +36,10 @@ class Config:
     # API key for external clients (Discord bot read endpoints).
     API_KEY = os.getenv("API_KEY")
 
+    # Discord OAuth2 - for linking Discord accounts to webapp accounts
+    DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+    DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+
 
 class DevelopmentConfig(Config):
     """Config for development"""
@@ -45,6 +49,7 @@ class DevelopmentConfig(Config):
     SEED_ENTRIES = False
     SEED_ENTRIES_COUNT = 1000
     REFRESH_TARKOV_ITEMS = False
+    DISCORD_OAUTH_REDIRECT_URI = os.getenv("DISCORD_OAUTH_REDIRECT_URI", "http://192.168.0.189:5000/users/discord/callback")
 
 
 class ProductionConfig(Config):
@@ -56,6 +61,7 @@ class ProductionConfig(Config):
     SEED_ENTRIES_COUNT = 1000
     REFRESH_TARKOV_ITEMS = False
     FLASK_BASE_URL = "http://localhost:80"
+    DISCORD_OAUTH_REDIRECT_URI = os.getenv("DISCORD_OAUTH_REDIRECT_URI", "http://192.168.0.189/users/discord/callback")
 
 env = os.getenv(
     "FLASK_ENV", "development"
