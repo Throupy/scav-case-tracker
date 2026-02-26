@@ -6,7 +6,7 @@ from collections import defaultdict
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, jsonify, abort
 from flask_login import login_required, current_user
 
-from app.models import ScavCase, ScavCaseItem, TarkovItem
+from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.constants import SCAV_CASE_TYPES, CLOUDINARY_BASE_URL
 from app.cases.forms import CreateScavCaseForm, UpdateScavCaseForm
 from app.cases.utils import is_discord_bot_request
@@ -149,7 +149,8 @@ def create_scav_case():
     if not current_user.is_authenticated:
         flash("You must be logged in to do this", "danger")
         return redirect(url_for("users.login"))
-    return render_template("create_scav_case.html")
+    users = User.query.order_by(User.username).all() if current_user.is_superuser else []
+    return render_template("create_scav_case.html", users=users)
 
 @cases_bp.route("/cases/submit", methods=["GET", "POST"])
 @csrf.exempt  # bot requests have no CSRF token; web form submissions are validated by WTForms' own form.validate_on_submit()
@@ -164,13 +165,24 @@ def submit_scav_case():
 
     # Create the form instance to display to web user
     form = CreateScavCaseForm()
+    users = User.query.order_by(User.username).all() if current_user.is_superuser else []
 
     if form.validate_on_submit():
+        # Superusers can optionally submit on behalf of another user
+        target_user = current_user
+        if current_user.is_superuser:
+            submit_as_id = request.form.get("submit_as_user_id", type=int)
+            if submit_as_id:
+                target_user = db.session.get(User, submit_as_id)
+                if not target_user:
+                    flash("Selected user not found", "danger")
+                    return render_template("create_scav_case.html", form=form, users=users)
+
         result = scav_case_service.create_scav_case(
             scav_case_type=form.scav_case_type.data,
             uploaded_image=form.scav_case_image.data,
             items_data=form.items_data.data,
-            user=current_user
+            user=target_user
         )
 
         if result["success"]:
@@ -178,9 +190,9 @@ def submit_scav_case():
             return redirect(url_for("cases.dashboard"))
         else:
             flash(result["message"], "danger")
-    
+
     # render HTML with CreateScavCase form
-    return render_template("create_scav_case.html", form=form)
+    return render_template("create_scav_case.html", form=form, users=users)
 
 
 @cases_bp.route("/cases/<int:scav_case_id>")

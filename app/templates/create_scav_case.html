@@ -33,7 +33,6 @@
 
     <div class="tab-content" id="createCaseTabContent">
 
-      <!-- MANUAL -->
       <div class="tab-pane fade show active" id="manual" role="tabpanel" aria-labelledby="manual-tab">
         <div class="card shadow mb-4">
           <div class="card-header py-3 d-flex align-items-center justify-content-between">
@@ -111,11 +110,47 @@
               </div>
               <hr class="mt-0 mb-3">
 
+              {% if current_user.is_superuser %}
+              <div class="superuser-submit-panel form-group">
+                <p class="small font-weight-bold text-uppercase submit-as-label mb-2">
+                  <i class="fas fa-user-shield mr-1"></i>(Admin) Submit as user
+                </p>
+                <input type="hidden" name="submit_as_user_id" class="submit-as-input" value="">
+                <div class="dropdown">
+                  <button type="button" class="form-control d-flex align-items-center text-left submit-as-btn"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
+                         class="rounded-circle mr-2 flex-shrink-0 submit-as-thumb">
+                    <span class="submit-as-name text-truncate">myself — {{ current_user.username }}</span>
+                  </button>
+                  <div class="dropdown-menu w-100 py-1 shadow-sm">
+                    <a class="dropdown-item d-flex align-items-center submit-as-option py-2" href="#"
+                       data-value="" data-name="myself — {{ current_user.username }}"
+                       data-img="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+                      <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
+                           class="rounded-circle mr-2 flex-shrink-0 submit-as-avatar">
+                      <span>{{ current_user.username }}</span>
+                      <span class="badge badge-secondary submit-as-badge ml-2">me</span>
+                    </a>
+                    {% for user in users %}{% if user.id != current_user.id %}
+                    <a class="dropdown-item d-flex align-items-center submit-as-option py-2" href="#"
+                       data-value="{{ user.id }}" data-name="{{ user.username }}"
+                       data-img="{{ url_for('static', filename='profile_pics/' + user.image_file) }}">
+                      <img src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}"
+                           class="rounded-circle mr-2 flex-shrink-0 submit-as-avatar">
+                      <span>{{ user.username }}</span>
+                    </a>
+                    {% endif %}{% endfor %}
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+
               <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div class="small text-muted mb-2 mb-md-0">
                   Review selected items before submitting.
                 </div>
-              
+
                 <button type="submit" class="btn btn-danger px-4">
                   <i class="fas fa-check mr-2"></i>Submit Scav Case
                 </button>
@@ -125,7 +160,6 @@
         </div>
       </div>
 
-      <!-- IMAGE -->
       <div class="tab-pane fade" id="image" role="tabpanel" aria-labelledby="image-tab">
         <div class="card shadow mb-4">
           <div class="card-header py-3 d-flex align-items-center justify-content-between">
@@ -158,6 +192,43 @@
               </div>
 
               <hr class="mt-0 mb-3">
+
+              {% if current_user.is_superuser %}
+              <div class="superuser-submit-panel form-group">
+                <p class="small font-weight-bold text-uppercase submit-as-label mb-2">
+                  <i class="fas fa-user-shield mr-1"></i>(Admin) Submit as user
+                </p>
+                <input type="hidden" name="submit_as_user_id" class="submit-as-input" value="">
+                <div class="dropdown">
+                  <button type="button" class="form-control d-flex align-items-center text-left submit-as-btn"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
+                         class="rounded-circle mr-2 flex-shrink-0 submit-as-thumb">
+                    <span class="submit-as-name text-truncate">myself — {{ current_user.username }}</span>
+                  </button>
+                  <div class="dropdown-menu w-100 py-1 shadow-sm">
+                    <a class="dropdown-item d-flex align-items-center submit-as-option py-2" href="#"
+                       data-value="" data-name="myself — {{ current_user.username }}"
+                       data-img="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+                      <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
+                           class="rounded-circle mr-2 flex-shrink-0 submit-as-avatar">
+                      <span>{{ current_user.username }}</span>
+                      <span class="badge badge-secondary submit-as-badge ml-2">me</span>
+                    </a>
+                    {% for user in users %}{% if user.id != current_user.id %}
+                    <a class="dropdown-item d-flex align-items-center submit-as-option py-2" href="#"
+                       data-value="{{ user.id }}" data-name="{{ user.username }}"
+                       data-img="{{ url_for('static', filename='profile_pics/' + user.image_file) }}">
+                      <img src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}"
+                           class="rounded-circle mr-2 flex-shrink-0 submit-as-avatar">
+                      <span>{{ user.username }}</span>
+                    </a>
+                    {% endif %}{% endfor %}
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+
               <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-danger px-4">
                   <i class="fas fa-upload mr-2"></i>Process Image
@@ -290,6 +361,16 @@
     if (itemList) itemList.innerHTML = '';
     if (search) search.value = '';
   }
+
+  document.addEventListener("click", function(e) {
+    var opt = e.target.closest(".submit-as-option");
+    if (!opt) return;
+    e.preventDefault();
+    var panel = opt.closest(".superuser-submit-panel");
+    panel.querySelector(".submit-as-input").value = opt.dataset.value;
+    panel.querySelector(".submit-as-name").textContent = opt.dataset.name;
+    panel.querySelector(".submit-as-thumb").src = opt.dataset.img;
+  });
 
   document.addEventListener("DOMContentLoaded", function() {
     updateSelectedCount();

@@ -244,6 +244,52 @@ input[type="number"] {
     overflow: visible;
 }
 
+.superuser-submit-panel {
+    padding: 0.65rem 0.85rem 1.1rem;
+    border-left: 3px solid #f56e6e;
+    border-radius: 0.25rem;
+    background: rgba(245, 110, 110, 0.04);
+}
+
+.submit-as-label {
+    color: #f56e6e;
+    letter-spacing: 0.05em;
+}
+
+.submit-as-btn {
+    cursor: pointer;
+    height: auto;
+}
+
+/* CSS-only caret replaces the FA icon */
+.submit-as-btn::after {
+    content: "";
+    display: inline-block;
+    flex-shrink: 0;
+    margin-left: auto;
+    border-top: 0.3em solid currentColor;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+    opacity: 0.55;
+}
+
+.submit-as-thumb {
+    width: 22px;
+    height: 22px;
+    object-fit: cover;
+}
+
+.submit-as-avatar {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+}
+
+.submit-as-badge {
+    font-size: 10px;
+}
+
 .dashboard-controls-panel {
     min-width: 264px;
     padding: 1rem;

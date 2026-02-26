@@ -338,3 +338,7 @@ html.dark .dashboard-panel-label {
 html.dark .dropdown-divider {
     border-top-color: #2a3142 !important;
 }
+
+html.dark .superuser-submit-panel {
+    background: rgba(245, 110, 110, 0.08);
+}
