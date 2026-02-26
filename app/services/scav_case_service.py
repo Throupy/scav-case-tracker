@@ -632,26 +632,8 @@ class ScavCaseService(BaseService):
     ) -> ScavCase:
         """Create ScavCase + ScavCaseItems."""
 
-        def _parse_case_cost(case_type: str) -> float:
-            """resolve cost of the case
-            - Moonshine / Intel -> dynamic price lookup
-            - static costs -> parsed integers
-            """
-            ct = (case_type or "").strip()
-            ctl = ct.lower()
-
-            if ctl == "moonshine":
-                p = get_price("5d1b376e86f774252519444e")
-                return float(p or 0.0)
-            if ctl == "intelligence":
-                p = get_price("5c12613b86f7743bbe2c3f76")
-                return float(p or 0.0)
-
-            # parse the static cost
-            try:
-                return float(int(ct.replace("₽", "").replace(",", "").strip()))
-            except Exception as e:
-                raise ValueError(f"Invalid scav_case_type cost: {case_type!r}") from e
+        MOONSHINE_ID = "5d1b376e86f774252519444e"
+        INTEL_ID = "5c12613b86f7743bbe2c3f76"
 
         # validate and normalise items
         normalized: list[dict[str, Any]] = []
@@ -671,18 +653,41 @@ class ScavCaseService(BaseService):
 
             normalized.append({"id": tid, "name": name, "quantity": qty})
 
-        # compute case cost after validation
-        cost = _parse_case_cost(scav_case_type)
+        # determine whether the case cost requires a dynamic price lookup
+        ct = (scav_case_type or "").strip()
+        ctl = ct.lower()
+        cost_item_id: Optional[str] = None
+        static_cost: Optional[float] = None
 
-        # prepare IDs for bulk price lookup
+        if ctl == "moonshine":
+            cost_item_id = MOONSHINE_ID
+        elif ctl == "intelligence":
+            cost_item_id = INTEL_ID
+        else:
+            try:
+                static_cost = float(int(ct.replace("₽", "").replace(",", "").strip()))
+            except Exception as e:
+                raise ValueError(f"Invalid scav_case_type cost: {scav_case_type!r}") from e
+
+        # single bulk API call — include cost item ID so moonshine/intel price
+        # is fetched in the same request as the loot items
         unique_ids = list({x["id"] for x in normalized})
+        if cost_item_id is not None:
+            unique_ids = list({*unique_ids, cost_item_id})
+
         prices_by_id: dict[str, Optional[int]]
         try:
-            # bulk call to graphql endpoint
             prices_by_id = get_prices(unique_ids)
         except Exception:
             current_app.logger.exception("Price lookup failed (bulk). Falling back to None prices.")
             prices_by_id = {tid: None for tid in unique_ids}
+
+        # resolve cost from the shared price map
+        if cost_item_id is not None:
+            p = prices_by_id.get(cost_item_id)
+            cost = float(p or 0.0)
+        else:
+            cost = static_cost
 
         # use real session obj, not scoped proxy
         session = self.db.session()
