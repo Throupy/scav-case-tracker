@@ -1,4 +1,4 @@
-<div class="card shadow mb-4">
+<div class="card shadow">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-danger">Earnings Overview - 15 Most Recent Cases</h6>
     </div>
@@ -62,6 +62,7 @@
         chart.options.plugins.tooltip.titleColor = dark ? "#e6e6e6" : "#6e707e";
         chart.options.plugins.tooltip.bodyColor = dark ? "#e6e6e6" : "#858796";
         chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
+        chart.options.plugins.legend.labels.color = dark ? "#e6e6e6" : undefined;
 
         chart.update();
     }
@@ -142,7 +143,7 @@
                 labels: [],
                 datasets: [
                     {
-                        label: "Earnings",
+                        label: "Return",
                         lineTension: 0.3,
                         backgroundColor: "rgba(78, 115, 223, 0.05)",
                         borderColor: "rgb(231, 74, 59)",
@@ -154,6 +155,7 @@
                         pointHoverBorderColor: "rgb(231, 74, 59)",
                         pointHitRadius: 10,
                         pointBorderWidth: 2,
+                        pointStyle: 'line',
                         data: [],
                         scav_cases: []
                     },
@@ -170,6 +172,7 @@
                         fill: false,
                         borderDash: [5, 5],
                         showLine: true,
+                        pointStyle: 'line',
                         data: [],
                         scav_cases: [],
                         hidden: false
@@ -245,7 +248,16 @@
                         }
                     },
                     horizontalLine: { y: null },
-                    legend: { display: false }
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyleWidth: 28,
+                            padding: 20,
+                            font: { size: 12 }
+                        }
+                    }
                 }
             },
             plugins: [{
