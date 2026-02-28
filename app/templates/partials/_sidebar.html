@@ -1,0 +1,89 @@
+<ul class="navbar-nav bg-gradient-danger sidebar sidebar-dark accordion" id="accordionSidebar">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#">
+        <div class="sidebar-brand-icon rotate-n-15">
+            <i class="fas fa-sack-dollar"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">Scav Case Tracker</div>
+    </a>
+
+    <hr class="sidebar-divider my-0">
+
+    <li class="nav-item active">
+        <a class="nav-link" href="{{ url_for('cases.dashboard') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span></a>
+    </li>
+
+    <hr class="sidebar-divider">
+
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#scav-cases-dropdown"
+            aria-expanded="true" aria-controls="scav-cases-dropdown">
+            <i class="fas fa-fw fa-box"></i>
+            <span>Scav Cases</span>
+        </a>
+        <div id="scav-cases-dropdown" class="collapse" aria-labelledby="scav-cases-dropdown-heading"
+            data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ url_for('cases.submit_scav_case') }}">New Case</a>
+                <a class="collapse-item" href="{{ url_for('cases.all_scav_cases') }}">All Cases</a>
+                <a class="collapse-item" href="{{ url_for('cases.insights') }}">Insights</a>
+                <a class="collapse-item" href="{{ url_for('cases.cases_items') }}">Found Items</a>
+            </div>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#cultist-circles-dropdown"
+            aria-expanded="true" aria-controls="cultist-circles-dropdown">
+            <i class="fas fa-fw fa-box"></i>
+            <span>Cultist Circles</span>
+        </a>
+        <div id="cultist-circles-dropdown" class="collapse" aria-labelledby="cultist-circles-dropdown-heading"
+            data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ url_for('circles.create_circle') }}">New Entry</a>
+            </div>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+            aria-expanded="true" aria-controls="collapseTwo">
+            <i class="fas fa-fw fa-cog"></i>
+            <span>Attachment Quiz</span>
+        </a>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ url_for('quiz.quiz', quiz_type='recoil') }}">Recoil</a>
+                <a class="collapse-item" href="{{ url_for('quiz.quiz', quiz_type='ergonomics') }}">Ergonomics</a>
+            </div>
+        </div>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('market.index') }}">
+            <i class="fas fa-fw fa-shop"></i>
+            <span>Market</span></a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('leaderboards.index') }}">
+            <i class="fas fa-fw fa-trophy"></i>
+            <span>Leaderboards</span></a>
+    </li>
+
+    {% if current_user.is_authenticated and current_user.is_superuser %}
+    <hr class="sidebar-divider">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.users') }}">
+            <i class="fas fa-fw fa-shield-alt"></i>
+            <span>Admin</span></a>
+    </li>
+    {% endif %}
+
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+
+</ul>
