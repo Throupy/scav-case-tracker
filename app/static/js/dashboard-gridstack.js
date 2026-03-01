@@ -1,8 +1,3 @@
-// Rudimentary to-do list for the gridstack
-// TODO: 'widget library' to select
-// TODO: Ability to remove widgets from view - drag away, or X button when unlocked
-// TODO: Resizing - auto text-wrap
-
 (function () {
     const gridEl = document.querySelector(".grid-stack");
     if (!gridEl) return;
@@ -16,8 +11,9 @@
         cellHeight: 130,
         float: false,
         animate: true,
-        draggable: isAuthenticated,   // only draggable if logged in
-        resizable: isAuthenticated ? { handles: "all" } : false
+        draggable: isAuthenticated,
+        resizable: isAuthenticated ? { handles: "all" } : false,
+        acceptWidgets: isAuthenticated
     }, ".grid-stack");
 
     function revealGrid() {
@@ -81,7 +77,6 @@
         const res = await fetch("/cases/global-dashboard/layout", {
             credentials: "include"
         });
-
         if (!res.ok) return null;
         return await res.json();
     }
@@ -94,11 +89,15 @@
             locked = state;
             grid.enableMove(!locked);
             grid.enableResize(!locked);
+            gridEl.classList.toggle("gs-unlocked", !locked);
             if (btn) {
                 const icon  = document.getElementById("toggle-layout-icon");
                 const label = document.getElementById("toggle-layout-label");
                 if (icon)  icon.className  = "fas " + (locked ? "fa-lock-open" : "fa-lock") + " fa-sm mr-2";
                 if (label) label.textContent = locked ? "Unlock layout" : "Lock layout";
+            }
+            if (window.WidgetLibrary) {
+                window.WidgetLibrary.setLocked(locked);
             }
         }
 
@@ -110,20 +109,26 @@
             removeOrphans();
 
             const stored = await loadLayout();
+
+            gridEl.classList.remove("grid-stack-animate");
+
             if (Array.isArray(stored) && stored.length) {
                 const domIds = getDomIds();
                 const filtered = stored.filter(n => n && n.id && domIds.has(n.id));
 
-                // Disable animation so widgets snap to saved positions without tweening
-                gridEl.classList.remove("grid-stack-animate");
-
                 grid.engine.batchUpdate();
-                grid.load(filtered);
+                grid.load(filtered, false);
                 grid.engine.batchUpdate(false);
-                grid.compact();
-                removeOrphans();
+            }
 
-                // Re-enable animation and reveal grid after the browser has painted the final positions
+            if (window.WidgetLibrary) {
+                window.WidgetLibrary.init(grid, stored);
+            }
+
+            grid.compact();
+            removeOrphans();
+
+            if (Array.isArray(stored) && stored.length) {
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     gridEl.classList.add("grid-stack-animate");
                     revealGrid();
@@ -131,10 +136,10 @@
             } else {
                 revealGrid();
             }
+
             setLocked(true);
             setTimeout(nudgeCharts, 50);
         })();
-
 
         function persist() {
             const layout = getLayout();
@@ -154,4 +159,3 @@
     }
 
 })();
-

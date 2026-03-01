@@ -2,6 +2,7 @@
 
 {% block content %}
 {% include "partials/dashboard/_controls.html" %}
+{% include "partials/dashboard/_widget_library_modal.html" %}
 
 <div id="dashboard-grid-wrapper" style="position: relative;">
 <div id="dashboard-loading" style="position: absolute; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding-top: 80px; pointer-events: none;">
@@ -201,5 +202,6 @@
     })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@11.3.0/dist/gridstack-all.js"></script>
+<script src="{{ url_for('static', filename='js/widget-library.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard-gridstack.js') }}"></script>
 {% endblock content %}
