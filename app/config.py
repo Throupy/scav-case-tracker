@@ -54,14 +54,21 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     """Config for production"""
-
     DEBUG = False
     START_DISCORD_BOT = True
     SEED_ENTRIES = False
     SEED_ENTRIES_COUNT = 1000
     REFRESH_TARKOV_ITEMS = False
-    FLASK_BASE_URL = "http://localhost:80"
-    DISCORD_OAUTH_REDIRECT_URI = os.getenv("DISCORD_OAUTH_REDIRECT_URI", "http://192.168.0.189/users/discord/callback")
+    FLASK_BASE_URL = "https://sct.owenthroup.co.uk"
+    DISCORD_OAUTH_REDIRECT_URI = os.getenv("DISCORD_OAUTH_REDIRECT_URI", "https://sct.owenthroup.co.uk/users/discord/callback")
+    # Security: ensure cookies are only sent over HTTPS
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    # CSRF
+    WTF_CSRF_SSL_STRICT = True
 
 env = os.getenv(
     "FLASK_ENV", "development"

@@ -4,6 +4,8 @@ from logging.config import dictConfig
 from flask import Flask, redirect, url_for, request
 from flask_login import current_user
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from app.config import ConfigClass
 from app.constants import SCAV_CASE_TYPES
 from app.extensions import db, migrate, login_manager, bcrypt, csrf
@@ -39,6 +41,7 @@ def create_app(config_class=ConfigClass):
     _configure_logging()
 
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     app.config.from_object(config_class)
 
     _init_extensions(app)
