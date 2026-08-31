@@ -60,6 +60,24 @@
         </div>
     </div>
 
+    <div class="grid-stack-item" gs-id="kpi_biggest_loss" gs-x="9" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_biggest_loss.html" %}
+        </div>
+    </div>
+
+    <div class="grid-stack-item" gs-id="kpi_win_rate" gs-x="9" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_win_rate.html" %}
+        </div>
+    </div>
+
+    <div class="grid-stack-item" gs-id="kpi_average_roi" gs-x="9" gs-y="1" gs-w="3" gs-h="1" gs-min-w="2">
+        <div class="grid-stack-item-content">
+            {% include "partials/kpis/_average_roi.html" %}
+        </div>
+    </div>
+
     <div class="grid-stack-item" gs-id="chart_earnings_overview" gs-x="0" gs-y="2" gs-w="8" gs-h="3" gs-min-w="6">
         <div class="grid-stack-item-content">
             {% include "partials/graphs/_earnings_overview_chart.html" %}
@@ -150,6 +168,23 @@
                 setText('[data-kpi="total-return"]', fmt(d.total_return));
                 setText('[data-kpi="most-popular-category"]', d.most_popular_category || 'N/A');
                 setText('[data-kpi="most-profitable-case-type"]', d.most_profitable_case_type || 'N/A');
+                setText('[data-kpi="win-rate-result"]', d.win_rate !== null ? d.win_rate.toFixed(1) + '%' : 'N/A');
+                setText('[data-kpi="avg-roi-result"]', d.average_roi !== null ? d.average_roi.toFixed(1) + '%' : 'N/A');
+
+                // Biggest loss
+                var bl = d.biggest_loss;
+                var blResult = document.querySelector('[data-kpi="worst-case-result"]');
+                var blId = document.querySelector('[data-kpi="worst-case-id"]');
+                var blLink = document.querySelector('[data-kpi="worst-case-link"]');
+                if (bl) {
+                    if (blResult) blResult.textContent = fmt(bl._return - bl.cost);
+                    if (blId) blId.textContent = 'Case #' + bl.id;
+                    if (blLink) blLink.href = '/cases/' + bl.id;
+                } else {
+                    if (blResult) blResult.textContent = 'N/A';
+                    if (blId) blId.textContent = '';
+                    if (blLink) blLink.removeAttribute('href');
+                }
 
                 // Profit icon colour
                 var profitIcon = document.querySelector('[data-kpi="profit-icon"]');

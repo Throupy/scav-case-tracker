@@ -10,6 +10,9 @@
         { id: 'kpi_top_contributor',           title: 'Top Contributor',        icon: 'fa-user',           defaultW: 3, defaultH: 1, minW: 2 },
         { id: 'kpi_most_profitable_case_type', title: 'Most Profitable Case',   icon: 'fa-chart-line',     defaultW: 3, defaultH: 1, minW: 2 },
         { id: 'kpi_most_valuable_item',        title: 'Most Valuable Item',     icon: 'fa-gem',            defaultW: 3, defaultH: 1, minW: 2 },
+        { id: 'kpi_biggest_loss',              title: 'Biggest Loss',           icon: 'fa-chart-pie',      defaultW: 3, defaultH: 1, minW: 2 },
+        { id: 'kpi_win_rate',                  title: 'Win Rate',               icon: 'fa-chart-line',     defaultW: 3, defaultH: 1, minW: 2 },
+        { id: 'kpi_average_roi',               title: 'Average ROI',            icon: 'fa-chart-pie',      defaultW: 3, defaultH: 1, minW: 2 },
         { id: 'chart_earnings_overview',       title: 'Earnings Overview',      icon: 'fa-chart-line',     defaultW: 8, defaultH: 3, minW: 6 },
         { id: 'chart_case_distribution',       title: 'Case Type Distribution', icon: 'fa-chart-pie',      defaultW: 4, defaultH: 3, minW: 3 },
     ];

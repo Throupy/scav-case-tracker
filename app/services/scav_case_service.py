@@ -370,6 +370,9 @@ class ScavCaseService(BaseService):
             "top_contributor": self._get_top_contributor(since_date=since_date, case_type=case_type) if not user_id else None,
             "most_profitable_case_type": self._get_most_profitable_case_type_name(since_date=since_date, case_type=case_type, user_id=user_id),
             "most_valuable_item": self._get_most_valuable_item(since_date=since_date, case_type=case_type, user_id=user_id),
+            "biggest_loss": self._get_biggest_loss(since_date=since_date, case_type=case_type, user_id=user_id),
+            "win_rate": self._get_win_rate(since_date=since_date, case_type=case_type, user_id=user_id),
+            "average_roi": self._get_average_roi(since_date=since_date, case_type=case_type, user_id=user_id),
         }
 
     def save_user_global_dashboard_layout(self, user_id, layout):
@@ -388,7 +391,7 @@ class ScavCaseService(BaseService):
             "good_cases": self._get_best_cases(user_id=user_id),
             "avg_profit": self._get_avg_profit_per_case(user_id=user_id),
             "most_profitable_case": self._get_most_profitable_case(user_id=user_id),
-            "profitable_cases_pcnt": self._get_profitable_cases_percentage(user_id=user_id)
+            "profitable_cases_pcnt": self._get_profitable_cases_percentage(user_id=user_id),
         }
 
     def _get_profitable_cases_percentage(self, user_id: int = None) -> float:
@@ -420,11 +423,46 @@ class ScavCaseService(BaseService):
 
         return round(percentage, 1)
 
-    def _get_worst_case(self, user_id: int = None) -> Optional[ScavCase]:
-        """Return the worst scav case by % loss of investment (lowest ROI)."""
+    def _get_biggest_loss(
+        self,
+        user_id: int = None,
+        since_date=None,
+        case_type: str = None,
+    ) -> Optional[ScavCase]:
+        """Return the scav case with the largest absolute loss (cost - return)."""
         q = self.db.session.query(ScavCase).filter(ScavCase.cost > 0)
+
         if user_id is not None:
             q = q.filter(ScavCase.user_id == user_id)
+        if since_date is not None:
+            q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
+
+        return (
+            q.order_by(
+                (ScavCase.cost - ScavCase._return).desc(),
+                ScavCase.created_at.desc(),
+            )
+            .first()
+        )
+
+    def _get_worst_case(
+        self,
+        user_id: int = None,
+        since_date=None,
+        case_type: str = None,
+    ) -> Optional[ScavCase]:
+        """Return the worst scav case by % loss of investment (lowest ROI)."""
+        q = self.db.session.query(ScavCase).filter(ScavCase.cost > 0)
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+        if since_date is not None:
+            q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
+
         return (
             q.order_by(
                 ((ScavCase._return - ScavCase.cost) / ScavCase.cost).asc(),
@@ -545,6 +583,59 @@ class ScavCaseService(BaseService):
             .limit(1)
             .scalar()
         )
+
+    def _get_win_rate(
+        self,
+        user_id: int = None,
+        since_date=None,
+        case_type: str = None,
+    ) -> Optional[float]:
+        """Return the percent of cases where return exceeded cost."""
+        q = self.db.session.query(
+            func.count(ScavCase.id).label('total'),
+            func.sum(
+                case((ScavCase._return > ScavCase.cost, 1), else_=0)
+            ).label('wins'),
+        ).filter(ScavCase.cost > 0)
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+        if since_date is not None:
+            q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
+
+        result = q.one()
+        if not result.total:
+            return None
+
+        return (result.wins / result.total) * 100
+
+    def _get_average_roi(
+        self,
+        user_id: int = None,
+        since_date=None,
+        case_type: str = None,
+    ) -> Optional[float]:
+        """Return the mean ROI percent across cases (each case weighted equally)."""
+        q = self.db.session.query(
+            func.avg(
+                (ScavCase._return - ScavCase.cost) / ScavCase.cost
+            ).label('avg_roi')
+        ).filter(ScavCase.cost > 0)
+
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+        if since_date is not None:
+            q = q.filter(ScavCase.created_at >= since_date)
+        if case_type and case_type.lower() != 'all':
+            q = q.filter(ScavCase.type == case_type)
+
+        result = q.scalar()
+        if result is None:
+            return None
+
+        return result * 100
 
     def _get_most_profitable_case_type_name(self, user_id: int = None, since_date=None, case_type: str = None) -> str | None:
         """Most profitable case type by average profit per run (optionally per-user)."""

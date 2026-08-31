@@ -98,6 +98,7 @@ def dashboard_kpis():
 
     tc = data["top_contributor"]
     mvi = data["most_valuable_item"]
+    bl = data["biggest_loss"]
 
     return success_response(
         data={
@@ -117,6 +118,13 @@ def dashboard_kpis():
                 "scav_case_id": mvi.scav_case_id,
                 "image_url": get_item_cdn_image_url(mvi),
             } if mvi else None,
+            "biggest_loss": {
+                "id": bl.id,
+                "cost": bl.cost,
+                "_return": bl._return,
+            } if bl else None,
+            "win_rate": data["win_rate"],
+            "average_roi": data["average_roi"],
         },
         message="Dashboard KPIs fetched",
     )
