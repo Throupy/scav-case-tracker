@@ -69,7 +69,7 @@ def test_case_detail_requires_login(client, session):
 
 
 def test_case_detail_requires_ownership(client, session):
-    """Authenticated user cannot view another user's case — expects 403."""
+    """Authenticated user cannot view another user's case - expects 403."""
     owner_id = _create_user("rt_det_owner2")
     case_id = _create_case(owner_id)
     attacker_id = _create_user("rt_det_attacker")

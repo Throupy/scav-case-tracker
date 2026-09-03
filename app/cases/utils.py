@@ -16,7 +16,7 @@ from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
 
 from app.constants import ACHIEVEMENT_CHECKS, ACHIEVEMENT_METADATA
-from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem, UserAchievement, User
+from app.models import TarkovItem, ScavCase, ScavCaseItem, UserAchievement, User
 from app.extensions import db
 
 
@@ -70,15 +70,15 @@ def _preprocess_image(image_path: str) -> Image.Image:
     1. Upscale 3× (Tesseract accuracy improves significantly on larger images)
     2. Convert to grayscale
     3. Invert (white-on-dark → dark-on-white)
-    4. Hard binarize at threshold 128 (no blur — it destroys small quantity text)
+    4. Hard binarize at threshold 128 (no blur - it destroys small quantity text)
     """
     img = Image.open(image_path)
     w, h = img.size
-    # 3× upscale — Tesseract needs resolution for small text like the (1) quantity indicator
+    # 3× upscale - Tesseract needs resolution for small text like the (1) quantity indicator
     img = img.resize((w * 3, h * 3), Image.LANCZOS)
     img = img.convert("L")
     img = ImageOps.invert(img)
-    # No blur — even a small kernel smears the narrow (1) parentheses into unrecognisable glyphs
+    # No blur - even a small kernel smears the narrow (1) parentheses into unrecognisable glyphs
     img = img.point(lambda x: 255 if x > 128 else 0)
     return img
 
@@ -158,7 +158,7 @@ def extract_items_from_ocr(text: str):
     all_items = TarkovItem.query.with_entities(TarkovItem.tarkov_id, TarkovItem.name).all()
     item_names = [name for _, name in all_items]
 
-    # Matches <anything> (<integer>) — non-greedy
+    # Matches <anything> (<integer>) - non-greedy
     item_line_pattern = re.compile(r"^(.+?)\s+\((\d+)\)")
     # Trailing OCR artefacts
     trailing_garbage = re.compile(r"[\s~©*«»°§|]+$")
@@ -192,12 +192,12 @@ def extract_items_from_ocr(text: str):
 
         strict_match = item_line_pattern.match(line)
         if strict_match:
-            # (N) was OCR'd cleanly — this is definitely an item line
+            # (N) was OCR'd cleanly - this is definitely an item line
             item_name = strict_match.group(1).strip()
             quantity = int(strict_match.group(2))
             is_definite_item = True
         else:
-            # (1) was garbled into ~, ©, *, etc. — strip trailing garbage and default qty to 1
+            # (1) was garbled into ~, ©, *, etc. - strip trailing garbage and default qty to 1
             item_name = trailing_garbage.sub("", line).strip()
             quantity = 1
             is_definite_item = False
@@ -274,35 +274,6 @@ def process_scav_case_image(file_path):
     return extract_items_from_ocr(ocr_text)
 
 
-def calculate_insights(scav_cases):
-    """Compute multiple insights dynamically"""
-    insight_functions = {
-        "Most Profitable Case": calculate_most_profitable,
-        "Average Return by Case Type": calculate_avg_return_by_case_type,
-        "Average Items per Case Type": calculate_avg_items_per_case_type,
-    }
-
-    insights = [func(scav_cases) for func in insight_functions.values()]
-    return [insight for insight in insights if insight is not None]
-
-
-def find_most_common_items(scav_cases, top_n=3):
-    """Find the top N most common items across all scav cases."""
-    item_counts = defaultdict(int)
-    tarkov_item_map = {}
-
-    for scav_case in scav_cases:
-        for item in scav_case.items:
-            item_counts[item.tarkov_id] += 1
-            tarkov_item_map[item.tarkov_id] = item
-
-    if not item_counts:
-        return []
-
-    sorted_items = sorted(item_counts.items(), key=lambda x: x[1], reverse=True)[:top_n]
-    return [(tarkov_item_map[tarkov_id], count) for tarkov_id, count in sorted_items]
-
-
 def calculate_item_category_distribution(scav_cases):
     category_counts = defaultdict(int)
 
@@ -374,25 +345,6 @@ def calculate_avg_items_per_case_type(scav_cases):
             ],
         },
     }
-
-
-def calculate_most_popular_categories(scav_cases, top_n=3):
-    """Find the top N most frequently appearing item categories across all scav cases."""
-    category_counts = defaultdict(int)
-    category_map = {}
-
-    for scav_case in scav_cases:
-        for item in scav_case.items:
-            category_counts[item.tarkov_item.category] += 1
-            category_map[item.tarkov_item.category] = item.tarkov_item
-
-    if not category_counts:
-        return []
-
-    sorted_categories = sorted(
-        category_counts.items(), key=lambda x: x[1], reverse=True
-    )[:top_n]
-    return [(category_map[category], count) for category, count in sorted_categories]
 
 
 def calculate_avg_return_by_case_type(scav_cases):

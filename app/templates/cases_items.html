@@ -24,7 +24,7 @@
                        hx-trigger="input changed delay:300ms"
                        hx-target="#items-card"
                        hx-swap="innerHTML"
-                       hx-include="#case-type-hidden, #sort-order-hidden"
+                       hx-include="#case-type-hidden, #category-hidden, #sort-order-hidden"
                        hx-push-url="true">
             </div>
 
@@ -60,11 +60,45 @@
                     <a class="dropdown-item d-flex align-items-center {% if case_type == value %}active{% endif %}"
                        href="#"
                        hx-get="{{ url_for('cases.cases_items') }}?case_type={{ value }}"
-                       hx-include="#search-input, #sort-order-hidden"
+                       hx-include="#search-input, #category-hidden, #sort-order-hidden"
                        hx-target="#items-card"
                        hx-swap="innerHTML"
                        hx-push-url="true">
                         <i class="fas {{ icon }} mr-2"></i>{{ label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
+                        type="button" id="categoryFilterDropdown"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-tags mr-2"></i>
+                    {{ 'All Categories' if category == 'all' else category }}
+                </button>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                     aria-labelledby="categoryFilterDropdown"
+                     style="max-height: 320px; overflow-y: auto;">
+                    <a class="dropdown-item d-flex align-items-center {% if category == 'all' %}active{% endif %}"
+                       href="#"
+                       hx-get="{{ url_for('cases.cases_items') }}?category=all"
+                       hx-include="#search-input, #case-type-hidden, #sort-order-hidden"
+                       hx-target="#items-card"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">
+                        <i class="fas fa-layer-group mr-2"></i>All Categories
+                    </a>
+                    {% for cat in categories %}
+                    <a class="dropdown-item d-flex align-items-center {% if category == cat %}active{% endif %}"
+                       href="#"
+                       hx-get="{{ url_for('cases.cases_items') }}?category={{ cat }}"
+                       hx-include="#search-input, #case-type-hidden, #sort-order-hidden"
+                       hx-target="#items-card"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">
+                        <img class="rounded category-icon mr-2" width="16" height="16"
+                             src="{{ cat | get_category_cdn_image_url }}">{{ cat }}
                     </a>
                     {% endfor %}
                 </div>

@@ -24,19 +24,19 @@
         {% endfor %}
     {% else %}
         <div style="flex: 2;">
-            {% if avg is none %}<span class="text-muted">—</span>
+            {% if avg is none %}<span class="text-muted">-</span>
             {% else %}₽{{ "{:,}".format(avg) }}
                 {% if best is not none %}<span class="badge badge-pill badge-primary ml-1">{{ vendor }}</span>{% endif %}
             {% endif %}
         </div>
         <div style="flex: 2;">
-            {% if low is none %}<span class="text-muted">—</span>
+            {% if low is none %}<span class="text-muted">-</span>
             {% else %}₽{{ "{:,}".format(low) }}
                 {% if vendor %}<span class="badge badge-pill badge-danger ml-1">{{ vendor }}</span>{% endif %}
             {% endif %}
         </div>
         <div style="flex: 2;">
-            {% if high is none %}<span class="text-muted">—</span>
+            {% if high is none %}<span class="text-muted">-</span>
             {% else %}₽{{ "{:,}".format(high) }}
                 {% if vendor %}<span class="badge badge-pill badge-success ml-1">{{ vendor }}</span>{% endif %}
             {% endif %}

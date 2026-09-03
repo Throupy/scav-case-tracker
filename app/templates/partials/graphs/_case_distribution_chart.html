@@ -11,6 +11,14 @@
 </div>
 
 <script>
+    function darkenColor(hex, amount) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const r = Math.max(0, (num >> 16) - amount);
+        const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+        const b = Math.max(0, (num & 0x0000FF) - amount);
+        return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+    }
+
     function applyPieTheme(chart) {
         if (!chart) return;
 
@@ -56,6 +64,9 @@
     document.addEventListener("DOMContentLoaded", function () {
         const ctx = document.getElementById("caseTypeDistribution");
 
+        const pieColors = ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"];
+        const pieBorderColors = pieColors.map(c => darkenColor(c, 40));
+
         _pieChart = new Chart(ctx, {
             type: "doughnut",
             data: {
@@ -64,8 +75,11 @@
                     {
                         label: "Scav Case Type Distribution",
                         data: [],
-                        backgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"],
-                        hoverBackgroundColor: ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"],
+                        backgroundColor: pieColors,
+                        hoverBackgroundColor: pieColors,
+                        borderColor: pieBorderColors,
+                        hoverBorderColor: pieBorderColors,
+                        borderWidth: 2,
                     },
                 ],
             },

@@ -5,13 +5,15 @@
 #}
 <input type="hidden" id="sort-order-hidden" name="sort_order" value="{{ sort_order }}">
 <input type="hidden" id="case-type-hidden" name="case_type" value="{{ case_type }}">
+<input type="hidden" id="category-hidden" name="category" value="{{ category }}">
 
 {% set new_sort = 'asc' if sort_order == 'desc' else 'desc' %}
 {% set case_label = 'All Cases' if case_type == 'all' else (case_type + ' Cases') %}
+{% set category_label = (' &mdash; ' + category) | safe if category != 'all' else '' %}
 
 <div class="card-header py-3 d-flex align-items-center justify-content-between">
     <h6 class="m-0 font-weight-bold text-danger">
-        Items Found &mdash; {{ case_label }}
+        Items Found &mdash; {{ case_label }}{{ category_label }}
     </h6>
     <small class="text-muted">
         {{ pagination.total }} unique item{% if pagination.total != 1 %}s{% endif %}
@@ -29,7 +31,7 @@
             <th class="text-right">
                 <a href="#"
                    hx-get="{{ url_for('cases.cases_items') }}?sort_order={{ new_sort }}"
-                   hx-include="#case-type-hidden, #search-input"
+                   hx-include="#case-type-hidden, #category-hidden, #search-input"
                    hx-target="#items-card"
                    hx-swap="innerHTML"
                    hx-push-url="true"
@@ -44,7 +46,8 @@
     </thead>
     <tbody>
         {% for item in items %}
-        <tr>
+        <tr class="item-row-link" style="cursor: pointer;"
+            onclick="window.location='{{ url_for('cases.item_detail', tarkov_id=item.tarkov_id) }}';">
             <td class="align-middle py-2 pl-3">
                 <img src="{{ item.image_url }}"
                      alt="{{ item.name }}"
@@ -57,6 +60,7 @@
             <td class="align-middle">
                 <a href="{{ url_for('cases.scav_case_detail', scav_case_id=item.last_case_id) }}"
                    class="badge badge-soft-danger"
+                   onclick="event.stopPropagation();"
                    style="font-size: 0.8em; font-weight: 500; padding: 0.3em 0.6em;">Case #{{ item.last_case_id }}</a>
             </td>
         </tr>
@@ -76,11 +80,11 @@
                 <a class="page-link"
                    {% if pagination.has_prev %}
                    hx-get="{{ url_for('cases.cases_items') }}?page={{ pagination.prev_num }}"
-                   hx-include="#case-type-hidden, #search-input, #sort-order-hidden"
+                   hx-include="#case-type-hidden, #category-hidden, #search-input, #sort-order-hidden"
                    hx-target="#items-card"
                    hx-swap="innerHTML"
                    hx-push-url="true"
-                   href="{{ url_for('cases.cases_items') }}?page={{ pagination.prev_num }}&case_type={{ case_type }}&sort_order={{ sort_order }}"
+                   href="{{ url_for('cases.cases_items') }}?page={{ pagination.prev_num }}&case_type={{ case_type }}&category={{ category }}&sort_order={{ sort_order }}"
                    {% endif %}>Previous</a>
             </li>
             <li class="page-item disabled">
@@ -90,11 +94,11 @@
                 <a class="page-link"
                    {% if pagination.has_next %}
                    hx-get="{{ url_for('cases.cases_items') }}?page={{ pagination.next_num }}"
-                   hx-include="#case-type-hidden, #search-input, #sort-order-hidden"
+                   hx-include="#case-type-hidden, #category-hidden, #search-input, #sort-order-hidden"
                    hx-target="#items-card"
                    hx-swap="innerHTML"
                    hx-push-url="true"
-                   href="{{ url_for('cases.cases_items') }}?page={{ pagination.next_num }}&case_type={{ case_type }}&sort_order={{ sort_order }}"
+                   href="{{ url_for('cases.cases_items') }}?page={{ pagination.next_num }}&case_type={{ case_type }}&category={{ category }}&sort_order={{ sort_order }}"
                    {% endif %}>Next</a>
             </li>
         </ul>

@@ -11,7 +11,7 @@ from flask import current_app
 from rapidfuzz import process, fuzz
 from sqlalchemy.sql import func
 
-from app.models import Insight, TarkovItem, ScavCase, ScavCaseItem, User
+from app.models import TarkovItem, ScavCase, ScavCaseItem, User
 from app.extensions import db
 
 

@@ -130,6 +130,94 @@ def dashboard_kpis():
     )
 
 
+def _parse_insight_filters():
+    """Parse the days/case_type/scope query params shared by all insight widgets.
+
+    Returns (case_type, since_date, user_id, error_response). error_response is
+    not None when case_type failed validation, in which case the other values
+    should be ignored and error_response returned directly by the caller.
+    """
+    case_type = request.args.get("case_type", "all")
+    days = request.args.get("days", 0, type=int)
+    scope = request.args.get("scope", "global")
+
+    if case_type.lower() != "all" and case_type not in SCAV_CASE_TYPES:
+        return None, None, None, error_response(message="Invalid case type", error_code="VALIDATION_ERROR", status_code=422)
+
+    since = _since_date(days)
+    user_id = current_user.id if scope == "personal" else None
+    return case_type, since, user_id, None
+
+
+# queried by the "Most Common Items" dashboard widget
+@api_bp.route("/api/insights/most-common-items")
+@login_required
+def insights_most_common_items():
+    case_type, since, user_id, err = _parse_insight_filters()
+    if err:
+        return err
+
+    items = _scav_case_service.get_most_common_items_insight(case_type=case_type, since_date=since, user_id=user_id)
+    data = [
+        {
+            "tarkov_id": item.tarkov_id,
+            "name": item.name,
+            "count": count,
+            "image_url": get_item_cdn_image_url(item),
+        }
+        for item, count in items
+    ]
+    return success_response(data=data, message="Most common items fetched")
+
+
+# queried by the "Item Category Distribution" dashboard widget
+@api_bp.route("/api/insights/category-distribution")
+@login_required
+def insights_category_distribution():
+    case_type, since, user_id, err = _parse_insight_filters()
+    if err:
+        return err
+
+    data = _scav_case_service.get_category_distribution_insight(case_type=case_type, since_date=since, user_id=user_id)
+    return success_response(data=data, message="Category distribution fetched")
+
+
+# queried by the "Return" dashboard widget
+@api_bp.route("/api/insights/return-chart")
+@login_required
+def insights_return_chart():
+    case_type, since, user_id, err = _parse_insight_filters()
+    if err:
+        return err
+
+    data = _scav_case_service.get_return_insight(case_type=case_type, since_date=since, user_id=user_id)
+    return success_response(data=data, message="Return insight fetched")
+
+
+# queried by the "Items" dashboard widget
+@api_bp.route("/api/insights/items-chart")
+@login_required
+def insights_items_chart():
+    case_type, since, user_id, err = _parse_insight_filters()
+    if err:
+        return err
+
+    data = _scav_case_service.get_items_insight(case_type=case_type, since_date=since, user_id=user_id)
+    return success_response(data=data, message="Items insight fetched")
+
+
+# queried by the "Profit" dashboard widget
+@api_bp.route("/api/insights/profit-chart")
+@login_required
+def insights_profit_chart():
+    case_type, since, user_id, err = _parse_insight_filters()
+    if err:
+        return err
+
+    data = _scav_case_service.get_profit_insight(case_type=case_type, since_date=since, user_id=user_id)
+    return success_response(data=data, message="Profit insight fetched")
+
+
 def _serialize_case(case):
     roi = ((case._return - case.cost) / case.cost * 100) if case.cost else 0
     return {

@@ -15,6 +15,11 @@
         { id: 'kpi_average_roi',               title: 'Average ROI',            icon: 'fa-chart-pie',      defaultW: 3, defaultH: 1, minW: 2 },
         { id: 'chart_earnings_overview',       title: 'Earnings Overview',      icon: 'fa-chart-line',     defaultW: 8, defaultH: 3, minW: 6 },
         { id: 'chart_case_distribution',       title: 'Case Type Distribution', icon: 'fa-chart-pie',      defaultW: 4, defaultH: 3, minW: 3 },
+        { id: 'kpi_most_common_item',           title: 'Most Found Item',       icon: 'fa-star',           defaultW: 3, defaultH: 1, minW: 2 },
+        { id: 'chart_return_insight',          title: 'Return Insights',        icon: 'fa-chart-line',     defaultW: 6, defaultH: 3, minW: 4 },
+        { id: 'chart_items_insight',           title: 'Items Insights',         icon: 'fa-boxes',          defaultW: 6, defaultH: 3, minW: 4 },
+        { id: 'chart_item_category_distribution', title: 'Item Category Distribution', icon: 'fa-chart-pie', defaultW: 6, defaultH: 3, minW: 4 },
+        { id: 'chart_profit_insight',          title: 'Profit Insights',        icon: 'fa-chart-bar',      defaultW: 6, defaultH: 3, minW: 4 },
     ];
 
     let _grid   = null;

@@ -59,6 +59,7 @@ def dashboard():
 def cases_items():
     page = request.args.get("page", 1, type=int)
     case_type = request.args.get("case_type", "all")
+    category = request.args.get("category", "all")
     search = request.args.get("search", "").strip()
     sort_order = request.args.get("sort_order", "desc")
 
@@ -68,8 +69,9 @@ def cases_items():
         sort_order = "desc"
 
     pagination = scav_case_service.get_item_frequency_paginated(
-        case_type=case_type, page=page, per_page=10, search=search, sort_order=sort_order
+        case_type=case_type, page=page, per_page=10, search=search, sort_order=sort_order, category=category
     )
+    categories = scav_case_service.get_found_item_categories()
 
     items = [
         {
@@ -87,6 +89,8 @@ def cases_items():
         items=items,
         pagination=pagination,
         case_type=case_type,
+        category=category,
+        categories=categories,
         search=search,
         sort_order=sort_order,
     )
@@ -95,6 +99,33 @@ def cases_items():
         return render_template("partials/_cases_items_list.html", **ctx)
 
     return render_template("cases_items.html", **ctx)
+
+
+@cases_bp.route("/cases/items/<tarkov_id>")
+@login_required
+def item_detail(tarkov_id):
+    page = request.args.get("page", 1, type=int)
+    sort_order = request.args.get("sort_order", "desc")
+    if sort_order not in ("asc", "desc"):
+        sort_order = "desc"
+
+    item = scav_case_service.get_tarkov_item_by_id_or_404(tarkov_id)
+
+    pagination = scav_case_service.get_item_occurrences_paginated(
+        tarkov_id=tarkov_id, page=page, per_page=15, sort_order=sort_order
+    )
+    price_history = scav_case_service.get_item_price_history(tarkov_id)
+    stats = scav_case_service.get_item_stats(tarkov_id)
+
+    return render_template(
+        "item_detail.html",
+        item=item,
+        occurrences=pagination.items,
+        pagination=pagination,
+        sort_order=sort_order,
+        price_history=price_history,
+        stats=stats,
+    )
 
 
 @cases_bp.route("/cases/all", methods=["GET"])
@@ -117,30 +148,6 @@ def all_scav_cases():
         sort_order=sort_order,
         case_type=case_type,
     )
-
-
-@cases_bp.route("/cases/insights-data")
-@login_required
-def insights_data():
-    case_type = request.args.get("case_type", "all")
-    insights = scav_case_service.calculate_insights_data(case_type)
-    
-    return render_template(
-        "partials/_insights.html",
-        case_type=case_type,
-        **insights
-    )
-
-
-@cases_bp.route("/cases/insights")
-@login_required
-def insights():
-    insights = scav_case_service.calculate_insights_data("all")
-
-    if not scav_case_service.get_cases_by_type("all"):
-        flash("No Data to show", "warning")
-    
-    return render_template("insights.html", case_type="all", **insights)
 
 
 @cases_bp.route("/cases/create", methods=["GET"])

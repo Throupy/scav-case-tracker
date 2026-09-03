@@ -1,5 +1,4 @@
 from datetime import datetime
-from dataclasses import dataclass
 
 from sqlalchemy import event, insert
 from sqlalchemy.orm import Session
@@ -8,14 +7,6 @@ from flask_login import UserMixin
 
 from app.extensions import db
 from app.constants import DEFAULT_TRACKED_ITEMS
-
-
-@dataclass
-class Insight:
-    title: str
-    description: str
-    chart_data: dict
-    chart_tooltip: str
 
 
 class ScavCase(db.Model):

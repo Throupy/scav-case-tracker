@@ -11,8 +11,6 @@ from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.services import BaseService
 from app.services.user_service import UserService
 from app.cases.utils import (
-    calculate_most_popular_categories,
-    find_most_common_items,
     calculate_avg_items_per_case_type,
     calculate_avg_return_by_case_type,
     calculate_most_profitable,
@@ -114,12 +112,24 @@ class ScavCaseService(BaseService):
         """Get scav case by ID, or raise a 404 error"""
         return ScavCase.query.get_or_404(case_id)
 
-    def get_cases_by_type(self, case_type: str) -> List[ScavCase]:
-        """Get all cases of specific type e.g. moonshine"""
-        q = self.db.session.query(ScavCase).options(selectinload(ScavCase.items))
-        if case_type == "all":
-            return q.all()
-        return q.filter(ScavCase.type == case_type).all()
+    def get_cases_by_type(
+        self,
+        case_type: str,
+        since_date=None,
+        user_id: int = None,
+    ) -> List[ScavCase]:
+        """Get all cases of a specific type (or 'all'), optionally scoped by date range and/or user."""
+        q = (
+            self.db.session.query(ScavCase)
+            .options(selectinload(ScavCase.items).selectinload(ScavCaseItem.tarkov_item))
+        )
+        if case_type and case_type.lower() != "all":
+            q = q.filter(ScavCase.type == case_type)
+        if since_date is not None:
+            q = q.filter(ScavCase.created_at >= since_date)
+        if user_id is not None:
+            q = q.filter(ScavCase.user_id == user_id)
+        return q.all()
 
     def get_item_frequency_paginated(
         self,
@@ -128,12 +138,13 @@ class ScavCaseService(BaseService):
         per_page: int = 10,
         search: str = "",
         sort_order: str = "desc",
+        category: str = "all",
     ):
         """
         Return paginated item occurrence-counts aggregated across all scav cases.
         'Occurrences' = number of scav case rows the item appeared in (not total quantity).
         Each row: tarkov_id, name, category, times_found, last_case_id.
-        Single query — no N+1.
+        Single query - no N+1.
         """
         q = (
             self.db.session.query(
@@ -150,6 +161,9 @@ class ScavCaseService(BaseService):
             q = q.join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
             q = q.filter(ScavCase.type == case_type)
 
+        if category and category.lower() != "all":
+            q = q.filter(TarkovItem.category == category)
+
         if search:
             q = q.filter(ScavCaseItem.name.ilike(f"%{search}%"))
 
@@ -164,42 +178,170 @@ class ScavCaseService(BaseService):
 
         return q.paginate(page=page, per_page=per_page, error_out=False)
 
-    def calculate_insights_data(self, case_type: str = "all") -> Dict[str, Any]:
-        """Calculate values and form structure for insights page, for a given case type"""
+    def get_found_item_categories(self) -> List[str]:
+        """Distinct, sorted item categories among items that have actually been recorded in a case."""
+        rows = (
+            self.db.session.query(TarkovItem.category)
+            .join(ScavCaseItem, ScavCaseItem.tarkov_id == TarkovItem.tarkov_id)
+            .filter(TarkovItem.category.isnot(None))
+            .distinct()
+            .order_by(TarkovItem.category.asc())
+            .all()
+        )
+        return [row.category for row in rows]
 
-        scav_cases = self.get_cases_by_type(case_type)
-        # Common calculations
-        most_popular_items = find_most_common_items(scav_cases)
-        most_popular_categories = calculate_most_popular_categories(scav_cases)
-        category_distribution = calculate_item_category_distribution(scav_cases)
-        
-        if case_type == "all":
-            return {
-                "most_popular_items": most_popular_items,
-                "most_popular_categories": most_popular_categories,
-                "category_distribution": category_distribution,
-                "most_profitable_case": calculate_most_profitable(scav_cases),
-                "avg_return_chart": calculate_avg_return_by_case_type(scav_cases),
-                "avg_items_chart": calculate_avg_items_per_case_type(scav_cases),
-                # Time-based charts not applicable for "all"
-                "profit_over_time_chart": None,
-                "items_over_time_chart": None,
-                "return_over_time_chart": None,
-            }
+    def get_tarkov_item_by_id_or_404(self, tarkov_id: str) -> TarkovItem:
+        """Get a TarkovItem by its tarkov_id, or raise a 404 error"""
+        return TarkovItem.query.filter_by(tarkov_id=tarkov_id).first_or_404()
+
+    def get_item_occurrences_paginated(
+        self,
+        tarkov_id: str,
+        page: int = 1,
+        per_page: int = 15,
+        sort_order: str = "desc",
+    ):
+        """Every ScavCaseItem row for a given tarkov_id, across every case, paginated."""
+        q = (
+            self.db.session.query(ScavCaseItem)
+            .join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
+            .options(joinedload(ScavCaseItem.scav_case).joinedload(ScavCase.author))
+            .filter(ScavCaseItem.tarkov_id == tarkov_id)
+        )
+
+        if sort_order == "asc":
+            q = q.order_by(ScavCase.created_at.asc(), ScavCase.id.asc())
         else:
-            return {
-                "most_popular_items": most_popular_items,
-                "most_popular_categories": most_popular_categories,
-                "category_distribution": category_distribution,
-                "profit_over_time_chart": self._build_profit_chart(scav_cases),
-                "items_over_time_chart": self._build_items_chart(scav_cases),
-                "return_over_time_chart": self._build_return_chart(scav_cases),
-                # Aggregated charts not applicable for specific types
-                "avg_items_chart": None,
-                "most_profitable_case": None,
-                "avg_return_chart": None,
-            }
-    
+            q = q.order_by(ScavCase.created_at.desc(), ScavCase.id.desc())
+
+        return q.paginate(page=page, per_page=per_page, error_out=False)
+
+    def get_item_price_history(self, tarkov_id: str) -> Dict[str, Any]:
+        """Chronological (case id asc) recorded price history for an item, for a price-over-time chart."""
+        rows = (
+            self.db.session.query(ScavCaseItem.scav_case_id, ScavCaseItem.price, ScavCase.type)
+            .join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
+            .filter(ScavCaseItem.tarkov_id == tarkov_id)
+            .order_by(ScavCase.id.asc())
+            .all()
+        )
+        return {
+            "labels": [str(row.scav_case_id) for row in rows],
+            "prices": [row.price for row in rows],
+            "case_types": [row.type for row in rows],
+        }
+
+    def get_item_stats(self, tarkov_id: str) -> Dict[str, Any]:
+        """Summary stats for an item across every recorded occurrence."""
+        row = (
+            self.db.session.query(
+                func.count(ScavCaseItem.id).label("times_found"),
+                func.coalesce(func.sum(ScavCaseItem.amount), 0).label("total_quantity"),
+                func.avg(ScavCaseItem.price).label("avg_price"),
+                func.min(ScavCaseItem.price).label("min_price"),
+                func.max(ScavCaseItem.price).label("max_price"),
+            )
+            .filter(ScavCaseItem.tarkov_id == tarkov_id)
+            .one()
+        )
+        return {
+            "times_found": int(row.times_found or 0),
+            "total_quantity": int(row.total_quantity or 0),
+            "avg_price": float(row.avg_price) if row.avg_price is not None else 0.0,
+            "min_price": float(row.min_price) if row.min_price is not None else 0.0,
+            "max_price": float(row.max_price) if row.max_price is not None else 0.0,
+        }
+
+    # --- Insight widgets (dashboard) ---
+    # Each is queried independently by its own widget/route so a single filter change
+    # (time range, case type, scope) only refetches the data that widget needs.
+
+    def get_most_common_items_insight(
+        self, case_type: str = "all", since_date=None, user_id: int = None, top_n: int = 3,
+    ) -> List[tuple]:
+        """Return the top N most frequently found items as (TarkovItem, count) pairs.
+
+        Aggregates with COUNT/GROUP BY in SQL rather than loading every ScavCase and
+        ScavCaseItem into Python, since this widget only ever needs the top few rows.
+        """
+        q = self.db.session.query(
+            ScavCaseItem.tarkov_id,
+            func.count(ScavCaseItem.id).label("times_found"),
+        )
+
+        if case_type.lower() != "all" or since_date is not None or user_id is not None:
+            q = q.join(ScavCase, ScavCaseItem.scav_case_id == ScavCase.id)
+            if case_type.lower() != "all":
+                q = q.filter(ScavCase.type == case_type)
+            if since_date is not None:
+                q = q.filter(ScavCase.created_at >= since_date)
+            if user_id is not None:
+                q = q.filter(ScavCase.user_id == user_id)
+
+        rows = (
+            q.group_by(ScavCaseItem.tarkov_id)
+            .order_by(func.count(ScavCaseItem.id).desc(), ScavCaseItem.tarkov_id.asc())
+            .limit(top_n)
+            .all()
+        )
+
+        if not rows:
+            return []
+
+        tarkov_ids = [row.tarkov_id for row in rows]
+        items_by_id = {
+            item.tarkov_id: item
+            for item in self.db.session.query(TarkovItem).filter(TarkovItem.tarkov_id.in_(tarkov_ids)).all()
+        }
+
+        return [(items_by_id[row.tarkov_id], row.times_found) for row in rows if row.tarkov_id in items_by_id]
+
+    def get_category_distribution_insight(
+        self, case_type: str = "all", since_date=None, user_id: int = None,
+    ) -> Dict[str, Any]:
+        scav_cases = self.get_cases_by_type(case_type, since_date=since_date, user_id=user_id)
+        return calculate_item_category_distribution(scav_cases)
+
+    def get_return_insight(
+        self, case_type: str = "all", since_date=None, user_id: int = None,
+    ) -> Dict[str, Any]:
+        """Avg return by case type ('all'), or return-over-time for a specific case type."""
+        scav_cases = self.get_cases_by_type(case_type, since_date=since_date, user_id=user_id)
+        if case_type.lower() == "all":
+            result = calculate_avg_return_by_case_type(scav_cases)
+            chart_data = result["chart_data"] if result else {"x_value": [], "y_value": []}
+            return {"mode": "by_type", "labels": chart_data["x_value"], "values": chart_data["y_value"]}
+
+        chart = self._build_return_chart(scav_cases)
+        return {"mode": "over_time", **chart}
+
+    def get_items_insight(
+        self, case_type: str = "all", since_date=None, user_id: int = None,
+    ) -> Dict[str, Any]:
+        """Avg items by case type ('all'), or items-over-time for a specific case type."""
+        scav_cases = self.get_cases_by_type(case_type, since_date=since_date, user_id=user_id)
+        if case_type.lower() == "all":
+            result = calculate_avg_items_per_case_type(scav_cases)
+            chart_data = result["chart_data"] if result else {"x_value": [], "y_value": []}
+            return {"mode": "by_type", "labels": chart_data["x_value"], "values": chart_data["y_value"]}
+
+        chart = self._build_items_chart(scav_cases)
+        return {"mode": "over_time", **chart}
+
+    def get_profit_insight(
+        self, case_type: str = "all", since_date=None, user_id: int = None,
+    ) -> Dict[str, Any]:
+        """Avg profit by case type ('all'), or profit-over-time for a specific case type."""
+        scav_cases = self.get_cases_by_type(case_type, since_date=since_date, user_id=user_id)
+        if case_type.lower() == "all":
+            result = calculate_most_profitable(scav_cases)
+            chart_data = result["chart_data"] if result else {"x_value": [], "y_value": []}
+            return {"mode": "by_type", "labels": chart_data["x_value"], "values": chart_data["y_value"]}
+
+        chart = self._build_profit_chart(scav_cases)
+        return {"mode": "over_time", **chart}
+
+
     def create_scav_case(self, scav_case_type: str, uploaded_image, items_data: str, user: User, via_discord: bool = False) -> Dict[str, Any]:
         """Create a new scav case entry - centralised function for web and integrations (e.g. discord bot)"""
         try:
@@ -290,7 +432,7 @@ class ScavCaseService(BaseService):
         try:
             # Resolve which user to attribute this submission to.
             # The bot always sends discord_user_id. If it matches a linked account, use that.
-            # If there's no linked account, reject the submission — the user must link first.
+            # If there's no linked account, reject the submission - the user must link first.
             discord_user_id = request.form.get("discord_user_id")
             submitting_user = None
             if discord_user_id:
@@ -366,7 +508,7 @@ class ScavCaseService(BaseService):
             "welcome_message": generate_dashboard_welcome_message(),
             **self._get_totals(since_date=since_date, case_type=case_type, user_id=user_id),
             "most_popular_category": self._get_most_popular_category_name(since_date=since_date, case_type=case_type, user_id=user_id),
-            # top_contributor is a global concept — not meaningful in personal view
+            # top_contributor is a global concept - not meaningful in personal view
             "top_contributor": self._get_top_contributor(since_date=since_date, case_type=case_type) if not user_id else None,
             "most_profitable_case_type": self._get_most_profitable_case_type_name(since_date=since_date, case_type=case_type, user_id=user_id),
             "most_valuable_item": self._get_most_valuable_item(since_date=since_date, case_type=case_type, user_id=user_id),
@@ -760,7 +902,7 @@ class ScavCaseService(BaseService):
             except Exception as e:
                 raise ValueError(f"Invalid scav_case_type cost: {scav_case_type!r}") from e
 
-        # single bulk API call — include cost item ID so moonshine/intel price
+        # single bulk API call - include cost item ID so moonshine/intel price
         # is fetched in the same request as the loot items
         unique_ids = list({x["id"] for x in normalized})
         if cost_item_id is not None:

@@ -1,0 +1,69 @@
+<div class="card border-left-danger shadow h-100 py-2">
+    <div class="card-body">
+        <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Most Found Item</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800 text-truncate" style="max-width: 200px;"
+                    id="insightMostCommonItemName">N/A</div>
+                <div class="text-muted small" id="insightMostCommonItemCount"></div>
+            </div>
+
+            <div class="col-auto">
+                <img width="40" height="40" class="mr-1 rounded" style="object-fit: contain; display: none;"
+                    id="insightMostCommonItemImg">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    function render(item) {
+        var nameEl = document.getElementById('insightMostCommonItemName');
+        var countEl = document.getElementById('insightMostCommonItemCount');
+        var imgEl = document.getElementById('insightMostCommonItemImg');
+
+        if (item) {
+            nameEl.textContent = item.name;
+            nameEl.title = item.name;
+            countEl.textContent = 'Found ' + item.count + ' times';
+            imgEl.src = item.image_url;
+            imgEl.style.display = '';
+        } else {
+            nameEl.textContent = 'N/A';
+            nameEl.removeAttribute('title');
+            countEl.textContent = '';
+            imgEl.removeAttribute('src');
+            imgEl.style.display = 'none';
+        }
+    }
+
+    async function refresh() {
+        var days = window.dashboardDays || 0;
+        var caseType = window.dashboardCaseType || 'all';
+        var scope = window.dashboardScope || 'global';
+        var params = new URLSearchParams();
+        if (days > 0) params.set('days', days);
+        if (caseType !== 'all') params.set('case_type', caseType);
+        if (scope !== 'global') params.set('scope', scope);
+
+        try {
+            var resp = await fetch('/api/insights/most-common-items?' + params.toString());
+            var json = await resp.json();
+            var items = json.data || [];
+            render(items[0] || null);
+        } catch (e) {
+            console.error('Error fetching most common item:', e);
+        }
+    }
+
+    document.addEventListener('dashboard:time-changed', refresh);
+    document.addEventListener('dashboard:case-type-changed', refresh);
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refresh);
+    } else {
+        refresh();
+    }
+})();
+</script>

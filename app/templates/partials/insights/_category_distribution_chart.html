@@ -1,0 +1,100 @@
+<div class="card shadow">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution</h6>
+    </div>
+    <div class="card-body">
+        <div class="chart-pie">
+            <canvas id="insightCategoryDistributionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    function darkenColor(hex, amount) {
+        var num = parseInt(hex.replace('#', ''), 16);
+        var r = Math.max(0, (num >> 16) - amount);
+        var g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+        var b = Math.max(0, (num & 0x0000FF) - amount);
+        return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+    }
+
+    var PIE_COLORS = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#f8f9fc', '#5a5c69', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9A6324', '#fffac8', '#800000'];
+    var PIE_BORDER_COLORS = PIE_COLORS.map(function (c) { return darkenColor(c, 40); });
+
+    function applyTheme(chart) {
+        if (!chart) return;
+        var dark = document.documentElement.classList.contains("dark");
+        chart.options.plugins.legend.labels.color = dark ? "#ffffff" : "#858796";
+        chart.options.plugins.tooltip.backgroundColor = dark ? "#151924" : "#ffffff";
+        chart.options.plugins.tooltip.titleColor = dark ? "#ffffff" : "#6e707e";
+        chart.options.plugins.tooltip.bodyColor = dark ? "#ffffff" : "#858796";
+        chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
+        chart.update();
+    }
+
+    var chart = null;
+
+    function buildChart() {
+        var ctx = document.getElementById('insightCategoryDistributionChart');
+        if (!ctx) return;
+        chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: PIE_COLORS,
+                    hoverBackgroundColor: PIE_COLORS,
+                    borderColor: PIE_BORDER_COLORS,
+                    hoverBorderColor: PIE_BORDER_COLORS,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: {} },
+                    tooltip: { enabled: true, borderWidth: 1 }
+                }
+            }
+        });
+        applyTheme(chart);
+    }
+
+    async function refresh() {
+        var days = window.dashboardDays || 0;
+        var caseType = window.dashboardCaseType || 'all';
+        var scope = window.dashboardScope || 'global';
+        var params = new URLSearchParams();
+        if (days > 0) params.set('days', days);
+        if (caseType !== 'all') params.set('case_type', caseType);
+        if (scope !== 'global') params.set('scope', scope);
+
+        try {
+            var resp = await fetch('/api/insights/category-distribution?' + params.toString());
+            var json = await resp.json();
+            if (!chart) return;
+            chart.data.labels = json.data.labels || [];
+            chart.data.datasets[0].data = json.data.values || [];
+            chart.update();
+        } catch (e) {
+            console.error('Error fetching category distribution:', e);
+        }
+    }
+
+    function init() {
+        buildChart();
+        document.addEventListener('theme:changed', function () { setTimeout(function () { applyTheme(chart); }, 0); });
+        document.addEventListener('dashboard:time-changed', refresh);
+        document.addEventListener('dashboard:case-type-changed', refresh);
+        refresh();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>

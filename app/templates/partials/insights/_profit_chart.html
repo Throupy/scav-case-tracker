@@ -1,0 +1,144 @@
+<div class="card shadow">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-danger" id="insightProfitChartTitle">Average Profit by Case Type</h6>
+    </div>
+    <div class="card-body">
+        <div class="chart-area">
+            <canvas id="insightProfitChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var chart = null;
+
+    function themeColors() {
+        var dark = document.documentElement.classList.contains("dark");
+        return {
+            text: dark ? "#e6e6e6" : "#5a5c69",
+            muted: dark ? "#e6e6e6" : "#858796",
+            grid: dark ? "rgba(255,255,255,0.08)" : "rgb(234, 236, 244)",
+            tooltipBg: dark ? "#151924" : "#ffffff",
+            tooltipBorder: dark ? "#2a3142" : "#dddfeb"
+        };
+    }
+
+    function formatRoubles(v) {
+        return '₽' + Math.round(v).toLocaleString();
+    }
+
+    function destroyChart() {
+        if (chart) { chart.destroy(); chart = null; }
+    }
+
+    function buildBarChart(labels, values) {
+        var t = themeColors();
+        var ctx = document.getElementById('insightProfitChart');
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Avg Profit', data: values, backgroundColor: '#e74a3b', borderColor: '#e74a3b', borderWidth: 2 }] },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: t.muted }, grid: { display: false, drawBorder: false } },
+                    y: { ticks: { color: t.muted, callback: formatRoubles }, grid: { color: t.grid } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: t.tooltipBg, titleColor: t.text, bodyColor: t.muted, borderColor: t.tooltipBorder, borderWidth: 1,
+                        callbacks: {
+                            title: function (items) { return 'Case Type: ' + items[0].label; },
+                            label: function (item) { return 'Avg Profit: ' + formatRoubles(item.raw); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function buildLineChart(labels, profits) {
+        var t = themeColors();
+        var ctx = document.getElementById('insightProfitChart');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Profit',
+                    data: profits,
+                    borderColor: 'rgb(231, 74, 59)',
+                    backgroundColor: 'rgba(231, 74, 59, 0.05)',
+                    pointBackgroundColor: 'rgb(231, 74, 59)',
+                    pointRadius: 3,
+                    lineTension: 0.3,
+                    fill: false
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                onClick: function (evt, elements) {
+                    if (!elements.length) return;
+                    var caseId = labels[elements[0].index];
+                    if (caseId) window.location.href = '/cases/' + caseId;
+                },
+                scales: {
+                    x: { ticks: { color: t.muted, maxRotation: 45, minRotation: 45 }, grid: { display: false, drawBorder: false } },
+                    y: { ticks: { color: t.muted, callback: formatRoubles }, grid: { color: t.grid } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: t.tooltipBg, titleColor: t.text, bodyColor: t.muted, borderColor: t.tooltipBorder, borderWidth: 1,
+                        callbacks: {
+                            title: function (items) { return 'Scav Case ID: ' + items[0].label; },
+                            label: function (item) { return 'Profit: ' + formatRoubles(item.raw); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    async function refresh() {
+        var days = window.dashboardDays || 0;
+        var caseType = window.dashboardCaseType || 'all';
+        var scope = window.dashboardScope || 'global';
+        var params = new URLSearchParams();
+        if (days > 0) params.set('days', days);
+        if (caseType !== 'all') params.set('case_type', caseType);
+        if (scope !== 'global') params.set('scope', scope);
+
+        try {
+            var resp = await fetch('/api/insights/profit-chart?' + params.toString());
+            var json = await resp.json();
+            var d = json.data;
+
+            destroyChart();
+
+            var titleEl = document.getElementById('insightProfitChartTitle');
+
+            if (d.mode === 'by_type') {
+                if (titleEl) titleEl.textContent = 'Average Profit by Case Type';
+                buildBarChart(d.labels, d.values);
+            } else {
+                if (titleEl) titleEl.textContent = 'Profit Over Time - ' + caseType;
+                buildLineChart(d.labels, d.profits);
+            }
+        } catch (e) {
+            console.error('Error fetching profit insight:', e);
+        }
+    }
+
+    document.addEventListener('dashboard:time-changed', refresh);
+    document.addEventListener('dashboard:case-type-changed', refresh);
+    document.addEventListener('theme:changed', refresh);
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refresh);
+    } else {
+        refresh();
+    }
+})();
+</script>

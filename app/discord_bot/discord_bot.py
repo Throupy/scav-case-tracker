@@ -106,14 +106,14 @@ async def _case_embed(session, url, title, color):
     via_discord = data.get("via_discord", False)
 
     item_lines = [
-        f"• **{item['name']}** x{item['amount']} — ₽{item['total']:,.0f}"
+        f"• **{item['name']}** x{item['amount']} - ₽{item['total']:,.0f}"
         for item in items
     ]
 
     submitter_value = f"{submitted_by} via Discord" if via_discord else submitted_by
 
     embed = discord.Embed(
-        title=f"{title} — Case #{case_id} ({case_type})",
+        title=f"{title} - Case #{case_id} ({case_type})",
         description="\n".join(item_lines) or "No items recorded.",
         color=color,
         timestamp=created_at,
@@ -298,7 +298,7 @@ class ImageDownloaderClient(commands.Bot):
                             case_id = response_data.get("scav_case_id")
 
                             item_lines = [
-                                f"• **{item['name']}** x{item['quantity']} — ₽{(item['price'] or 0) * item['quantity']:,.0f}"
+                                f"• **{item['name']}** x{item['quantity']} - ₽{(item['price'] or 0) * item['quantity']:,.0f}"
                                 for item in items
                             ]
 

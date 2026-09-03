@@ -1,0 +1,321 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% set case_type_badge_classes = {
+    '₽2500':        'badge-soft-warning',
+    '₽15000':       'badge-soft-danger',
+    '₽95000':       'badge-soft-success',
+    'Moonshine':    'badge-soft-primary',
+    'Intelligence': 'badge-soft-info',
+} %}
+
+<div class="card shadow-sm p-3 mb-4">
+    <a href="{{ url_for('cases.cases_items') }}" class="text-muted small text-decoration-none mb-2 d-inline-block">
+        <i class="fas fa-arrow-left mr-1"></i>Back to Found Items
+    </a>
+
+    <div class="d-flex align-items-center">
+        <img src="{{ item | get_item_cdn_image_url }}"
+             alt="{{ item.name }}"
+             width="64" height="64"
+             class="rounded mr-3"
+             style="object-fit: contain;"
+             onerror="this.style.visibility='hidden'">
+
+        <div>
+            <h2 class="mb-1 fs-2">{{ item.name }}</h2>
+            {% if item.category %}
+            <span class="badge badge-soft-secondary d-inline-flex align-items-center" style="font-size: 0.85em; padding: 0.35em 0.7em;">
+                <img class="rounded category-icon mr-1" width="16" height="16"
+                     src="{{ item.category | get_category_cdn_image_url }}">
+                {{ item.category }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Times Found</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.times_found }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Quantity</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_quantity }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Average Price</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(stats.avg_price | round | int) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Price Range</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(stats.min_price | int) }} &ndash; ₽{{ "{:,}".format(stats.max_price | int) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-danger">Recorded Price Over Time</h6>
+    </div>
+    <div class="card-body">
+        <div class="chart-area" style="position: relative; height: 320px;">
+            {% if price_history.labels %}
+            <canvas id="itemPriceHistoryChart"></canvas>
+            {% else %}
+            <div class="text-center text-muted py-5">No price history recorded yet.</div>
+            {% endif %}
+        </div>
+        {% if price_history.labels %}
+        <div id="itemPriceHistoryLegend" class="d-flex flex-wrap justify-content-center mt-3" style="gap: 1rem;"></div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-danger">Cases This Item Has Appeared In</h6>
+        <small class="text-muted">{{ pagination.total }} occurrence{% if pagination.total != 1 %}s{% endif %}</small>
+    </div>
+
+    {% if occurrences %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Case #</th>
+                    <th>Case Type</th>
+                    <th>
+                        <a class="text-reset text-decoration-none"
+                           href="{{ url_for('cases.item_detail', tarkov_id=item.tarkov_id, sort_order='asc' if sort_order == 'desc' else 'desc') }}">
+                            Date Submitted
+                            <i class="fas fa-sort-{{ 'down' if sort_order == 'desc' else 'up' }} ml-1"></i>
+                        </a>
+                    </th>
+                    <th class="text-right">Quantity</th>
+                    <th class="text-right">Price (per item)</th>
+                    <th>Submitted By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for occurrence in occurrences %}
+                <tr>
+                    <td class="align-middle">
+                        <a href="{{ url_for('cases.scav_case_detail', scav_case_id=occurrence.scav_case_id) }}"
+                           class="badge badge-soft-danger" style="font-size: 0.85em; padding: 0.35em 0.7em;">
+                            Case #{{ occurrence.scav_case_id }}
+                        </a>
+                    </td>
+                    <td class="align-middle">
+                        <span class="badge {{ case_type_badge_classes.get(occurrence.scav_case.type, 'badge-soft-secondary') }}"
+                              style="font-size: 0.85em; padding: 0.35em 0.7em;">
+                            {{ occurrence.scav_case.type }}
+                        </span>
+                    </td>
+                    <td class="align-middle">{{ occurrence.scav_case.created_at | timeago }}</td>
+                    <td class="text-right align-middle">{{ occurrence.amount }}</td>
+                    <td class="text-right align-middle">₽{{ "{:,}".format(occurrence.price | int) }}</td>
+                    <td class="align-middle">
+                        <a href="{{ url_for('users.cases_showcase', user_id=occurrence.scav_case.author.id) }}"
+                           class="d-flex align-items-center text-reset text-decoration-none">
+                            <img width="24" height="24" class="mr-1 img-profile rounded-circle"
+                                 style="object-fit: cover;"
+                                 src="{{ url_for('static', filename='profile_pics/' + occurrence.scav_case.author.image_file) }}">
+                            {{ occurrence.scav_case.author.username }}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="row g-0 align-items-center px-3 py-3">
+        <div class="col-sm-6">
+            <p class="mb-sm-0 text-muted small">Showing Page {{ pagination.page }} of {{ pagination.pages }}</p>
+        </div>
+        <div class="col-sm-6">
+            <div class="float-sm-end">
+                <ul class="pagination pagination-sm mb-sm-0">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a href="{{ url_for('cases.item_detail', tarkov_id=item.tarkov_id, page=pagination.prev_num, sort_order=sort_order) }}"
+                           class="page-link"><i class="text-danger fa fa-chevron-left"></i></a>
+                    </li>
+                    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                        <li class="page-item {% if pagination.page == page_num %}active{% endif %}">
+                            <a href="{{ url_for('cases.item_detail', tarkov_id=item.tarkov_id, page=page_num, sort_order=sort_order) }}"
+                               class="text-danger page-link">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><a href="#" class="text-danger page-link">&hellip;</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a href="{{ url_for('cases.item_detail', tarkov_id=item.tarkov_id, page=pagination.next_num, sort_order=sort_order) }}"
+                           class="page-link"><i class="text-danger fa fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center text-muted py-5">
+        <i class="fas fa-box-open fa-2x mb-3 d-block" style="opacity: 0.3;"></i>
+        <p class="mb-0">This item hasn't been recorded in any cases yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% if price_history.labels %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var labels = {{ price_history.labels | tojson }};
+    var prices = {{ price_history.prices | tojson }};
+    var caseTypes = {{ price_history.case_types | tojson }};
+
+    var CASE_TYPE_COLORS = {
+        '₽2500': '#ffc107',
+        '₽15000': '#f56e6e',
+        '₽95000': '#63ad6f',
+        'Moonshine': '#3b76e1',
+        'Intelligence': '#57c9eb'
+    };
+    var FALLBACK_COLOR = '#858796';
+
+    function colorFor(caseType) {
+        return CASE_TYPE_COLORS[caseType] || FALLBACK_COLOR;
+    }
+
+    function renderLegend() {
+        var legendEl = document.getElementById('itemPriceHistoryLegend');
+        if (!legendEl) return;
+
+        var seen = [];
+        caseTypes.forEach(function (ct) {
+            if (seen.indexOf(ct) === -1) seen.push(ct);
+        });
+
+        legendEl.innerHTML = seen.map(function (ct) {
+            return '<span class="d-inline-flex align-items-center small text-muted">' +
+                '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + colorFor(ct) + ';margin-right:6px;"></span>' +
+                ct +
+                '</span>';
+        }).join('');
+    }
+
+    function themeColors() {
+        var dark = document.documentElement.classList.contains("dark");
+        return {
+            muted: dark ? "#e6e6e6" : "#858796",
+            grid: dark ? "rgba(255,255,255,0.08)" : "rgb(234, 236, 244)",
+            line: dark ? "rgba(230, 230, 230, 0.35)" : "rgba(133, 135, 150, 0.35)",
+            tooltipBg: dark ? "#151924" : "#ffffff",
+            tooltipTitle: dark ? "#e6e6e6" : "#6e707e",
+            tooltipBorder: dark ? "#2a3142" : "#dddfeb"
+        };
+    }
+
+    function formatRoubles(v) {
+        return '₽' + Math.round(v).toLocaleString();
+    }
+
+    var ctx = document.getElementById('itemPriceHistoryChart');
+    var t = themeColors();
+    var pointColors = caseTypes.map(colorFor);
+
+    renderLegend();
+
+    var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Price',
+                data: prices,
+                borderColor: t.line,
+                backgroundColor: 'rgba(231, 74, 59, 0.05)',
+                pointBackgroundColor: pointColors,
+                pointBorderColor: pointColors,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                lineTension: 0.3,
+                fill: false
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            onClick: function (evt, elements) {
+                if (!elements.length) return;
+                var caseId = labels[elements[0].index];
+                if (caseId) window.location.href = '/cases/' + caseId;
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Case #', color: t.muted },
+                    ticks: { color: t.muted, maxRotation: 45, minRotation: 45 },
+                    grid: { display: false, drawBorder: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Price', color: t.muted },
+                    ticks: { color: t.muted, callback: formatRoubles },
+                    grid: { color: t.grid }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: t.tooltipBg, titleColor: t.tooltipTitle, bodyColor: t.muted,
+                    borderColor: t.tooltipBorder, borderWidth: 1,
+                    callbacks: {
+                        title: function (items) {
+                            var idx = items[0].dataIndex;
+                            return 'Case #' + items[0].label + ' (' + caseTypes[idx] + ')';
+                        },
+                        label: function (item) { return 'Price: ' + formatRoubles(item.raw); }
+                    }
+                }
+            }
+        }
+    });
+
+    document.addEventListener("theme:changed", function () {
+        var nt = themeColors();
+        chart.data.datasets[0].borderColor = nt.line;
+        chart.options.scales.x.ticks.color = nt.muted;
+        chart.options.scales.x.title.color = nt.muted;
+        chart.options.scales.y.ticks.color = nt.muted;
+        chart.options.scales.y.title.color = nt.muted;
+        chart.options.scales.y.grid.color = nt.grid;
+        chart.options.plugins.tooltip.backgroundColor = nt.tooltipBg;
+        chart.options.plugins.tooltip.titleColor = nt.tooltipTitle;
+        chart.options.plugins.tooltip.bodyColor = nt.muted;
+        chart.options.plugins.tooltip.borderColor = nt.tooltipBorder;
+        chart.update();
+    });
+});
+</script>
+{% endif %}
+
+{% endblock content %}

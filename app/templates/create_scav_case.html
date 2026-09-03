@@ -121,11 +121,11 @@
                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
                          class="rounded-circle mr-2 flex-shrink-0 submit-as-thumb">
-                    <span class="submit-as-name text-truncate">myself — {{ current_user.username }}</span>
+                    <span class="submit-as-name text-truncate">myself - {{ current_user.username }}</span>
                   </button>
                   <div class="dropdown-menu w-100 py-1 shadow-sm">
                     <a class="dropdown-item d-flex align-items-center submit-as-option py-2" href="#"
-                       data-value="" data-name="myself — {{ current_user.username }}"
+                       data-value="" data-name="myself - {{ current_user.username }}"
                        data-img="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
                       <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
                            class="rounded-circle mr-2 flex-shrink-0 submit-as-avatar">
@@ -164,7 +164,7 @@
         <div class="card shadow mb-4">
           <div class="card-header py-3 d-flex align-items-center justify-content-between">
             <h6 class="m-0 font-weight-bold text-danger">Image Upload</h6>
-            <span class="small text-muted">OCR is beta — manual is more reliable</span>
+            <span class="small text-muted">OCR is beta - manual is more reliable</span>
           </div>
 
           <div class="card-body">
@@ -204,11 +204,11 @@
                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
                          class="rounded-circle mr-2 flex-shrink-0 submit-as-thumb">
-                    <span class="submit-as-name text-truncate">myself — {{ current_user.username }}</span>
+                    <span class="submit-as-name text-truncate">myself - {{ current_user.username }}</span>
                   </button>
                   <div class="dropdown-menu w-100 py-1 shadow-sm">
                     <a class="dropdown-item d-flex align-items-center submit-as-option py-2" href="#"
-                       data-value="" data-name="myself — {{ current_user.username }}"
+                       data-value="" data-name="myself - {{ current_user.username }}"
                        data-img="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
                       <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}"
                            class="rounded-circle mr-2 flex-shrink-0 submit-as-avatar">
