@@ -22,7 +22,6 @@ from app.users.routes import users_bp
 from app.market.routes import market_bp
 from app.errors.routes import errors_bp
 from app.quiz.routes import quiz_bp
-from app.circles.routes import circles_bp
 from app.cases.routes import cases_bp
 from app.leaderboards.routes import leaderboards_bp
 from app.achievements.routes import achievements_bp
@@ -152,7 +151,6 @@ def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(quiz_bp)
     app.register_blueprint(errors_bp)
     app.register_blueprint(cases_bp)
-    app.register_blueprint(circles_bp)
     app.register_blueprint(leaderboards_bp)
     app.register_blueprint(achievements_bp)
     app.register_blueprint(admin_bp)
