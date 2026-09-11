@@ -7,10 +7,10 @@
             <h2 class="mr-2 mb-0 fs-2">
                 Scav Case <span class="text-muted">#{{ scav_case.id }}</span>
             </h2>
-            <a href="{{ url_for('cases.update_scav_case', scav_case_id=scav_case.id) }}" class="ml-2 ms-2 text-danger" title="Edit ScavCase">
+            <a href="{{ url_for('cases.update_scav_case', scav_case_id=scav_case.id) }}" class="ml-2 ms-2 text-accent" title="Edit ScavCase">
                 <i class="fa-regular fa-pen-to-square fa-md"></i>
             </a>
-            <a href="#" class="ml-3 ms-2 text-danger" title="Delete ScavCase" data-toggle="modal" data-target="#deleteConfirmationModal">
+            <a href="#" class="ml-3 ms-2 text-accent" title="Delete ScavCase" data-toggle="modal" data-target="#deleteConfirmationModal">
                 <i class="fa-regular fa-trash-can fa-md"></i>
             </a>                
         </div>
@@ -47,8 +47,8 @@
 
         <div class="d-flex align-items-center">
             {% if scav_case._return - scav_case.cost < 0 %}
-                <i class="fa-solid fa-chevron-down text-danger fs-3 me-2"></i>
-                <h3 class="mb-0 text-danger fs-2">₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}</h3>
+                <i class="fa-solid fa-chevron-down text-accent fs-3 me-2"></i>
+                <h3 class="mb-0 text-accent fs-2">₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}</h3>
             {% else %}
                 <i class="fa-solid fa-chevron-up text-success fs-3 me-2"></i>
                 <h3 class="mb-0 text-success fs-2">₽{{ "{:,}".format((scav_case._return - scav_case.cost) | int) }}</h3>
@@ -78,7 +78,7 @@
                     {% endif %}
                 </span>
             
-                <span class="badge badge-soft-danger text-nowrap ms-auto" style="font-size: 14px; padding: 6px 10px;">
+                <span class="badge badge-soft-accent text-nowrap ms-auto" style="font-size: 14px; padding: 6px 10px;">
                     ₽{{ "{:,}".format((item.price * item.amount) | int) }}
                 </span>
             </a>
@@ -133,7 +133,7 @@
                 <form action="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}"
                       method="POST">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="submit" class="btn btn-outline-accent">
                         Delete
                     </button>
                 </form>    

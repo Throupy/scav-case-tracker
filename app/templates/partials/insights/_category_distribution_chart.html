@@ -1,9 +1,12 @@
-<div class="card shadow">
+<div class="card shadow category-radar-summary" id="categoryRadarSummary" role="button" tabindex="0" aria-label="Open full category distribution chart">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-danger">Item Category Distribution</h6>
+        <div>
+            <h6 class="m-0 font-weight-bold text-accent">Item Category Distribution</h6>
+            <span class="small text-muted">Top 8 categories, hover for exact counts</span>
+        </div>
     </div>
     <div class="card-body">
-        <div class="chart-pie">
+        <div class="chart-area">
             <canvas id="insightCategoryDistributionChart"></canvas>
         </div>
     </div>
@@ -11,17 +14,6 @@
 
 <script>
 (function () {
-    function darkenColor(hex, amount) {
-        var num = parseInt(hex.replace('#', ''), 16);
-        var r = Math.max(0, (num >> 16) - amount);
-        var g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
-        var b = Math.max(0, (num & 0x0000FF) - amount);
-        return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
-    }
-
-    var PIE_COLORS = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#f8f9fc', '#5a5c69', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9A6324', '#fffac8', '#800000'];
-    var PIE_BORDER_COLORS = PIE_COLORS.map(function (c) { return darkenColor(c, 40); });
-
     function applyTheme(chart) {
         if (!chart) return;
         var dark = document.documentElement.classList.contains("dark");
@@ -30,36 +22,145 @@
         chart.options.plugins.tooltip.titleColor = dark ? "#ffffff" : "#6e707e";
         chart.options.plugins.tooltip.bodyColor = dark ? "#ffffff" : "#858796";
         chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
+
+        var accent = window.themeAccent();
+        var dataset = chart.data.datasets[0];
+        dataset.backgroundColor = window.themeAccent(0.24);
+        dataset.borderColor = accent;
+        dataset.pointBackgroundColor = accent;
+        dataset.pointHoverBorderColor = accent;
+
+        chart.options.scales.r.pointLabels.color = dark ? "#e6e6e6" : "#5a5c69";
+        chart.options.scales.r.grid.color = dark ? "rgba(255,255,255,0.13)" : "rgba(90,92,105,0.16)";
+        chart.options.scales.r.angleLines.color = dark ? "rgba(255,255,255,0.13)" : "rgba(90,92,105,0.16)";
         chart.update();
     }
 
     var chart = null;
+    var fullChart = null;
+    var allCategories = [];
+    var categoryTotal = 0;
+
+    function normaliseCategories(categories) {
+        var maximum = categories.reduce(function (max, item) {
+            return Math.max(max, item.value);
+        }, 0);
+        return categories.map(function (item) {
+            return maximum ? Math.sqrt(item.value / maximum) * 100 : 0;
+        });
+    }
 
     function buildChart() {
         var ctx = document.getElementById('insightCategoryDistributionChart');
         if (!ctx) return;
         chart = new Chart(ctx, {
-            type: 'pie',
+            type: 'radar',
             data: {
                 labels: [],
                 datasets: [{
+                    label: 'Items',
                     data: [],
-                    backgroundColor: PIE_COLORS,
-                    hoverBackgroundColor: PIE_COLORS,
-                    borderColor: PIE_BORDER_COLORS,
-                    hoverBorderColor: PIE_BORDER_COLORS,
-                    borderWidth: 2
+                    rawValues: [],
+                    backgroundColor: window.themeAccent(0.24),
+                    borderColor: window.themeAccent(),
+                    pointBackgroundColor: window.themeAccent(),
+                    pointBorderColor: '#ffffff',
+                    pointHoverBackgroundColor: '#ffffff',
+                    pointHoverBorderColor: window.themeAccent(),
+                    borderWidth: 2.5,
+                    tension: 0.15,
+                    pointRadius: 4,
+                    pointHoverRadius: 5
                 }]
             },
             options: {
                 maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { display: false },
+                        pointLabels: { font: { size: 11, weight: 500 }, padding: 12 },
+                        grid: {},
+                        angleLines: {}
+                    }
+                },
                 plugins: {
-                    legend: { display: true, position: 'bottom', labels: {} },
-                    tooltip: { enabled: true, borderWidth: 1 }
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function (context) {
+                                var total = categoryTotal;
+                                var raw = context.dataset.rawValues[context.dataIndex] || 0;
+                                var share = total ? (raw / total * 100).toFixed(1) : "0.0";
+                                return context.dataset.label + ": " + raw.toLocaleString() + " (" + share + "%)";
+                            }
+                        }
+                    }
                 }
             }
         });
         applyTheme(chart);
+    }
+
+
+    function buildFullChart() {
+        var canvas = document.getElementById('fullCategoryDistributionChart');
+        if (!canvas || !allCategories.length) return;
+        if (fullChart) fullChart.destroy();
+        fullChart = new Chart(canvas, {
+            type: 'radar',
+            data: {
+                labels: allCategories.map(function (item) { return item.label; }),
+                datasets: [{
+                    label: 'Items',
+                    data: normaliseCategories(allCategories),
+                    rawValues: allCategories.map(function (item) { return item.value; }),
+                    backgroundColor: window.themeAccent(0.22),
+                    borderColor: window.themeAccent(),
+                    pointBackgroundColor: window.themeAccent(),
+                    pointBorderColor: '#ffffff',
+                    pointHoverBackgroundColor: '#ffffff',
+                    pointHoverBorderColor: window.themeAccent(),
+                    borderWidth: 2.5,
+                    tension: 0.15,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: 28 },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { display: false },
+                        pointLabels: { font: { size: 13, weight: 500 }, padding: 16 },
+                        grid: {},
+                        angleLines: {}
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function (context) {
+                                var raw = context.dataset.rawValues[context.dataIndex] || 0;
+                                var share = categoryTotal ? (raw / categoryTotal * 100).toFixed(1) : "0.0";
+                                return context.dataset.label + ": " + raw.toLocaleString() + " (" + share + "%)";
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        applyTheme(fullChart);
     }
 
     async function refresh() {
@@ -75,9 +176,26 @@
             var resp = await fetch('/api/insights/category-distribution?' + params.toString());
             var json = await resp.json();
             if (!chart) return;
-            chart.data.labels = json.data.labels || [];
-            chart.data.datasets[0].data = json.data.values || [];
+            var labels = json.data.labels || [];
+            var values = json.data.values || [];
+            var categories = labels.map(function (label, index) {
+                return { label: label, value: Number(values[index]) || 0 };
+            }).filter(function (item) {
+                return item.value > 0;
+            });
+
+            categoryTotal = values.reduce(function (sum, value) {
+                return sum + (Number(value) || 0);
+            }, 0);
+            allCategories = categories;
+            var topCategories = categories.slice().sort(function (a, b) { return b.value - a.value; }).slice(0, 8);
+            var summaryCategories = categories.filter(function (item) { return topCategories.indexOf(item) !== -1; });
+            chart._categoryTotal = categoryTotal;
+            chart.data.labels = summaryCategories.map(function (item) { return item.label; });
+            chart.data.datasets[0].data = normaliseCategories(summaryCategories);
+            chart.data.datasets[0].rawValues = summaryCategories.map(function (item) { return item.value; });
             chart.update();
+            if (fullChart) buildFullChart();
         } catch (e) {
             console.error('Error fetching category distribution:', e);
         }
@@ -85,7 +203,30 @@
 
     function init() {
         buildChart();
-        document.addEventListener('theme:changed', function () { setTimeout(function () { applyTheme(chart); }, 0); });
+
+        var summary = document.getElementById('categoryRadarSummary');
+        function openFullChart() {
+            var grid = document.querySelector('.grid-stack');
+            if (grid && grid.classList.contains('gs-unlocked')) return;
+jQuery('#categoryDistributionModal').modal('show');
+        }
+        if (summary) {
+            summary.addEventListener('click', openFullChart);
+            summary.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openFullChart();
+                }
+            });
+        }
+jQuery('#categoryDistributionModal').on('shown.bs.modal', buildFullChart);
+jQuery('#categoryDistributionModal').on('hidden.bs.modal', function () {
+            if (fullChart) { fullChart.destroy(); fullChart = null; }
+        });
+
+        document.addEventListener('theme:changed', function () {
+            setTimeout(function () { applyTheme(chart); applyTheme(fullChart); }, 0);
+        });
         document.addEventListener('dashboard:time-changed', refresh);
         document.addEventListener('dashboard:case-type-changed', refresh);
         refresh();

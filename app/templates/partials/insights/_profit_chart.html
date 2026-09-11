@@ -1,6 +1,6 @@
 <div class="card shadow">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-danger" id="insightProfitChartTitle">Average Profit by Case Type</h6>
+        <h6 class="m-0 font-weight-bold text-accent" id="insightProfitChartTitle">Average Profit by Case Type</h6>
     </div>
     <div class="card-body">
         <div class="chart-area">
@@ -18,7 +18,7 @@
         return {
             text: dark ? "#e6e6e6" : "#5a5c69",
             muted: dark ? "#e6e6e6" : "#858796",
-            grid: dark ? "rgba(255,255,255,0.08)" : "rgb(234, 236, 244)",
+            grid: dark ? "rgba(255,255,255,0.06)" : "rgba(78,115,223,0.08)",
             tooltipBg: dark ? "#151924" : "#ffffff",
             tooltipBorder: dark ? "#2a3142" : "#dddfeb"
         };
@@ -37,7 +37,7 @@
         var ctx = document.getElementById('insightProfitChart');
         chart = new Chart(ctx, {
             type: 'bar',
-            data: { labels: labels, datasets: [{ label: 'Avg Profit', data: values, backgroundColor: '#e74a3b', borderColor: '#e74a3b', borderWidth: 2 }] },
+            data: { labels: labels, datasets: [{ label: 'Avg Profit', data: values, backgroundColor: window.themeAccent(0.76), hoverBackgroundColor: window.themeAccent(0.92), borderColor: window.themeAccent(), borderWidth: 1, borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, categoryPercentage: 0.72, barPercentage: 0.72, maxBarThickness: 58 }] },
             options: {
                 maintainAspectRatio: false,
                 scales: {
@@ -68,9 +68,9 @@
                 datasets: [{
                     label: 'Profit',
                     data: profits,
-                    borderColor: 'rgb(231, 74, 59)',
-                    backgroundColor: 'rgba(231, 74, 59, 0.05)',
-                    pointBackgroundColor: 'rgb(231, 74, 59)',
+                    borderColor: window.themeAccent(),
+                    backgroundColor: window.themeAccent(0.05),
+                    pointBackgroundColor: window.themeAccent(),
                     pointRadius: 3,
                     lineTension: 0.3,
                     fill: false

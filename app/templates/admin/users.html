@@ -3,8 +3,8 @@
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
-        <h4 class="mb-0"><i class="fas fa-shield-alt mr-2 text-danger"></i>Admin - User Management</h4>
-        <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#createUserModal">
+        <h4 class="mb-0"><i class="fas fa-shield-alt mr-2 text-accent"></i>Admin - User Management</h4>
+        <button class="btn btn-sm btn-accent" data-toggle="modal" data-target="#createUserModal">
             <i class="fas fa-user-plus mr-1"></i> Create User
         </button>
     </div>
@@ -44,7 +44,7 @@
                         </td>
                         <td>
                             {% if user.is_superuser %}
-                            <span class="badge badge-danger">Superuser</span>
+                            <span class="badge badge-accent">Superuser</span>
                             {% else %}
                             <span class="badge badge-secondary">User</span>
                             {% endif %}
@@ -63,14 +63,14 @@
                                         Demote
                                     </button>
                                     {% else %}
-                                    <button type="button" class="btn btn-sm btn-outline-danger js-promote-btn"
+                                    <button type="button" class="btn btn-sm btn-outline-accent js-promote-btn"
                                         data-user-id="{{ user.id }}"
                                         data-username="{{ user.username }}"
                                         data-toggle="modal" data-target="#promoteModal">
                                         Promote
                                     </button>
                                     {% endif %}
-                                    <button type="button" class="btn btn-sm btn-outline-danger js-delete-btn"
+                                    <button type="button" class="btn btn-sm btn-outline-accent js-delete-btn"
                                         data-user-id="{{ user.id }}"
                                         data-username="{{ user.username }}"
                                         data-case-count="{{ user.scav_cases | length }}"
@@ -126,7 +126,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" class="btn btn-accent">
                         <i class="fas fa-user-plus mr-1"></i>Create User
                     </button>
                 </div>
@@ -140,7 +140,7 @@
     <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-arrow-up mr-2 text-danger"></i>Promote to Superuser</h5>
+                <h5 class="modal-title"><i class="fas fa-arrow-up mr-2 text-accent"></i>Promote to Superuser</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -153,7 +153,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="submit" class="btn btn-outline-accent">
                         <i class="fas fa-arrow-up mr-1"></i>Promote
                     </button>
                 </div>
@@ -167,7 +167,7 @@
     <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-arrow-down mr-2 text-danger"></i>Demote User</h5>
+                <h5 class="modal-title"><i class="fas fa-arrow-down mr-2 text-warning"></i>Demote User</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -179,7 +179,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="submit" class="btn btn-outline-warning">
                         <i class="fas fa-arrow-down mr-1"></i>Demote
                     </button>
                 </div>
@@ -215,7 +215,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" class="btn btn-accent">
                         <i class="fas fa-trash mr-1"></i>Delete User
                     </button>
                 </div>

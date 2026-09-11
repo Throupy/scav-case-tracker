@@ -108,7 +108,7 @@
         </div>
     </div>
 
-    <div class="grid-stack-item" gs-id="chart_item_category_distribution" gs-x="0" gs-y="9" gs-w="6" gs-h="3" gs-min-w="4">
+    <div class="grid-stack-item" gs-id="chart_item_category_distribution" gs-x="0" gs-y="9" gs-w="6" gs-h="4" gs-min-w="4">
         <div class="grid-stack-item-content">
             {% include "partials/insights/_category_distribution_chart.html" %}
         </div>
@@ -122,6 +122,22 @@
 
 </div>
 </div>
+
+<div class="modal fade category-radar-modal" id="categoryDistributionModal" tabindex="-1" role="dialog" aria-labelledby="categoryDistributionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title text-accent" id="categoryDistributionModalLabel">Item Category Distribution</h5>
+                    <span class="small text-muted">All categories, hover for exact counts</span>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body"><canvas id="fullCategoryDistributionChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.IS_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};
 
@@ -267,6 +283,6 @@
     })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@11.3.0/dist/gridstack-all.js"></script>
-<script src="{{ url_for('static', filename='js/widget-library.js') }}"></script>
+<script src="{{ url_for('static', filename='js/widget-library.js', v='10') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard-gridstack.js') }}"></script>
 {% endblock content %}

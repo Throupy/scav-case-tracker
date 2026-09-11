@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-lg">
-        <div class="card-header bg-danger text-white">
+        <div class="card-header bg-accent text-white">
             <h4 class="mb-0">{{ quiz_title }}</h4>
         </div>
         <div class="card-body">
@@ -20,7 +20,7 @@
                     <div class="d-flex justify-content-center">
                         {% for option in options %}
                             <input type="radio" name="selected_modifier" value="{{ option }}" id="option{{ loop.index }}" class="d-none">
-                            <label for="option{{ loop.index }}" class="btn btn-outline-danger btn-lg mx-5 option-label">
+                            <label for="option{{ loop.index }}" class="btn btn-outline-accent btn-lg mx-5 option-label">
                                 {% if option > 0%}+{% endif %}{{ option | int}}%
                             </label>
                         {% endfor %}
@@ -59,7 +59,7 @@
         let selectedLabel = selectedOption.nextElementSibling;
 
         feedbackDiv.style.display = 'none';
-        selectedLabel.classList.remove('btn-outline-success', 'btn-outline-danger', 'active');
+        selectedLabel.classList.remove('btn-outline-success', 'btn-outline-accent', 'active');
         let correctAnswer = parseFloat(data.correct_answer).toFixed(1);
 
         if (data.is_correct) {
@@ -72,7 +72,7 @@
             let correctOption = document.querySelector(`input[value="${correctAnswer}"]`);
             if (correctOption) {
                 let correctLabel = document.querySelector(`label[for="${correctOption.id}"]`);
-                correctLabel.classList.remove('btn-outline-danger');
+                correctLabel.classList.remove('btn-outline-accent');
                 correctLabel.classList.add('btn-outline-success');
             }
         }

@@ -38,33 +38,33 @@
 
 <div class="row">
     <div class="col-md-3 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card border-left-accent shadow h-100 py-2">
             <div class="card-body">
-                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Times Found</div>
+                <div class="text-xs font-weight-bold text-accent text-uppercase mb-1">Times Found</div>
                 <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.times_found }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card border-left-accent shadow h-100 py-2">
             <div class="card-body">
-                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Quantity</div>
+                <div class="text-xs font-weight-bold text-accent text-uppercase mb-1">Total Quantity</div>
                 <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_quantity }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card border-left-accent shadow h-100 py-2">
             <div class="card-body">
-                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Average Price</div>
+                <div class="text-xs font-weight-bold text-accent text-uppercase mb-1">Average Price</div>
                 <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(stats.avg_price | round | int) }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
+        <div class="card border-left-accent shadow h-100 py-2">
             <div class="card-body">
-                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Price Range</div>
+                <div class="text-xs font-weight-bold text-accent text-uppercase mb-1">Price Range</div>
                 <div class="h5 mb-0 font-weight-bold text-gray-800">₽{{ "{:,}".format(stats.min_price | int) }} - ₽{{ "{:,}".format(stats.max_price | int) }}</div>
             </div>
         </div>
@@ -73,7 +73,7 @@
 
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-danger">Recorded Price Over Time</h6>
+        <h6 class="m-0 font-weight-bold text-accent">Recorded Price Over Time</h6>
     </div>
     <div class="card-body">
         <div class="chart-area" style="position: relative; height: 320px;">
@@ -91,7 +91,7 @@
 
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-danger">Cases This Item Has Appeared In</h6>
+        <h6 class="m-0 font-weight-bold text-accent">Cases This Item Has Appeared In</h6>
         <small class="text-muted">{{ pagination.total }} occurrence{% if pagination.total != 1 %}s{% endif %}</small>
     </div>
 

@@ -18,7 +18,7 @@
         { id: 'kpi_most_common_item',           title: 'Most Found Item',       icon: 'fa-star',           defaultW: 3, defaultH: 1, minW: 2 },
         { id: 'chart_return_insight',          title: 'Return Insights',        icon: 'fa-chart-line',     defaultW: 6, defaultH: 3, minW: 4 },
         { id: 'chart_items_insight',           title: 'Items Insights',         icon: 'fa-boxes',          defaultW: 6, defaultH: 3, minW: 4 },
-        { id: 'chart_item_category_distribution', title: 'Item Category Distribution', icon: 'fa-chart-pie', defaultW: 6, defaultH: 3, minW: 4 },
+        { id: 'chart_item_category_distribution', title: 'Item Category Distribution', icon: 'fa-chart-area', defaultW: 6, defaultH: 4, minW: 4 },
         { id: 'chart_profit_insight',          title: 'Profit Insights',        icon: 'fa-chart-bar',      defaultW: 6, defaultH: 3, minW: 4 },
     ];
 
@@ -137,9 +137,9 @@
                 '<div class="col-sm-6 col-md-4 mb-3">' +
                     '<div class="card widget-library-tile h-100" data-widget-id="' + w.id + '">' +
                         '<div class="card-body text-center py-3">' +
-                            '<i class="fas ' + w.icon + ' fa-2x mb-2 text-danger"></i>' +
+                            '<i class="fas ' + w.icon + ' fa-2x mb-2 text-accent"></i>' +
                             '<p class="mb-2 small font-weight-bold">' + w.title + '</p>' +
-                            '<button class="btn btn-sm btn-outline-danger btn-add-widget"' +
+                            '<button class="btn btn-sm btn-outline-accent btn-add-widget"' +
                                 ' data-widget-id="' + w.id + '">' +
                                 '<i class="fas fa-plus fa-xs mr-1"></i>Add' +
                             '</button>' +

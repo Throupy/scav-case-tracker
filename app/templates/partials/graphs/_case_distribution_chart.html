@@ -1,6 +1,6 @@
 <div class="card shadow">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold text-danger">Case Type Distribution</h6>
+        <h6 class="m-0 font-weight-bold text-accent">Case Type Distribution</h6>
     </div>
 
     <div class="card-body">
@@ -11,26 +11,26 @@
 </div>
 
 <script>
-    function darkenColor(hex, amount) {
-        const num = parseInt(hex.replace('#', ''), 16);
-        const r = Math.max(0, (num >> 16) - amount);
-        const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
-        const b = Math.max(0, (num & 0x0000FF) - amount);
-        return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
-    }
-
-    function applyPieTheme(chart) {
+    function applyCaseDistributionTheme(chart) {
         if (!chart) return;
 
         const dark = document.documentElement.classList.contains("dark");
+        const text = dark ? "#d8dbe5" : "#6e707e";
+        const grid = dark ? "rgba(255, 255, 255, 0.07)" : "rgba(78, 115, 223, 0.08)";
+        const accent = window.themeAccent();
 
-        chart.options.plugins.legend.labels.color = dark ? "#ffffff" : "#858796";
+        chart.options.scales.x.ticks.color = text;
+        chart.options.scales.x.grid.color = grid;
+        chart.options.scales.y.ticks.color = text;
+        chart.data.datasets[0].backgroundColor = window.themeAccent(0.78);
+        chart.data.datasets[0].hoverBackgroundColor = accent;
+        chart.data.datasets[0].borderColor = accent;
 
         chart.options.plugins.tooltip.backgroundColor = dark ? "#151924" : "#ffffff";
         chart.options.plugins.tooltip.titleColor = dark ? "#ffffff" : "#6e707e";
         chart.options.plugins.tooltip.bodyColor = dark ? "#ffffff" : "#858796";
         chart.options.plugins.tooltip.borderColor = dark ? "#2a3142" : "#dddfeb";
-        chart.options.plugins.tooltip.borderWidth = 1;
+        chart.$valueLabelColor = dark ? "#f3f4f8" : "#4b4f5c";
 
         chart.update();
     }
@@ -39,83 +39,115 @@
 
     async function fetchDistributionData() {
         const days = window.dashboardDays || 0;
-        const scope = window.dashboardScope || 'global';
+        const scope = window.dashboardScope || "global";
         const params = new URLSearchParams();
-        if (days > 0) params.set('days', days);
-        if (scope !== 'global') params.set('scope', scope);
+        if (days > 0) params.set("days", days);
+        if (scope !== "global") params.set("scope", scope);
         const qs = params.toString();
         const url = "/api/scav-case-type-distribution" + (qs ? "?" + qs : "");
+
         try {
-            const r = await fetch(url);
-            const resp = await r.json();
-            const labels = Object.keys(resp.data);
-            const values = Object.values(resp.data);
+            const response = await fetch(url);
+            const payload = await response.json();
+            const rows = Object.entries(payload.data)
+                .map(([label, value]) => ({ label, value: Number(value) }))
+                .sort((a, b) => b.value - a.value);
 
             if (_pieChart) {
-                _pieChart.data.labels = labels;
-                _pieChart.data.datasets[0].data = values;
+                _pieChart.data.labels = rows.map(row => row.label);
+                _pieChart.data.datasets[0].data = rows.map(row => row.value);
                 _pieChart.update();
             }
-        } catch (e) {
-            console.error("Error fetching Scav Case Type Distribution data:", e);
+        } catch (error) {
+            console.error("Error fetching Scav Case Type Distribution data:", error);
         }
     }
 
     document.addEventListener("DOMContentLoaded", function () {
         const ctx = document.getElementById("caseTypeDistribution");
 
-        const pieColors = ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b"];
-        const pieBorderColors = pieColors.map(c => darkenColor(c, 40));
-
         _pieChart = new Chart(ctx, {
-            type: "doughnut",
+            type: "bar",
             data: {
                 labels: [],
-                datasets: [
-                    {
-                        label: "Scav Case Type Distribution",
-                        data: [],
-                        backgroundColor: pieColors,
-                        hoverBackgroundColor: pieColors,
-                        borderColor: pieBorderColors,
-                        hoverBorderColor: pieBorderColors,
-                        borderWidth: 2,
-                    },
-                ],
+                datasets: [{
+                    label: "Cases",
+                    data: [],
+                    backgroundColor: window.themeAccent(0.78),
+                    hoverBackgroundColor: window.themeAccent(),
+                    borderColor: window.themeAccent(),
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    maxBarThickness: 26
+                }]
             },
             options: {
+                indexAxis: "y",
                 maintainAspectRatio: false,
                 devicePixelRatio: 3,
-
-                cutout: "50%",
-
+                animation: {
+                    duration: 500
+                },
+                layout: {
+                    padding: {
+                        right: 72
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grace: "20%",
+                        ticks: {
+                            precision: 0,
+                            maxTicksLimit: 5
+                        },
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                weight: "600"
+                            }
+                        }
+                    }
+                },
                 plugins: {
                     legend: {
-                        display: true,
-                        position: "top",
-                        labels: {
-                            // color will be set by applyPieTheme()
-                        },
+                        display: false
                     },
                     tooltip: {
                         enabled: true,
                         displayColors: false,
-                        padding: 15,
-                        caretPadding: 10,
-                    },
-                },
-            },
+                        padding: 12,
+                        caretPadding: 8,
+                        callbacks: {
+                            label(context) {
+                                const values = context.dataset.data;
+                                const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
+                                const value = Number(context.raw || 0);
+                                const percentage = total ? ((value / total) * 100).toFixed(1) : "0.0";
+                                return value.toLocaleString() + " cases (" + percentage + "%)";
+                            }
+                        }
+                    }
+                }
+            }
         });
 
-        applyPieTheme(_pieChart);
+        applyCaseDistributionTheme(_pieChart);
 
         document.addEventListener("theme:changed", function () {
-            setTimeout(() => applyPieTheme(_pieChart), 0);
+            setTimeout(() => applyCaseDistributionTheme(_pieChart), 0);
         });
-
         document.addEventListener("dashboard:time-changed", fetchDistributionData);
 
         fetchDistributionData();
     });
-
 </script>

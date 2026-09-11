@@ -1,38 +1,68 @@
 (function () {
-    const key = "darkMode";
     const root = document.documentElement;
-  
-    function isDark() {
-      return root.classList.contains("dark");
+    const accountId = root.dataset.accountId || "guest";
+    const storageKey = "appearance:" + accountId;
+    const modes = ["light", "dark"];
+    const accents = ["red", "blue", "green", "purple", "amber"];
+
+    function readPreference() {
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (_) {}
+      const legacyDark = localStorage.getItem("darkMode") === "on";
+      return {
+        mode: modes.includes(saved.mode) ? saved.mode : (legacyDark ? "dark" : "light"),
+        accent: accents.includes(saved.accent) ? saved.accent : "red"
+      };
     }
-  
-    function setDark(on) {
-      root.classList.toggle("dark", on);
+
+    function updateControls(preference) {
+      document.querySelectorAll("[data-mode-option]").forEach(function (button) {
+        const selected = button.dataset.modeOption === preference.mode;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+      document.querySelectorAll("[data-accent-option]").forEach(function (button) {
+        const selected = button.dataset.accentOption === preference.accent;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
     }
-  
-    function updateText() {
-      const toggleText = document.getElementById("themeToggleText");
-      if (!toggleText) return;
-      toggleText.textContent = isDark() ? "Switch to Light Mode" : "Switch to Dark Mode";
+
+    function applyPreference(preference, persist) {
+      root.dataset.mode = preference.mode;
+      root.dataset.accent = preference.accent;
+      root.classList.toggle("dark", preference.mode === "dark");
+      if (persist) {
+        localStorage.setItem(storageKey, JSON.stringify(preference));
+        localStorage.removeItem("darkMode");
+      }
+      updateControls(preference);
+      window.appAppearance = preference;
+      document.dispatchEvent(new CustomEvent("theme:changed", { detail: preference }));
     }
-  
-    // Apply saved mode (safe even if head script already did it)
-    setDark(localStorage.getItem(key) === "on");
-    updateText();
-  
-    // Wire up toggle if it exists on this page
-    document.addEventListener("click", function (e) {
-      const toggleItem = e.target.closest("#themeToggleItem");
-      if (!toggleItem) return;
-  
-      e.preventDefault();
-  
-      const newState = !isDark();
-      localStorage.setItem(key, newState ? "on" : "off");
-      setDark(newState);
-      updateText();
-  
-      document.dispatchEvent(new CustomEvent("theme:changed"));
+
+    window.themeAccent = function (alpha) {
+      const styles = getComputedStyle(root);
+      if (typeof alpha === "number") {
+        return "rgba(" + styles.getPropertyValue("--accent-rgb").trim() + ", " + alpha + ")";
+      }
+      return styles.getPropertyValue("--accent").trim() || "#e74a3b";
+    };
+
+    let preference = readPreference();
+    applyPreference(preference, false);
+
+    document.addEventListener("click", function (event) {
+      const modeButton = event.target.closest("[data-mode-option]");
+      const accentButton = event.target.closest("[data-accent-option]");
+      if (!modeButton && !accentButton) return;
+
+      if (modeButton) preference.mode = modeButton.dataset.modeOption;
+      if (accentButton) preference.accent = accentButton.dataset.accentOption;
+      applyPreference(preference, true);
     });
-  })();
-  
+
+    document.addEventListener("DOMContentLoaded", function () {
+      updateControls(preference);
+    });
+})();

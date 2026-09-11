@@ -6,17 +6,17 @@
 
             <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Scope toggle">
                 <a href="{{ url_for('cases.dashboard', scope='global') }}"
-                   class="btn btn-sm btn-{{ 'danger' if scope == 'global' else 'outline-danger' }}">
+                   class="btn btn-sm btn-{{ 'accent' if scope == 'global' else 'outline-accent' }}">
                     <i class="fas fa-globe fa-sm mr-1"></i>All Cases
                 </a>
                 <a href="{{ url_for('cases.dashboard', scope='personal') }}"
-                   class="btn btn-sm btn-{{ 'danger' if scope == 'personal' else 'outline-danger' }}">
+                   class="btn btn-sm btn-{{ 'accent' if scope == 'personal' else 'outline-accent' }}">
                     <i class="fas fa-user fa-sm mr-1"></i>My Cases
                 </a>
             </div>
 
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
+                <button class="btn btn-sm btn-outline-accent dropdown-toggle shadow-sm d-flex align-items-center"
                     type="button" id="dashboardControlsDropdown" data-toggle="dropdown" aria-haspopup="true"
                     aria-expanded="false">
                     <i class="fas fa-sliders-h fa-sm mr-2"></i>
@@ -55,12 +55,12 @@
 
                     <p class="dashboard-panel-label">Layout</p>
                     <button id="toggle-layout-btn" type="button"
-                        class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center">
+                        class="btn btn-sm btn-outline-accent w-100 d-flex align-items-center justify-content-center">
                         <i id="toggle-layout-icon" class="fas fa-lock-open fa-sm mr-2"></i>
                         <span id="toggle-layout-label">Unlock layout</span>
                     </button>
                     <button id="widget-library-btn" type="button" style="display:none;"
-                        class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center mt-2">
+                        class="btn btn-sm btn-outline-accent w-100 d-flex align-items-center justify-content-center mt-2">
                         <i class="fas fa-th fa-sm mr-2"></i>
                         Widget Library
                     </button>
@@ -69,7 +69,7 @@
                     <div class="dropdown-divider"></div>
 
                     <a href="{{ url_for('main.not_implemented') }}"
-                        class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center">
+                        class="btn btn-sm btn-outline-accent w-100 d-flex align-items-center justify-content-center">
                         <i class="fas fa-download fa-sm mr-2"></i>
                         Export
                     </a>

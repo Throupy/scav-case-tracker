@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-account-id="{{ current_user.id if current_user.is_authenticated else 'guest' }}">
 
 <head>
     <script>
         (function () {
-          if (localStorage.getItem("darkMode") === "on") {
-            document.documentElement.classList.add("dark");
-          }
+          var accountId = "{{ current_user.id if current_user.is_authenticated else 'guest' }}";
+          var saved = {};
+          try { saved = JSON.parse(localStorage.getItem("appearance:" + accountId) || "{}"); } catch (e) {}
+          var mode = ["light", "dark"].indexOf(saved.mode) >= 0
+            ? saved.mode
+            : (localStorage.getItem("darkMode") === "on" ? "dark" : "light");
+          var accent = ["red", "blue", "green", "purple", "amber"].indexOf(saved.accent) >= 0 ? saved.accent : "red";
+          document.documentElement.dataset.mode = mode;
+          document.documentElement.dataset.accent = accent;
+          document.documentElement.classList.toggle("dark", mode === "dark");
         })();
       </script>
 
@@ -33,6 +40,7 @@
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/dark.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/theme.css', v='10') }}" rel="stylesheet" type="text/css">
 
 </head>
 
@@ -75,7 +83,7 @@
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dark-mode.js', v='10') }}"></script>
     <script src="https://unpkg.com/htmx.org@1.7.0"></script>
     <script src="{{ url_for('static', filename='js/htmx-csrf-config.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.0.1/chart.umd.js" crossorigin="anonymous"

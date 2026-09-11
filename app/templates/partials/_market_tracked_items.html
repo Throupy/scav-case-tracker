@@ -19,7 +19,7 @@
     {% if prices_by_id is not defined %}
         {% for _ in range(3) %}
         <div style="flex: 2;">
-            <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+            <div class="spinner-border spinner-border-sm text-accent" role="status"></div>
         </div>
         {% endfor %}
     {% else %}
@@ -46,7 +46,7 @@
     <div style="width: 50px; flex-shrink: 0; text-align: center;">
         <form method="POST" action="/market/untrack-item/{{ item.tarkov_id }}" class="d-inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-link p-0 text-danger">
+            <button type="submit" class="btn btn-link p-0 text-accent">
                 <i class="fa-regular fa-trash-can"></i>
             </button>
         </form>

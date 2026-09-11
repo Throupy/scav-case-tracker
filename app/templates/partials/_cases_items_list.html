@@ -12,7 +12,7 @@
 {% set category_label = (' - ' + category) | safe if category != 'all' else '' %}
 
 <div class="card-header py-3 d-flex align-items-center justify-content-between">
-    <h6 class="m-0 font-weight-bold text-danger">
+    <h6 class="m-0 font-weight-bold text-accent">
         Items Found - {{ case_label }}{{ category_label }}
     </h6>
     <small class="text-muted">
@@ -59,7 +59,7 @@
             <td class="text-right align-middle font-weight-bold">{{ item.times_found }}</td>
             <td class="align-middle">
                 <a href="{{ url_for('cases.scav_case_detail', scav_case_id=item.last_case_id) }}"
-                   class="badge badge-soft-danger"
+                   class="badge badge-soft-accent"
                    onclick="event.stopPropagation();"
                    style="font-size: 0.8em; font-weight: 500; padding: 0.3em 0.6em;">Case #{{ item.last_case_id }}</a>
             </td>

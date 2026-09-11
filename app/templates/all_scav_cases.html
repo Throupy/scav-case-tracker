@@ -9,7 +9,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-body py-1 px-4 d-flex justify-content-between align-items-center flex-wrap">
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-danger dropdown-toggle shadow-sm d-flex align-items-center"
+                    <button class="btn btn-sm btn-outline-accent dropdown-toggle shadow-sm d-flex align-items-center"
                         type="button" id="caseFilterDropdown" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
 
@@ -187,14 +187,14 @@
                                     <li class="list-inline-item">
                                         <a href="{{ url_for('cases.scav_case_detail', scav_case_id=scav_case.id) }}"
                                             data-bs-toggle="tooltip" data-bs-placement="top" title="View"
-                                            class="px-2 text-danger"><i class="fa-regular fa-eye"></i></a>
+                                            class="px-2 text-accent"><i class="fa-regular fa-eye"></i></a>
                                     </li>
                                     <li class="list-inline-item">
                                         <form
                                             action="{{ url_for('cases.delete_scav_case', scav_case_id=scav_case.id) }}"
                                             method="POST" style="display:inline;">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                                            <button type="submit" class="btn btn-link px-2 text-danger p-0"
+                                            <button type="submit" class="btn btn-link px-2 text-accent p-0"
                                                 data-toggle="tooltip" data-placement="top" title="Delete">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
@@ -225,19 +225,19 @@
                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
                     <a href="{{ url_for('cases.all_scav_cases', page=pagination.prev_num, sort_by=sort_by, sort_order=sort_order, case_type=case_type) }}"
                         class="page-link">
-                        <i class="text-danger fa fa-chevron-left"></i>
+                        <i class="text-accent fa fa-chevron-left"></i>
                     </a>
                 </li>
 
                 <!-- Page Numbers -->
                 {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if page_num %}
-                <li class="text-danger page-item {% if pagination.page == page_num %}active{% endif %}">
+                <li class="text-accent page-item {% if pagination.page == page_num %}active{% endif %}">
                     <a href="{{ url_for('cases.all_scav_cases', page=page_num, sort_by=sort_by, sort_order=sort_order, case_type=case_type) }}"
-                        class="text-danger page-link">{{ page_num }}</a>
+                        class="text-accent page-link">{{ page_num }}</a>
                 </li>
                 {% else %}
-                <li class="page-item disabled"><a href="#" class="text-danger page-link">…</a></li>
+                <li class="page-item disabled"><a href="#" class="text-accent page-link">…</a></li>
                 {% endif %}
                 {% endfor %}
 
@@ -245,7 +245,7 @@
                 <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
                     <a href="{{ url_for('cases.all_scav_cases', page=pagination.next_num, sort_by=sort_by, sort_order=sort_order, case_type=case_type) }}"
                         class="page-link">
-                        <i class="text-danger fa fa-chevron-right"></i>
+                        <i class="text-accent fa fa-chevron-right"></i>
                     </a>
                 </li>
             </ul>
