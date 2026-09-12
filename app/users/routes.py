@@ -7,7 +7,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.users.utils import save_profile_picture
 from app.models import User
 from app.extensions import db, bcrypt
-from app.users.forms import LoginForm, UpdateAccountForm, ChangePasswordForm, AccountChangePasswordForm
+from app.users.forms import LoginForm, UpdateAccountForm, ChangePasswordForm, AccountChangePasswordForm, SettingsForm
 from app.services.scav_case_service import ScavCaseService
 from app.services.user_service import UserService
 
@@ -64,6 +64,26 @@ def account():
     elif request.method == "GET":
         form.username.data = current_user.username
     return render_template("account.html", form=form, pw_form=pw_form)
+
+
+@users_bp.route("/users/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    form = SettingsForm()
+    if form.validate_on_submit():
+        user_service.save_settings(
+            current_user,
+            theme_mode=form.theme_mode.data,
+            accent_colour=form.accent_colour.data,
+            max_level_charisma=form.max_level_charisma.data,
+        )
+        flash("Your settings have been updated!", "success")
+        return redirect(url_for("users.settings"))
+    if request.method == "GET":
+        form.theme_mode.data = current_user.theme_mode or "dark"
+        form.accent_colour.data = current_user.accent_colour or "red"
+        form.max_level_charisma.data = current_user.max_level_charisma
+    return render_template("settings.html", form=form)
 
 
 @users_bp.route("/users/account/change-password", methods=["POST"])

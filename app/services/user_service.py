@@ -18,3 +18,15 @@ class UserService(BaseService):
         user.scav_case_global_dashboard_layout = layout
         db.session.commit()
         return jsonify({"ok": True})
+
+    def save_settings(self, user: User, theme_mode: str, accent_colour: str, max_level_charisma: bool):
+        """Persist account-wide appearance and gameplay preferences."""
+        if theme_mode not in {"light", "dark"}:
+            raise ValueError("Invalid theme mode")
+        if accent_colour not in {"red", "blue", "green", "purple", "amber"}:
+            raise ValueError("Invalid accent colour")
+        user.theme_mode = theme_mode
+        user.accent_colour = accent_colour
+        user.max_level_charisma = bool(max_level_charisma)
+        db.session.commit()
+        return user

@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, HiddenField
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, AnyOf
 from flask_login import current_user
 
 from app.models import User
@@ -47,6 +47,16 @@ class AccountChangePasswordForm(FlaskForm):
         "Confirm New Password", validators=[DataRequired(), EqualTo("new_password")]
     )
     submit = SubmitField("Change Password")
+
+
+class SettingsForm(FlaskForm):
+    theme_mode = HiddenField("Theme mode", validators=[DataRequired(), AnyOf(["light", "dark"])])
+    accent_colour = HiddenField(
+        "Accent colour",
+        validators=[DataRequired(), AnyOf(["red", "blue", "green", "purple", "amber"])],
+    )
+    max_level_charisma = BooleanField("Max Level Charisma (Lvl 51)")
+    submit = SubmitField("Save Settings")
 
 
 class UpdateAccountForm(FlaskForm):

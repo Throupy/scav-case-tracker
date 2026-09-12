@@ -91,6 +91,8 @@ CATEGORY_MAPPING = {
 
 SCAV_CASE_TYPES = ["₽2500", "₽15000", "₽95000", "Moonshine", "Intelligence"]
 
+MAX_LEVEL_CHARISMA_COST_MULTIPLIER = 0.90
+
 DEFAULT_TRACKED_ITEMS = [
     "Pack of sugar",
     "Bottle of Fierce Hatchling moonshine",

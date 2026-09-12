@@ -40,6 +40,20 @@ html.dark .form-control:focus, html.dark .custom-select:focus {
   box-shadow: 0 0 0 .2rem rgba(var(--accent-rgb), .18) !important;
 }
 
+/* Bootstrap custom switches follow the active theme accent. */
+html .custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+html .custom-switch .custom-control-input:focus ~ .custom-control-label::before {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 .2rem rgba(var(--accent-rgb), .22) !important;
+}
+html .custom-switch .custom-control-input:not(:disabled):active ~ .custom-control-label::before {
+  background-color: rgba(var(--accent-rgb), .28) !important;
+  border-color: var(--accent) !important;
+}
+
 /* Case-detail selection uses an outline without replacing the row surface. */
 html #list-tab .list-group-item.active,
 html.dark #list-tab .list-group-item.active {
@@ -75,3 +89,60 @@ html.dark .category-radar-modal .modal-content { background: rgba(21,25,36,.94) 
 .category-radar-modal .modal-body canvas { width: 100% !important; height: 100% !important; }
 .category-radar-modal + .modal-backdrop.show { opacity: .72; }
 
+
+
+/* Profit-by-time small multiples keep every case type readable without overlap. */
+.profit-time-chart-host { height: 100% !important; }
+.profit-time-small-multiples {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.profit-time-multiple-row {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  border-bottom: 1px solid rgba(133, 135, 150, .16);
+}
+.profit-time-multiple-row:last-child { border-bottom: 0; }
+.profit-time-multiple-label {
+  display: flex;
+  flex: 0 0 96px;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding-right: .65rem;
+  color: var(--accent);
+  font-size: .72rem;
+  line-height: 1.2;
+}
+.profit-time-multiple-label strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profit-time-multiple-label span {
+  margin-top: .18rem;
+  color: #858796;
+  font-size: .65rem;
+}
+html.dark .profit-time-multiple-label span { color: #b5b9c8; }
+.profit-time-multiple-plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+.profit-time-multiple-plot canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.profit-time-no-data {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #858796;
+  font-size: .7rem;
+  transform: translate(-50%, -50%);
+}

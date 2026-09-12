@@ -1,17 +1,12 @@
 (function () {
     const root = document.documentElement;
-    const accountId = root.dataset.accountId || "guest";
-    const storageKey = "appearance:" + accountId;
     const modes = ["light", "dark"];
     const accents = ["red", "blue", "green", "purple", "amber"];
 
     function readPreference() {
-      let saved = {};
-      try { saved = JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (_) {}
-      const legacyDark = localStorage.getItem("darkMode") === "on";
       return {
-        mode: modes.includes(saved.mode) ? saved.mode : (legacyDark ? "dark" : "light"),
-        accent: accents.includes(saved.accent) ? saved.accent : "red"
+        mode: modes.includes(root.dataset.mode) ? root.dataset.mode : "dark",
+        accent: accents.includes(root.dataset.accent) ? root.dataset.accent : "red"
       };
     }
 
@@ -28,14 +23,10 @@
       });
     }
 
-    function applyPreference(preference, persist) {
+    function applyPreference(preference) {
       root.dataset.mode = preference.mode;
       root.dataset.accent = preference.accent;
       root.classList.toggle("dark", preference.mode === "dark");
-      if (persist) {
-        localStorage.setItem(storageKey, JSON.stringify(preference));
-        localStorage.removeItem("darkMode");
-      }
       updateControls(preference);
       window.appAppearance = preference;
       document.dispatchEvent(new CustomEvent("theme:changed", { detail: preference }));
@@ -50,7 +41,7 @@
     };
 
     let preference = readPreference();
-    applyPreference(preference, false);
+    applyPreference(preference);
 
     document.addEventListener("click", function (event) {
       const modeButton = event.target.closest("[data-mode-option]");
@@ -59,7 +50,7 @@
 
       if (modeButton) preference.mode = modeButton.dataset.modeOption;
       if (accentButton) preference.accent = accentButton.dataset.accentOption;
-      applyPreference(preference, true);
+      applyPreference(preference);
     });
 
     document.addEventListener("DOMContentLoaded", function () {

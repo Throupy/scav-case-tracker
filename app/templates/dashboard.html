@@ -120,6 +120,12 @@
         </div>
     </div>
 
+    <div class="grid-stack-item" gs-id="chart_profit_time_of_day" gs-x="0" gs-y="13" gs-w="6" gs-h="3" gs-min-w="4">
+        <div class="grid-stack-item-content">
+            {% include "partials/insights/_profit_time_of_day_chart.html" %}
+        </div>
+    </div>
+
 </div>
 </div>
 
@@ -283,6 +289,6 @@
     })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gridstack@11.3.0/dist/gridstack-all.js"></script>
-<script src="{{ url_for('static', filename='js/widget-library.js', v='10') }}"></script>
+<script src="{{ url_for('static', filename='js/widget-library.js', v='11') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard-gridstack.js') }}"></script>
 {% endblock content %}

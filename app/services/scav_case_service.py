@@ -1,4 +1,6 @@
 import json
+from datetime import timezone
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Any, Optional
 
 import requests
@@ -6,7 +8,7 @@ from flask import url_for, current_app, jsonify
 from sqlalchemy.sql import func, case
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.constants import DISCORD_BOT_USER_USERNAME
+from app.constants import DISCORD_BOT_USER_USERNAME, MAX_LEVEL_CHARISMA_COST_MULTIPLIER, SCAV_CASE_TYPES
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.services import BaseService
 from app.services.user_service import UserService
@@ -252,7 +254,6 @@ class ScavCaseService(BaseService):
             "max_price": float(row.max_price) if row.max_price is not None else 0.0,
         }
 
-    # --- Insight widgets (dashboard) ---
     # Each is queried independently by its own widget/route so a single filter change
     # (time range, case type, scope) only refetches the data that widget needs.
 
@@ -328,6 +329,53 @@ class ScavCaseService(BaseService):
         chart = self._build_items_chart(scav_cases)
         return {"mode": "over_time", **chart}
 
+    def get_profit_by_time_of_day_insight(
+        self, case_type: str = "all", since_date=None, user_id: int = None,
+    ) -> Dict[str, Any]:
+        """Average case profit in 3-hour UK-local time periods."""
+        query = self.db.session.query(
+            ScavCase.type,
+            ScavCase.created_at,
+            (ScavCase._return - ScavCase.cost).label("profit"),
+        )
+        if case_type.lower() != "all":
+            query = query.filter(ScavCase.type == case_type)
+        if since_date is not None:
+            query = query.filter(ScavCase.created_at >= since_date)
+        if user_id is not None:
+            query = query.filter(ScavCase.user_id == user_id)
+
+        labels = [f"{hour:02d}:00-{hour + 3:02d}:00" for hour in range(0, 24, 3)]
+        grouped = {}
+        uk_timezone = ZoneInfo("Europe/London")
+
+        for row in query.all():
+            submitted_utc = row.created_at.replace(tzinfo=timezone.utc)
+            bucket = submitted_utc.astimezone(uk_timezone).hour // 3
+            case_buckets = grouped.setdefault(row.type, [[] for _ in labels])
+            case_buckets[bucket].append(float(row.profit))
+
+        ordered_types = (
+            [case_type]
+            if case_type.lower() != "all"
+            else list(SCAV_CASE_TYPES)
+        )
+        ordered_types.extend(sorted(set(grouped) - set(ordered_types)))
+
+        datasets = []
+        for name in ordered_types:
+            buckets = grouped.get(name, [[] for _ in labels])
+            datasets.append({
+                "case_type": name,
+                "values": [
+                    round(sum(values) / len(values), 2) if values else None
+                    for values in buckets
+                ],
+                "counts": [len(values) for values in buckets],
+            })
+
+        return {"labels": labels, "datasets": datasets, "timezone": "Europe/London"}
+
     def get_profit_insight(
         self, case_type: str = "all", since_date=None, user_id: int = None,
     ) -> Dict[str, Any]:
@@ -356,7 +404,7 @@ class ScavCaseService(BaseService):
             else:
                 raise ValueError("Either image or items_data must be provided")
 
-            scav_case = self._create_scav_case_entry(scav_case_type, items, user.id, via_discord=via_discord)
+            scav_case = self._create_scav_case_entry(scav_case_type, items, user, via_discord=via_discord)
 
             check_achievements(user)
 
@@ -861,7 +909,7 @@ class ScavCaseService(BaseService):
         }
 
     def _create_scav_case_entry(
-        self, scav_case_type: str, items: list[dict[str, Any]], user_id: int, via_discord: bool = False,
+        self, scav_case_type: str, items: list[dict[str, Any]], user: User, via_discord: bool = False,
     ) -> ScavCase:
         """Create ScavCase + ScavCaseItems."""
 
@@ -921,6 +969,8 @@ class ScavCaseService(BaseService):
             cost = float(p or 0.0)
         else:
             cost = static_cost
+            if user.max_level_charisma:
+                cost = round(cost * MAX_LEVEL_CHARISMA_COST_MULTIPLIER, 2)
 
         # use real session obj, not scoped proxy
         session = self.db.session()
@@ -932,7 +982,7 @@ class ScavCaseService(BaseService):
             with tx_ctx:
                 scav_case = ScavCase(
                     type=scav_case_type,
-                    user_id=user_id,
+                    user_id=user.id,
                     cost=cost,
                     number_of_items=len(normalized),
                     _return=0.0,

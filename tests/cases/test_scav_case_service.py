@@ -2,6 +2,7 @@ import pytest
 from werkzeug.exceptions import NotFound
 
 from app.models import User, ScavCase
+from app.constants import SCAV_CASE_TYPES
 from app.extensions import db, bcrypt
 from app.services.scav_case_service import ScavCaseService
 
@@ -122,3 +123,93 @@ def test_get_cases_by_type_items_eager_loaded(app, service):
         for sc in cases:
             state = sa_inspect(sc)
             assert "items" not in state.unloaded, "items relationship should be eagerly loaded"
+
+
+def test_profit_by_time_of_day_uses_uk_local_time_and_all_types(session, service):
+    """UTC timestamps are placed in 3-hour UK buckets with automatic BST handling."""
+    from datetime import datetime
+
+    user = User(
+        username="time_bucket_user",
+        password=bcrypt.generate_password_hash("testpass123!").decode("utf-8"),
+    )
+    db.session.add(user)
+    db.session.flush()
+
+    db.session.add_all([
+        ScavCase(
+            user_id=user.id,
+            type="\u20bd2500",
+            cost=100.0,
+            _return=200.0,
+            number_of_items=0,
+            created_at=datetime(2026, 1, 10, 2, 30),
+        ),
+        ScavCase(
+            user_id=user.id,
+            type="\u20bd2500",
+            cost=100.0,
+            _return=400.0,
+            number_of_items=0,
+            created_at=datetime(2026, 7, 10, 2, 30),
+        ),
+        ScavCase(
+            user_id=user.id,
+            type="Moonshine",
+            cost=100.0,
+            _return=500.0,
+            number_of_items=0,
+            created_at=datetime(2026, 7, 10, 23, 30),
+        ),
+    ])
+    db.session.flush()
+
+    data = service.get_profit_by_time_of_day_insight(user_id=user.id)
+    by_type = {dataset["case_type"]: dataset for dataset in data["datasets"]}
+
+    assert len(data["labels"]) == 8
+    assert set(SCAV_CASE_TYPES).issubset(by_type)
+    assert by_type["\u20bd2500"]["values"][0] == 100.0
+    assert by_type["\u20bd2500"]["values"][1] == 300.0
+    assert by_type["\u20bd2500"]["counts"][:2] == [1, 1]
+    assert by_type["Moonshine"]["values"][0] == 400.0
+
+
+def test_profit_by_time_of_day_filters_to_selected_case_type(session, service):
+    """A selected case type produces only its own dataset."""
+    from datetime import datetime
+
+    user = User(
+        username="time_bucket_filter_user",
+        password=bcrypt.generate_password_hash("testpass123!").decode("utf-8"),
+    )
+    db.session.add(user)
+    db.session.flush()
+    db.session.add_all([
+        ScavCase(
+            user_id=user.id,
+            type="\u20bd95000",
+            cost=95000.0,
+            _return=105000.0,
+            number_of_items=0,
+            created_at=datetime(2026, 1, 10, 10, 0),
+        ),
+        ScavCase(
+            user_id=user.id,
+            type="Moonshine",
+            cost=200000.0,
+            _return=250000.0,
+            number_of_items=0,
+            created_at=datetime(2026, 1, 10, 10, 0),
+        ),
+    ])
+    db.session.flush()
+
+    data = service.get_profit_by_time_of_day_insight(
+        case_type="\u20bd95000", user_id=user.id,
+    )
+
+    assert len(data["datasets"]) == 1
+    assert data["datasets"][0]["case_type"] == "\u20bd95000"
+    assert data["datasets"][0]["values"][3] == 10000.0
+    assert data["datasets"][0]["counts"][3] == 1

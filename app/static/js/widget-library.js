@@ -20,6 +20,7 @@
         { id: 'chart_items_insight',           title: 'Items Insights',         icon: 'fa-boxes',          defaultW: 6, defaultH: 3, minW: 4 },
         { id: 'chart_item_category_distribution', title: 'Item Category Distribution', icon: 'fa-chart-area', defaultW: 6, defaultH: 4, minW: 4 },
         { id: 'chart_profit_insight',          title: 'Profit Insights',        icon: 'fa-chart-bar',      defaultW: 6, defaultH: 3, minW: 4 },
+        { id: 'chart_profit_time_of_day',      title: 'Profit by Time of Day', icon: 'fa-clock',          defaultW: 6, defaultH: 3, minW: 4 },
     ];
 
     let _grid   = null;

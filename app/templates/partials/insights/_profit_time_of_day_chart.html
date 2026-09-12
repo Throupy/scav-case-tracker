@@ -1,0 +1,287 @@
+{% set chart_id = "profitTimeOfDayChart" %}
+<div class="card shadow h-100">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <div>
+            <h6 class="m-0 font-weight-bold text-accent" id="profitTimeOfDayTitle">Profit by Time of Day</h6>
+            <span class="small text-muted" id="profitTimeOfDaySubtitle">Average profit per case &middot; UK local time &middot; 3-hour periods</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="chart-area profit-time-chart-host" id="{{ chart_id }}"></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var charts = [];
+    var latestData = null;
+
+    function themeColors() {
+        var dark = document.documentElement.classList.contains('dark');
+        return {
+            text: dark ? '#e6e6e6' : '#5a5c69',
+            muted: dark ? '#b5b9c8' : '#858796',
+            grid: dark ? 'rgba(255,255,255,.07)' : 'rgba(90,92,105,.10)',
+            zero: dark ? 'rgba(255,255,255,.30)' : 'rgba(90,92,105,.35)',
+            tooltipBg: dark ? '#151924' : '#ffffff',
+            tooltipBorder: dark ? '#2a3142' : '#dddfeb'
+        };
+    }
+
+    function formatRoubles(value) {
+        if (value === null || typeof value === 'undefined') return 'No cases';
+        var sign = value < 0 ? '-\u20bd' : '\u20bd';
+        return sign + Math.abs(Math.round(value)).toLocaleString('en-GB');
+    }
+
+    function formatCompactRoubles(value) {
+        var absolute = Math.abs(value);
+        var compact = absolute >= 1000000
+            ? (absolute / 1000000).toFixed(1).replace('.0', '') + 'm'
+            : absolute >= 1000
+                ? Math.round(absolute / 1000) + 'k'
+                : Math.round(absolute).toString();
+        return (value < 0 ? '-\u20bd' : '\u20bd') + compact;
+    }
+
+    function destroyCharts() {
+        charts.forEach(function (chart) { chart.destroy(); });
+        charts = [];
+    }
+
+    function tooltipOptions(colors) {
+        return {
+            backgroundColor: colors.tooltipBg,
+            titleColor: colors.text,
+            bodyColor: colors.muted,
+            borderColor: colors.tooltipBorder,
+            borderWidth: 1,
+            callbacks: {
+                title: function (items) {
+                    return items[0].label + ' UK time';
+                },
+                label: function (item) {
+                    var count = item.dataset.caseCounts[item.dataIndex] || 0;
+                    return 'Average profit: ' + formatRoubles(item.raw) +
+                        ' (' + count + ' case' + (count === 1 ? '' : 's') + ')';
+                }
+            }
+        };
+    }
+
+    function gridColor(colors) {
+        return function (ctx) {
+            return ctx.tick.value === 0 ? colors.zero : colors.grid;
+        };
+    }
+
+    function gridWidth(ctx) {
+        return ctx.tick.value === 0 ? 2 : 1;
+    }
+
+    function renderSingle(data, dataset) {
+        var host = document.getElementById('profitTimeOfDayChart');
+        var colors = themeColors();
+        var canvas = document.createElement('canvas');
+        host.appendChild(canvas);
+
+        charts.push(new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: dataset.case_type,
+                    data: dataset.values,
+                    caseCounts: dataset.counts,
+                    borderColor: window.themeAccent(),
+                    backgroundColor: window.themeAccent(.10),
+                    pointBackgroundColor: window.themeAccent(),
+                    pointBorderColor: window.themeAccent(),
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 3,
+                    tension: .32,
+                    spanGaps: false,
+                    fill: true
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                interaction: { mode: 'nearest', intersect: false },
+                scales: {
+                    x: {
+                        ticks: { color: colors.muted, maxRotation: 0, autoSkip: false },
+                        grid: { display: false, drawBorder: false },
+                        title: { display: true, text: 'UK local time', color: colors.muted }
+                    },
+                    y: {
+                        ticks: { color: colors.muted, callback: formatRoubles },
+                        grid: { color: gridColor(colors), lineWidth: gridWidth },
+                        title: { display: true, text: 'Average profit per case', color: colors.muted }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipOptions(colors)
+                }
+            }
+        }));
+    }
+
+    function renderSmallMultiples(data) {
+        var host = document.getElementById('profitTimeOfDayChart');
+        var colors = themeColors();
+        var list = document.createElement('div');
+        list.className = 'profit-time-small-multiples';
+        host.appendChild(list);
+
+        var lastDataIndex = -1;
+        data.datasets.forEach(function (dataset, index) {
+            if (dataset.values.some(function (value) { return value !== null; })) lastDataIndex = index;
+        });
+
+        data.datasets.forEach(function (dataset, index) {
+            var row = document.createElement('div');
+            row.className = 'profit-time-multiple-row';
+
+            var label = document.createElement('div');
+            label.className = 'profit-time-multiple-label';
+            var name = document.createElement('strong');
+            name.textContent = dataset.case_type;
+            var count = document.createElement('span');
+            var total = dataset.counts.reduce(function (sum, value) { return sum + value; }, 0);
+            count.textContent = total + ' case' + (total === 1 ? '' : 's');
+            label.appendChild(name);
+            label.appendChild(count);
+            row.appendChild(label);
+
+            var plot = document.createElement('div');
+            plot.className = 'profit-time-multiple-plot';
+            row.appendChild(plot);
+            list.appendChild(row);
+
+            if (!dataset.values.some(function (value) { return value !== null; })) {
+                var empty = document.createElement('span');
+                empty.className = 'profit-time-no-data';
+                empty.textContent = 'No data for this period';
+                plot.appendChild(empty);
+                return;
+            }
+
+            var canvas = document.createElement('canvas');
+            plot.appendChild(canvas);
+            var isLast = index === lastDataIndex;
+
+            charts.push(new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: dataset.case_type,
+                        data: dataset.values,
+                        caseCounts: dataset.counts,
+                        borderColor: window.themeAccent(),
+                        backgroundColor: window.themeAccent(.07),
+                        pointBackgroundColor: window.themeAccent(),
+                        pointBorderColor: window.themeAccent(),
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                        tension: .28,
+                        spanGaps: false,
+                        fill: true
+                    }]
+                },
+                options: {
+                    animation: false,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'nearest', intersect: false },
+                    layout: { padding: { top: 2, bottom: 2 } },
+                    scales: {
+                        x: {
+                            display: isLast,
+                            ticks: {
+                                color: colors.muted,
+                                maxRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            },
+                            grid: { display: false, drawBorder: false }
+                        },
+                        y: {
+                            position: 'right',
+                            ticks: {
+                                color: colors.muted,
+                                callback: formatCompactRoubles,
+                                maxTicksLimit: 3,
+                                font: { size: 10 }
+                            },
+                            grid: {
+                                color: gridColor(colors),
+                                lineWidth: gridWidth,
+                                drawBorder: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: tooltipOptions(colors)
+                    }
+                }
+            }));
+        });
+    }
+
+    function render(data) {
+        latestData = data;
+        destroyCharts();
+
+        var host = document.getElementById('profitTimeOfDayChart');
+        var title = document.getElementById('profitTimeOfDayTitle');
+        var subtitle = document.getElementById('profitTimeOfDaySubtitle');
+        var selectedType = window.dashboardCaseType || 'all';
+        host.innerHTML = '';
+
+        if (selectedType === 'all') {
+            if (title) title.textContent = 'Profit by Time of Day';
+            if (subtitle) subtitle.textContent = 'Average profit per case (UK local time)';
+            renderSmallMultiples(data);
+        } else {
+            if (title) title.textContent = 'Profit by Time of Day - ' + selectedType;
+            if (subtitle) subtitle.textContent = 'Average profit per case  (UK local time)';
+            renderSingle(data, data.datasets[0]);
+        }
+    }
+
+    async function refresh() {
+        var params = new URLSearchParams();
+        var days = window.dashboardDays || 0;
+        var caseType = window.dashboardCaseType || 'all';
+        var scope = window.dashboardScope || 'global';
+
+        if (days > 0) params.set('days', days);
+        if (caseType !== 'all') params.set('case_type', caseType);
+        if (scope !== 'global') params.set('scope', scope);
+
+        try {
+            var response = await fetch('/api/insights/profit-by-time-of-day?' + params.toString());
+            var json = await response.json();
+            render(json.data);
+        } catch (error) {
+            console.error('Error fetching profit-by-time-of-day insight:', error);
+        }
+    }
+
+    document.addEventListener('dashboard:time-changed', refresh);
+    document.addEventListener('dashboard:case-type-changed', refresh);
+    document.addEventListener('theme:changed', function () {
+        if (latestData) render(latestData);
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', refresh);
+    } else {
+        refresh();
+    }
+})();
+</script>

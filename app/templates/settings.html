@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1 text-gray-800">Settings</h1>
+        <p class="text-muted mb-0">Manage how the site looks and how new Scav Case costs are recorded.</p>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('users.settings') }}">
+    {{ form.csrf_token }}
+    {{ form.theme_mode(id="theme-mode-input") }}
+    {{ form.accent_colour(id="accent-colour-input") }}
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-accent">
+                        <i class="fas fa-palette mr-2"></i>Appearance
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold small text-uppercase text-muted d-block">Mode</label>
+                        <div class="btn-group" role="group" aria-label="Appearance mode">
+                            <button type="button" class="btn btn-outline-accent" data-mode-option="light">
+                                <i class="fas fa-sun mr-1"></i>Light
+                            </button>
+                            <button type="button" class="btn btn-outline-accent" data-mode-option="dark">
+                                <i class="fas fa-moon mr-1"></i>Dark
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold small text-uppercase text-muted d-block">Accent colour</label>
+                        <div class="accent-picker" role="group" aria-label="Accent colour">
+                            {% for name, colour in [("red", "#e74a3b"), ("blue", "#4e73df"), ("green", "#1cc88a"), ("purple", "#8b5cf6"), ("amber", "#f6c23e")] %}
+                            <button type="button" class="accent-swatch" data-accent-option="{{ name }}"
+                                style="--swatch: {{ colour }};" aria-label="{{ name|title }}" title="{{ name|title }}"></button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% for error in form.theme_mode.errors + form.accent_colour.errors %}
+                    <div class="text-danger small mt-2">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-accent">
+                        <i class="fas fa-gamepad mr-2"></i>Game Settings
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="custom-control custom-switch">
+                        {{ form.max_level_charisma(class="custom-control-input") }}
+                        {{ form.max_level_charisma.label(class="custom-control-label font-weight-bold") }}
+                    </div>
+                    <p class="text-muted small mt-3 mb-2">
+                        Max Level Charisma reduces the cost of static-price Scav Cases by 10%.
+                    </p>
+                    <ul class="small text-muted pl-3 mb-0">
+                        <li>&#8381;2,500 cases are recorded at &#8381;2,250.</li>
+                        <li>&#8381;15,000 cases are recorded at &#8381;13,500.</li>
+                        <li>&#8381;95,000 cases are recorded at &#8381;85,500.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-accent">
+        <i class="fas fa-save mr-1"></i>Save Settings
+    </button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var modeInput = document.getElementById("theme-mode-input");
+    var accentInput = document.getElementById("accent-colour-input");
+
+    document.querySelectorAll("[data-mode-option]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            if (modeInput) modeInput.value = button.dataset.modeOption;
+        });
+    });
+
+    document.querySelectorAll("[data-accent-option]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            if (accentInput) accentInput.value = button.dataset.accentOption;
+        });
+    });
+});
+</script>
+
+{% endblock content %}

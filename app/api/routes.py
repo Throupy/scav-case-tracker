@@ -218,6 +218,20 @@ def insights_profit_chart():
     return success_response(data=data, message="Profit insight fetched")
 
 
+# queried by the "Profit by Time of Day" dashboard widget
+@api_bp.route("/api/insights/profit-by-time-of-day")
+@login_required
+def insights_profit_by_time_of_day():
+    case_type, since, user_id, err = _parse_insight_filters()
+    if err:
+        return err
+
+    data = _scav_case_service.get_profit_by_time_of_day_insight(
+        case_type=case_type, since_date=since, user_id=user_id,
+    )
+    return success_response(data=data, message="Profit by time of day fetched")
+
+
 def _serialize_case(case):
     roi = ((case._return - case.cost) / case.cost * 100) if case.cost else 0
     return {
