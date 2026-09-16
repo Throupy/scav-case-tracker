@@ -122,7 +122,9 @@ def fuzzy_match_ocr_to_database(
 
     if best_match:
         original_name = normalized_map[best_match[0]]
-        return TarkovItem.query.filter_by(name=original_name).first()
+        return TarkovItem.query.filter_by(
+            name=original_name, scav_case_eligible=True
+        ).first()
     return None
 
 
@@ -155,7 +157,11 @@ def extract_items_from_ocr(text: str):
     """
     current_app.logger.info(f"[DEBUG] Raw OCR text:\n{text}")
 
-    all_items = TarkovItem.query.with_entities(TarkovItem.tarkov_id, TarkovItem.name).all()
+    all_items = (
+        TarkovItem.query.filter(TarkovItem.scav_case_eligible.is_(True))
+        .with_entities(TarkovItem.tarkov_id, TarkovItem.name)
+        .all()
+    )
     item_names = [name for _, name in all_items]
 
     # Matches <anything> (<integer>) - non-greedy

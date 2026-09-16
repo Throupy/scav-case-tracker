@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
+  <title id="title">Item image unavailable</title>
+  <desc id="description">A simple supply crate placeholder</desc>
+  <rect width="128" height="128" rx="18" fill="#182033"/>
+  <path d="M24 43 64 24l40 19v49L64 110 24 92Z" fill="#28344b" stroke="#71809a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m24 43 40 20 40-20M64 63v47" fill="none" stroke="#71809a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M49 47h30" stroke="#e0a800" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="96" cy="96" r="20" fill="#182033" stroke="#e0a800" stroke-width="4"/>
+  <path d="M96 84v15m0 8v1" stroke="#e0a800" stroke-width="6" stroke-linecap="round"/>
+</svg>

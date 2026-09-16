@@ -61,9 +61,17 @@
     {% if current_user.is_authenticated and current_user.is_superuser %}
     <hr class="sidebar-divider">
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.users') }}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#admin-dropdown"
+            aria-expanded="true" aria-controls="admin-dropdown">
             <i class="fas fa-fw fa-shield-alt"></i>
-            <span>Admin</span></a>
+            <span>Admin</span>
+        </a>
+        <div id="admin-dropdown" class="collapse" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ url_for('admin.users') }}">User Management</a>
+                <a class="collapse-item" href="{{ url_for('admin.items') }}">Item Management</a>
+            </div>
+        </div>
     </li>
     {% endif %}
 

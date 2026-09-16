@@ -1,4 +1,4 @@
-from app.models import User, ScavCase
+from app.models import User, ScavCase, TarkovItem
 from app.extensions import db, bcrypt
 
 
@@ -48,6 +48,57 @@ def test_search_items_short_query(client):
     """GET /cases/search-items with a single character returns empty results."""
     response = client.get("/cases/search-items?q=x")
     assert response.status_code == 200
+
+
+def test_search_items_only_returns_eligible_items(client, session):
+    eligible = TarkovItem(
+        name="Eligibility Test Visible",
+        tarkov_id="eligible-test-item",
+        category="Barter Items",
+        scav_case_eligible=True,
+    )
+    hidden = TarkovItem(
+        name="Eligibility Test Hidden",
+        tarkov_id="hidden-test-item",
+        category="Guns",
+        scav_case_eligible=False,
+    )
+    db.session.add_all([eligible, hidden])
+    db.session.flush()
+
+    user_id = _create_user("eligibility_search")
+    _login(client, user_id)
+    response = client.get("/cases/search-items?q=Eligibility+Test")
+
+    assert response.status_code == 200
+    assert b"Eligibility Test Visible" in response.data
+    assert b"Eligibility Test Hidden" not in response.data
+
+
+def test_search_items_lists_guns_before_matching_parts(client, session):
+    part = TarkovItem(
+        name="G36 A Early Part",
+        tarkov_id="g36-test-part",
+        category="Mods",
+        scav_case_eligible=True,
+    )
+    gun = TarkovItem(
+        name="HK G36 Test Rifle",
+        tarkov_id="g36-test-gun",
+        category="Guns",
+        scav_case_eligible=True,
+    )
+    db.session.add_all([part, gun])
+    db.session.flush()
+
+    user_id = _create_user("gun_first_search")
+    _login(client, user_id)
+    response = client.get("/cases/search-items?q=G36")
+
+    assert response.status_code == 200
+    assert response.data.index(b"HK G36 Test Rifle") < response.data.index(
+        b"G36 A Early Part"
+    )
 
 
 def test_all_cases_requires_login(client):

@@ -1,13 +1,68 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, abort, request, current_app
 from flask_login import current_user
 
 from app.auth.decorators import superuser_required
 from app.admin.forms import CreateUserForm
-from app.models import User, UserAchievement
+from app.models import User, UserAchievement, TarkovItem
 from app.extensions import db, bcrypt
+from app.services.tarkov_item_import_service import ItemCatalogError, TarkovItemImportService
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+
+@admin_bp.route("")
+@admin_bp.route("/")
+@superuser_required
+def index():
+    return redirect(url_for("admin.items"))
+
+
+@admin_bp.route("/items")
+@superuser_required
+def items():
+    return render_template(
+        "admin/items.html", items=None,
+        item_count=TarkovItem.query.count(),
+    )
+
+
+@admin_bp.route("/items/check", methods=["POST"])
+@superuser_required
+def check_items():
+    service = TarkovItemImportService()
+    try:
+        new_items = service.find_new_items()
+    except ItemCatalogError as error:
+        flash(str(error), "danger")
+        return redirect(url_for("admin.items"))
+
+    return render_template(
+        "admin/items.html", items=new_items,
+        item_count=TarkovItem.query.count(),
+    )
+
+
+@admin_bp.route("/items/import", methods=["POST"])
+@superuser_required
+def import_items():
+    selected_ids = {value.strip() for value in request.form.getlist("item_ids") if value.strip()}
+    if not selected_ids:
+        flash("Select at least one eligible item to import.", "warning")
+        return redirect(url_for("admin.items"))
+
+    try:
+        result = TarkovItemImportService().import_selected(selected_ids)
+    except Exception as error:
+        current_app.logger.exception("Admin item import failed")
+        flash(f"No database changes were saved: {error}", "danger")
+        return redirect(url_for("admin.items"))
+
+    if result.imported:
+        flash(f"Imported {len(result.imported)} item(s): {', '.join(result.imported)}", "success")
+    if result.skipped:
+        flash(f"Skipped {len(result.skipped)} item(s) that were missing, ineligible, or already imported.", "warning")
+    return redirect(url_for("admin.items"))
 
 
 @admin_bp.route("/users")

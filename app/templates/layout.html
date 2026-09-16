@@ -13,6 +13,20 @@
           document.documentElement.classList.toggle("dark", mode === "dark");
         })();
       </script>
+    <script>
+      // Cloudinary returns an ordinary image error when an asset was never
+      // uploaded. Capture those errors for both server-rendered and dynamically
+      // inserted images, then fall back to a local asset without retry loops.
+      window.addEventListener("error", function (event) {
+        var image = event.target;
+        if (!(image instanceof HTMLImageElement)) return;
+        if (!image.src.includes("res.cloudinary.com/dquzibnsm/")) return;
+
+        image.onerror = null;
+        image.src = "{{ url_for('static', filename='item-placeholder.svg') }}";
+        image.classList.add("image-placeholder");
+      }, true);
+    </script>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -36,7 +50,7 @@
 
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
-    <link href="{{ url_for('static', filename='css/dark.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/dark.css', v='2') }}" rel="stylesheet" type="text/css">
     <link href="{{ url_for('static', filename='css/theme.css', v='12') }}" rel="stylesheet" type="text/css">
 
 </head>

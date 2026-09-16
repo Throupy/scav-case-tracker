@@ -58,6 +58,9 @@ class TarkovItem(db.Model):
     name = db.Column(db.String(100), nullable=False)  # item name
     tarkov_id = db.Column(db.String(50), nullable=False, unique=True, index=True)
     category = db.Column(db.String(64), nullable=True)
+    scav_case_eligible = db.Column(
+        db.Boolean, nullable=False, default=True, server_default="1", index=True
+    )
 
 
 class WeaponAttachment(db.Model):

@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body py-3 px-4 d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1"><i class="fas fa-box-open mr-2 text-accent"></i>Admin - Item Management</h4>
+            <div class="small text-muted">{{ item_count }} items currently in the database</div>
+        </div>
+        <form action="{{ url_for('admin.check_items') }}" method="post" class="mt-2 mt-md-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-accent" type="submit">
+                <i class="fas fa-sync-alt mr-1"></i> Check for New Items
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if items is not none %}
+    {% set eligible_count = items | selectattr('scav_case_eligible') | list | length %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <strong>{{ items | length }} new records from tarkov.dev</strong>
+            <span class="badge badge-accent">{{ eligible_count }} importable</span>
+        </div>
+        {% if items %}
+        <form action="{{ url_for('admin.import_items') }}" method="post" id="item-import-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 42px;"><input type="checkbox" id="select-all" aria-label="Select all importable items"></th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Mapped category</th>
+                            <th>Source details</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr class="{% if not item.scav_case_eligible %}text-muted{% endif %}">
+                            <td>
+                                {% if item.scav_case_eligible %}
+                                <input class="item-checkbox" type="checkbox" name="item_ids" value="{{ item.id }}" aria-label="Select {{ item.name }}">
+                                {% else %}
+                                <i class="fas fa-ban" title="Not importable"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.image_link %}
+                                <img src="{{ item.image_link }}" alt="{{ item.name }}" style="width: 72px; height: 54px; object-fit: contain;" loading="lazy">
+                                {% else %}
+                                <img src="{{ url_for('static', filename='item-placeholder.svg') }}" alt="No image available" style="width: 72px; height: 54px; object-fit: contain;">
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                <div class="small text-muted text-monospace">{{ item.id }}</div>
+                            </td>
+                            <td>{{ item.category }}</td>
+                            <td class="small">
+                                <div>{{ item.source_categories | join(', ') or 'No source category' }}</div>
+                                {% if item.types %}<div class="text-muted">Types: {{ item.types | join(', ') }}</div>{% endif %}
+                                {% if item.base_price is not none %}<div class="text-muted">Base price: {{ "{:,}".format(item.base_price) }} ₽</div>{% endif %}
+                            </td>
+                            <td>
+                                {% if item.scav_case_eligible %}
+                                <span class="badge badge-accent">Importable</span>
+                                {% else %}
+                                <span class="badge badge-secondary">Excluded</span>
+                                {% endif %}
+                                <div class="small mt-1">{{ item.eligibility_reason }}</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span class="small text-muted">The server fetches and validates every selected item again before saving.</span>
+                <button type="submit" class="btn btn-accent" id="import-selected-button"
+                    {% if eligible_count == 0 %}disabled{% endif %}>
+                    <i class="fas fa-file-import mr-1"></i> Import Selected
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="card-body text-center py-5">
+            <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+            <h5>No new items found</h5>
+            <p class="text-muted mb-0">The database already contains every item returned by the source.</p>
+        </div>
+        {% endif %}
+    </div>
+{% endif %}
+
+<div class="modal fade" id="import-progress-modal" tabindex="-1" role="dialog"
+    aria-labelledby="import-progress-title" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5 px-4">
+                <i class="fas fa-circle-notch fa-spin fa-3x text-accent mb-4" aria-hidden="true"></i>
+                <h5 id="import-progress-title">Importing selected items</h5>
+                <p class="mb-2" id="import-progress-message">Validating item data and uploading available images…</p>
+                <p class="small text-muted mb-0">
+                    <span id="import-elapsed">0 seconds elapsed</span> · Please keep this page open
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var selectAll = document.getElementById("select-all");
+    if (selectAll) {
+        selectAll.addEventListener("change", function () {
+            document.querySelectorAll(".item-checkbox").forEach(function (checkbox) {
+                checkbox.checked = selectAll.checked;
+            });
+        });
+    }
+
+    var importForm = document.getElementById("item-import-form");
+    if (!importForm) return;
+
+    importForm.addEventListener("submit", function (event) {
+        var selectedCount = document.querySelectorAll(".item-checkbox:checked").length;
+        if (!selectedCount) {
+            event.preventDefault();
+            window.alert("Select at least one item to import.");
+            return;
+        }
+        if (!window.confirm("Import " + selectedCount + " selected item(s) into the database and upload their available images?")) {
+            event.preventDefault();
+            return;
+        }
+
+        var button = document.getElementById("import-selected-button");
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i> Importing…';
+        document.getElementById("import-progress-title").textContent =
+            "Importing " + selectedCount + " item" + (selectedCount === 1 ? "" : "s");
+        $("#import-progress-modal").modal("show");
+
+        var startedAt = Date.now();
+        window.setInterval(function () {
+            var seconds = Math.floor((Date.now() - startedAt) / 1000);
+            document.getElementById("import-elapsed").textContent =
+                seconds + " second" + (seconds === 1 ? "" : "s") + " elapsed";
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

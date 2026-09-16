@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, jsonify, abort
 from flask_login import login_required, current_user
+from sqlalchemy import case, func
 
 from app.models import ScavCase, ScavCaseItem, TarkovItem, User
 from app.constants import SCAV_CASE_TYPES, CLOUDINARY_BASE_URL
@@ -30,7 +31,28 @@ def search_items():
     if not query or len(query) < 2:
         return render_template("partials/_scav_case_search_item_list.html", items=[])
 
-    items = TarkovItem.query.filter(TarkovItem.name.ilike(f"%{query}%")).limit(15).all()
+    gun_categories = (
+        "guns",
+        "assault rifle",
+        "assault carbine",
+        "marksman rifle",
+        "sniper rifle",
+        "smg",
+    )
+    gun_first = case(
+        (func.lower(TarkovItem.category).in_(gun_categories), 0),
+        else_=1,
+    )
+
+    items = (
+        TarkovItem.query.filter(
+            TarkovItem.scav_case_eligible.is_(True),
+            TarkovItem.name.ilike(f"%{query}%"),
+        )
+        .order_by(gun_first, TarkovItem.name.asc())
+        .limit(15)
+        .all()
+    )
     return render_template("partials/_scav_case_search_item_list.html", items=items)
 
 @cases_bp.route("/cases/global-dashboard/layout")

@@ -50,6 +50,11 @@ html.dark .card-header {
     border-bottom-color: #2a3142 !important;
 }
 
+html.dark .card-footer {
+    background-color: #151924 !important;
+    border-top-color: #2a3142 !important;
+}
+
 html.dark .text-gray-600,
 html.dark .text-gray-700 {
     color: #b7bfd1 !important;

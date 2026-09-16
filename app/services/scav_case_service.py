@@ -934,6 +934,23 @@ class ScavCaseService(BaseService):
 
             normalized.append({"id": tid, "name": name, "quantity": qty})
 
+        requested_ids = {item["id"] for item in normalized}
+        eligible_ids = {
+            row[0]
+            for row in self.db.session.query(TarkovItem.tarkov_id)
+            .filter(
+                TarkovItem.tarkov_id.in_(requested_ids),
+                TarkovItem.scav_case_eligible.is_(True),
+            )
+            .all()
+        }
+        rejected_ids = sorted(requested_ids - eligible_ids)
+        if rejected_ids:
+            raise ValueError(
+                "One or more selected items are not eligible scav-case rewards: "
+                + ", ".join(rejected_ids)
+            )
+
         # determine whether the case cost requires a dynamic price lookup
         ct = (scav_case_type or "").strip()
         ctl = ct.lower()
